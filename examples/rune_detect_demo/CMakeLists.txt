@@ -2,5 +2,5 @@
 
 
 RuneVision_add_exe(rune_detect_demo
-DEPENDS core math
+DEPENDS core math contour_proc
 )
