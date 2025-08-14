@@ -1,4 +1,4 @@
 RuneVision_add_module(processor
 INTERFACE
-DEPENDS logging
+DEPENDS core
 ) 
