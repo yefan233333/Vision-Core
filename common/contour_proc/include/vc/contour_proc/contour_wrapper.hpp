@@ -21,9 +21,6 @@
 
 #include "vc/core/property_wrapper.hpp"
 
-// 是否允许平滑处理
-#define ENABLE_SMOOTH_CONTOUR_CALC 0
-
 /**
  * @brief 可以用于ContourWrapper的基本算术类型 int 、float 和 double
  */

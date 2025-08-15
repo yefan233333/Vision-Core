@@ -31,6 +31,12 @@ public:
         DEFINE_PROPERTY(Contours, public, public, (std::vector<Contour_ptr>));
         //! 角点集
         DEFINE_PROPERTY(Corners, public, public, (std::vector<cv::Point2f>));
+        //! 中心位置
+        DEFINE_PROPERTY(Center, public, public, (cv::Point2f));
+        //! 宽(图像中)
+        DEFINE_PROPERTY(Width, public, public, (float));
+        //! 高(图像中)
+        DEFINE_PROPERTY(Height, public, public, (float));
     };
 
     /**

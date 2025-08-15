@@ -134,6 +134,38 @@ inline auto getDist(const Vec1 &v1, const Vec2 &v2) noexcept
 }
 
 /**
+ * @brief 计算单位向量
+ *
+ * @tparam Tp 数据类型
+ * @param[in] v 向量
+ * @return 向量在单位圆上的向量
+ */
+template <typename Tp>
+inline cv::Point_<Tp> getUnitVector(const cv::Point_<Tp> &v)
+{
+    return v / sqrt(v.x * v.x + v.y * v.y);
+}
+
+/**
+ * @brief 求两个向量的最小夹角
+ *
+ * @tparam Tp 数据类型
+ * @param[in] v1 向量1
+ * @param[in] v2 向量2
+ * @param[in] mode 角度模式，默认弧度制
+ * @return 夹角大小,[0,180]
+ */
+template <typename Tp1, typename Tp2>
+inline Tp1 getVectorMinAngle(const cv::Point_<Tp1> &v1, const cv::Point_<Tp2> &v2, AngleMode mode = RAD)
+{
+    Tp1 cos_theta = (v1.x * v2.x + v1.y * v2.y) / (std::sqrt(v1.x * v1.x + v1.y * v1.y) * std::sqrt(v2.x * v2.x + v2.y * v2.y));
+    Tp1 theta = std::acos(cos_theta);
+    if (std::isnan(theta))
+        return Tp1(0);
+    return mode ? theta : rad2deg(theta);
+}
+
+/**
  * @brief 平面向量外积计算
  *
  * @param v1 第一个向量
