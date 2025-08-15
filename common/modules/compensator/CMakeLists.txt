@@ -1,4 +1,4 @@
-RuneVision_add_module(compensator
+VisCore_add_module(compensator
 INTERFACE
 DEPENDS core
 ) 

@@ -1,11 +1,9 @@
 #include <opencv2/opencv.hpp>
 #include "rune_detect_demo/rune_detect_demo.h"
-#include "rv/contour_proc/contour_wrapper.hpp"
+#include "vc/contour_proc/contour_wrapper.hpp"
 #include <vector>
 #include <iostream>
 #include <cmath>
-
-
 
 using namespace std;
 using namespace cv;
@@ -39,7 +37,6 @@ int main()
         vector<Vec4i> hierarchy;
         findContours(binary, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
 
-        
         // 绘制轮廓
         Mat contourImage = frame.clone();
         drawContours(contourImage, contours, -1, Scalar(0, 255, 0), 2);
@@ -48,6 +45,7 @@ int main()
         imshow("Camera Feed", frame);
         imshow("Contours", contourImage);
         imshow("Binary Image", binary);
-        if (waitKey(30) >= 0) break; // 按任意键退出
+        if (waitKey(30) >= 0)
+            break; // 按任意键退出
     }
 }

@@ -1,4 +1,4 @@
-RuneVision_add_module(processor
+VisCore_add_module(processor
 INTERFACE
 DEPENDS core
 ) 
