@@ -85,14 +85,10 @@ inline bool isContourInactiveTarget(const vector<Contour_ptr> &contours, const i
     float area_ratio = contour_area / fit_ellipse_area;
     if (area_ratio > rune_target_param.INACTIVE_MAX_AREA_RATIO)
     {
-        // DEBUG_RUNE_WARNING_("target 2.area_ratio : fail");
-        // RUNE_TARGET_INACTIVE_CONTOUR_FAIL(contours[outer_idx], "target inactive : area ratio : %f > %f", area_ratio, rune_target_param.INACTIVE_MAX_AREA_RATIO);
         return false;
     }
     if (area_ratio < rune_target_param.INACTIVE_MIN_AREA_RATIO)
     {
-        // DEBUG_RUNE_WARNING_("target 2.area_ratio : fail");
-        // RUNE_TARGET_INACTIVE_CONTOUR_FAIL(contours[outer_idx], "target inactive : area ratio : %f < %f", area_ratio, rune_target_param.INACTIVE_MIN_AREA_RATIO);
         return false;
     }
 
@@ -100,23 +96,13 @@ inline bool isContourInactiveTarget(const vector<Contour_ptr> &contours, const i
     float perimeter = contours[outer_idx]->perimeter();
     float fit_ellipse_perimeter = CV_PI * (3 * (width + height) - sqrt((3 * width + height) * (width + 3 * height)));
     float perimeter_ratio = perimeter / fit_ellipse_perimeter;
-    // DEBUG_RUNE_INFO_("target 3.perimeter_ratio : %f", perimeter_ratio);
-    // if(perimeter_ratio > rune_target_param.INACTIVE_MAX_PERI_RATIO || perimeter_ratio < rune_target_param.INACTIVE_MIN_PERI_RATIO)
-    // {
-    //     DEBUG_RUNE_WARNING_("target 3.perimeter_ratio : fail");
-    //     return false;
-    // }
-    // DEBUG_RUNE_PASS_("target 3.perimeter_ratio : pass");
+
     if (perimeter_ratio > rune_target_param.INACTIVE_MAX_PERI_RATIO)
     {
-        // DEBUG_RUNE_WARNING_("target 3.perimeter_ratio : fail");
-        // RUNE_TARGET_INACTIVE_CONTOUR_FAIL(contours[outer_idx], "target inactive : perimeter ratio : %f > %f", perimeter_ratio, rune_target_param.INACTIVE_MAX_PERI_RATIO);
         return false;
     }
     if (perimeter_ratio < rune_target_param.INACTIVE_MIN_PERI_RATIO)
     {
-        // DEBUG_RUNE_WARNING_("target 3.perimeter_ratio : fail");
-        // RUNE_TARGET_INACTIVE_CONTOUR_FAIL(contours[outer_idx], "target inactive : perimeter ratio : %f < %f", perimeter_ratio, rune_target_param.INACTIVE_MIN_PERI_RATIO);
         return false;
     }
 
@@ -740,7 +726,7 @@ bool RuneTargetInactive::correctDirection()
     return true;
 }
 
-auto RuneTargetInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>
+auto RuneTargetInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> 
 {
     vector<Point2f> pnp_points_2d{};
     vector<Point3f> pnp_points_3d{};

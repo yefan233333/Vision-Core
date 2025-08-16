@@ -3,7 +3,7 @@
 #include "vc/contour_proc/contour_wrapper.hpp"
 // #include "vc/feature/rune_target.h"
 #include "vc/feature/rune_target_inactive.h"
-#include "vc/feature/rune_target_inactive.h"
+#include "vc/feature/rune_target_active.h"
 #include <vector>
 #include <iostream>
 #include <cmath>
@@ -49,29 +49,37 @@ int main(int argc, char** argv)
         findContours(binary, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
 
         // 搜索靶心轮廓
-        vector<RuneTargetInactive_ptr> targets;
-        unordered_map<RuneTargetInactive_ptr, unordered_set<size_t>> used_contour_idxs;
+        vector<RuneTarget_ptr> targets_inactive;
+        vector<RuneTarget_ptr> targets_active;
         unordered_set<size_t> all_sub_idx;
-        RuneTargetInactive::find(targets, contours, hierarchy, all_sub_idx, used_contour_idxs);
-        if(targets.size() > 0)
-        {
-            // cout << "Found " << targets.size() << " inactive rune targets." << endl;
-            cout << "target_size = " << targets.size() << endl;
+        unordered_map<RuneTarget_ptr, unordered_set<size_t>> used_contour_idxs;
+        RuneTarget::find_inactive_targets(targets_inactive, contours, hierarchy, all_sub_idx, used_contour_idxs);
+        RuneTarget::find_active_targets(targets_active, contours, hierarchy, all_sub_idx, used_contour_idxs);
+        // 合并
+        vector<RuneTarget_ptr> all_targets;
+        all_targets.reserve(targets_inactive.size() + targets_active.size());
+        all_targets.insert(all_targets.end(), targets_inactive.begin(), targets_inactive.end());
+        all_targets.insert(all_targets.end(), targets_active.begin(), targets_active.end());
 
-            // 绘制靶心的位置和四个缺口的位置
-            for (const auto& target : targets)
+        // 绘制靶心轮廓
+        for (const auto& target : all_targets)
+        {
+            if (target->getActiveFlag())
             {
-                circle(contourImage, target->getImageCache().getCenter(), 5, Scalar(255, 0, 0), -1);
-                for (const auto& gap : target->getGaps())
-                {
-                    circle(contourImage, gap.center, 5, Scalar(0, 0, 255), -1);
-                }
+                // 绘制激活靶心
+                drawContours(contourImage, target->imageCache().getContours(), -1, Scalar(0, 200, 100), 2);
+            }
+            else
+            {
+                // 绘制未激活靶心
+                drawContours(contourImage, target->imageCache().getContours(), -1, Scalar(120, 0, 0), 2);
             }
         }
-        else
-        {
-            // cout << "No inactive rune targets found." << endl;
-        }
+
+
+
+
+        
 
 
 

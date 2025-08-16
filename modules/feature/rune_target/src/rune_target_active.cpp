@@ -1,0 +1,275 @@
+#include <opencv2/imgproc.hpp>
+#include <string>
+
+#include "vc/feature/rune_target_active.h"
+#include "vc/feature/rune_target_param.h"
+
+using namespace std;
+using namespace cv;
+
+/**
+ * @brief 已激活神符靶心等级向量判断
+ *
+ * @param[in] contours 所有轮廓
+ * @param[in] hierarchy 所有的等级向量
+ * @param[in] idx 指定的等级向量的下标
+ * @return 等级结构是否满足要求
+ */
+inline bool isHierarchyActiveTarget(const vector<Contour_ptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
+{
+    if (hierarchy[idx][3] != -1) // 该轮廓有父轮廓，退出
+        return false;
+    if (hierarchy[idx][2] == -1) // 该轮廓没有子轮廓，退出
+        return false;
+
+    return true;
+}
+
+void RuneTargetActive::find(std::vector<RuneTargetActive_ptr> &targets,
+                                   const std::vector<Contour_ptr> &contours,
+                                   const std::vector<cv::Vec4i> &hierarchy,
+                                   const std::unordered_set<size_t> &mask,
+                                   std::unordered_map<RuneTargetActive_ptr, unordered_set<size_t>> &used_contour_idxs)
+{
+
+    for (size_t i = 0; i < contours.size(); i++)
+    {
+        if (mask.find(i) != mask.end())
+            continue;
+        if (isHierarchyActiveTarget(contours, hierarchy, i))
+        {
+            unordered_set<size_t> temp_used_contour_idxs{};
+            auto p_target = RuneTargetActive::make_feature(contours, hierarchy, i, temp_used_contour_idxs);
+            if (p_target != nullptr)
+            {
+                targets.push_back(p_target);
+                used_contour_idxs[p_target] = temp_used_contour_idxs;
+            }
+        }
+    }
+}
+
+auto RuneTargetActive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>
+{
+    vector<Point2f> points_2d = {getImageCache().getCenter()};
+    vector<Point3f> points_3d = {Point3f(0, 0, 0)};
+    vector<float> weights = {1.0};
+
+    return make_tuple(points_2d, points_3d, weights);
+}
+
+/**
+ * @brief 椭圆度检测
+ *
+ * @param contours 轮廓
+ */
+inline bool checkEllipse(const Contour_ptr &contour)
+{
+    if (contour->points().size() < 6)
+    {
+        return false;
+    }
+    float contour_area = contour->area();
+    // -----------------------绝对面积判断-------------------------
+    if (contour_area < rune_target_param.ACTIVE_MIN_AREA)
+    {
+        return false;
+    }
+    if (contour_area > rune_target_param.ACTIVE_MAX_AREA)
+    {
+        return false;
+    }
+
+    // -----------------------边长比例判断-------------------------
+    auto fit_ellipse = contour->fittedEllipse();
+    float width = max(fit_ellipse.size.width, fit_ellipse.size.height);
+    float height = min(fit_ellipse.size.width, fit_ellipse.size.height);
+    float side_ratio = width / height;
+
+    if (side_ratio > rune_target_param.ACTIVE_MAX_SIDE_RATIO)
+    {
+        return false;
+    }
+    if (side_ratio < rune_target_param.ACTIVE_MIN_SIDE_RATIO)
+    {
+        return false;
+    }
+
+    // ------------------------面积比例判断----------------------------
+    float fit_ellipse_area = width * height * CV_PI / 4;
+    float area_ratio = contour_area / fit_ellipse_area;
+    // {
+    //     return false;
+    // }
+    if (area_ratio > rune_target_param.ACTIVE_MAX_AREA_RATIO)
+    {
+        return false;
+    }
+    if (area_ratio < rune_target_param.ACTIVE_MIN_AREA_RATIO)
+    {
+        return false;
+    }
+
+    // ----------------------周长比例判断-------------------------
+    float perimeter = contour->perimeter();
+    float fit_ellipse_perimeter = CV_PI * (3 * (width + height) - sqrt((3 * width + height) * (width + 3 * height)));
+    float perimeter_ratio = perimeter / fit_ellipse_perimeter;
+    if (perimeter_ratio > rune_target_param.ACTIVE_MAX_PERI_RATIO)
+    {
+        return false;
+    }
+    if (perimeter_ratio < rune_target_param.ACTIVE_MIN_PERI_RATIO)
+    {
+        return false;
+    }
+    const auto &hull_contour = contour->convexHull();
+    float hull_area = contourArea(hull_contour);
+    float hull_area_ratio = hull_area / contour_area;
+    if (hull_area_ratio > rune_target_param.ACTIVE_MAX_CONVEX_AREA_RATIO)
+    {
+        return false;
+    }
+    float hull_perimeter = arcLength(hull_contour, true);
+    float hull_perimeter_ratio = hull_perimeter / perimeter;
+    hull_perimeter_ratio = hull_perimeter_ratio > 1 ? hull_perimeter_ratio : 1 / hull_perimeter_ratio;
+    if (hull_perimeter_ratio > rune_target_param.ACTIVE_MAX_CONVEX_PERI_RATIO)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * @brief 常规环数的靶心构造检验
+ *
+ * @param[in] contours 所有轮廓
+ * @param[in] hierarchy 等级向量
+ * @param[in] idx 轮廓下标
+ * @param[in] all_sub_idx 所有子轮廓下标
+ *
+ * @return 是否符合要求
+ */
+inline bool checkConcentricity(const std::vector<Contour_ptr> &contours,
+                               const std::vector<cv::Vec4i> &hierarchy,
+                               const std::vector<int> &all_sub_idx,
+                               size_t idx,
+                               double contour_area)
+{
+    if (all_sub_idx.empty()) // 无子轮廓
+    {
+        return false;
+    }
+    unordered_map<size_t, float> area_map;
+    for (auto sub_idx : all_sub_idx)
+    {
+        float area = contours[sub_idx]->area();
+        area_map[sub_idx] = area;
+    }
+    auto [max_area_idx, max_sub_area] = *max_element(area_map.begin(), area_map.end(), [](const auto &lhs, const auto &rhs)
+                                                     { return lhs.second < rhs.second; });
+    if (max_sub_area > contour_area)
+    {
+        VC_THROW_ERROR("sub_contour_area > outer_area"); // 子轮廓面积大于当前轮廓面积
+    }
+    float sub_area_ratio = max_sub_area / contour_area;
+    if (sub_area_ratio < rune_target_param.ACTIVE_MIN_AREA_RATIO_SUB) // 子轮廓面积过小
+    {
+        return false;
+    }
+
+    // 对最大子轮廓进行椭圆度检测6
+    if (checkEllipse(contours[max_area_idx]) == false)
+        return false;
+
+    return true;
+}
+
+/**
+ * @brief 针对十环靶心的构造检验
+ *
+ * @param contours 轮廓
+ * @param hierarchy 等级向量
+ * @param idx 轮廓下标
+ * @param all_sub_idx 所有子轮廓下标
+ * @param contour_area 轮廓面积
+ *
+ */
+inline bool checkTenRing(const std::vector<Contour_ptr> &contours,
+                         const std::vector<cv::Vec4i> &hierarchy,
+                         const std::vector<int> &all_sub_idx,
+                         size_t idx,
+                         double contour_area)
+{
+    // 计算所有子轮廓的面积之和
+    float total_area = 0;
+    for (auto sub_idx : all_sub_idx)
+    {
+        float area = contours[sub_idx]->area();
+        total_area += area;
+    }
+    // 获取比例
+    float area_ratio = total_area / contour_area;
+    if (area_ratio > rune_target_param.ACTIVE_MAX_AREA_RATIO_SUB_TEN_RING)
+    {
+        return false;
+    }
+    return true;
+}
+
+RuneTargetActive_ptr RuneTargetActive::make_feature(const std::vector<Contour_ptr> &contours,
+                                                                 const std::vector<cv::Vec4i> &hierarchy,
+                                                                 size_t idx,
+                                                                 std::unordered_set<size_t> &used_contour_idxs)
+{
+
+    const auto &contour_outer = contours[idx];
+
+    // 轮廓点数判断
+    if (contour_outer->points().size() < 6)
+        return nullptr;
+
+    float contour_area = contour_outer->area();
+
+    // 椭圆度检测
+    if (checkEllipse(contour_outer) == false)
+        return nullptr;
+
+    // 当面积足够时，利用子轮廓进行判断
+    vector<int> all_sub_idx{};
+    getAllSubContoursIdx(hierarchy, idx, all_sub_idx);
+    if (contour_area < 100)
+        return nullptr;
+
+    if (checkConcentricity(contours, hierarchy, all_sub_idx, idx, contour_area) == false)
+    {
+        if (checkTenRing(contours, hierarchy, all_sub_idx, idx, contour_area) == false)
+            return nullptr;
+    }
+
+    // 将当前轮廓和子轮廓加入到使用轮廓集合中
+    used_contour_idxs.insert(idx);
+    used_contour_idxs.insert(all_sub_idx.begin(), all_sub_idx.end());
+
+    auto fit_ellipse = contour_outer->fittedEllipse();
+
+    // 构建未激活靶心对象，并赋予属性
+    auto rune_target = make_shared<RuneTargetActive>();
+
+    rune_target->setActiveFlag(true); // 设置为激活靶心
+    vector<Point2f> corners{};
+    corners.push_back(fit_ellipse.center); // 将中心点作为第一个角点
+
+    auto width = max(fit_ellipse.size.width, fit_ellipse.size.height);
+    auto height = min(fit_ellipse.size.width, fit_ellipse.size.height);
+
+    // 图像属性
+    auto &image_info = rune_target->getImageCache();
+    image_info.setContours(vector<Contour_ptr>{contour_outer}); // 设置轮廓集
+    image_info.setCorners(corners);                             // 设置角点
+    image_info.setHeight(height);
+    image_info.setWidth(width);
+    image_info.setCenter(fit_ellipse.center);
+
+    return rune_target;
+}

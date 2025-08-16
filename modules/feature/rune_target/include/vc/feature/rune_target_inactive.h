@@ -12,7 +12,7 @@ struct RuneTargetGap
 };
 
 //! 神符未激活靶心
-struct RuneTargetInactive : public RuneTarget
+class RuneTargetInactive : public RuneTarget
 {
     using Ptr = std::shared_ptr<RuneTargetInactive>;
 
@@ -20,6 +20,7 @@ public:
     RuneTargetInactive() = default;
     RuneTargetInactive(const RuneTargetInactive &) = delete;
     RuneTargetInactive(RuneTargetInactive &&) = delete;
+    virtual ~RuneTargetInactive() = default;
 
     /**
      * @brief 动态类型转换
@@ -103,7 +104,7 @@ protected:
     /**
      * @brief 获取所有PNP角点
      */
-    std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> getPnpPoints() const;
+    virtual auto getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> override;
 
 protected:
 
@@ -113,7 +114,6 @@ protected:
     DEFINE_PROPERTY(RightTopGap, public, protected, (RuneTargetGap*)); //!< 右上缺口
     DEFINE_PROPERTY(RightBottomGap, public, protected, (RuneTargetGap*)); //!< 右下缺口
     DEFINE_PROPERTY(LeftBottomGap, public, protected, (RuneTargetGap*)); //!< 左下缺口
-    // DEFINE_PROPERTY(GapCorners, public, protected, (std::vector<cv::Point2f>)); //!< 缺口角点
     DEFINE_PROPERTY_WITH_INIT(GapSortedFlag, public, protected, (bool), false); //!< 缺口是否已排序
     DEFINE_PROPERTY_WITH_INIT(GapCorners, public, protected, (std::vector<cv::Point2f>),{}); //!< 缺口角点占位点
 
