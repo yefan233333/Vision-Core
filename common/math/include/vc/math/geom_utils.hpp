@@ -166,6 +166,129 @@ inline Tp1 getVectorMinAngle(const cv::Point_<Tp1> &v1, const cv::Point_<Tp2> &v
 }
 
 /**
+ * @brief 计算点集的方向向量 (逐差法)
+ *
+ * @tparam Tp 数据类型
+ * @param[in] points 点集
+ * @return 点集的整体方向，以 points[0] 指向 points[1] 为正方向
+ */
+template <typename Tp>
+inline cv::Point2f getPointsDirectionVector(const std::vector<cv::Point_<Tp>> &points)
+{
+    cv::Point2f direction{};
+    if (points.size() <= 1)
+    {
+        return direction;
+    }
+
+    size_t half_size = points.size() / 2;
+    for (size_t i = 0; i < half_size; ++i)
+    {
+        direction -= static_cast<cv::Point2f>(points[i]);
+    }
+    for (size_t i = half_size + (points.size() % 2); i < points.size(); ++i)
+    {
+        direction += static_cast<cv::Point2f>(points[i]);
+    }
+
+    direction /= static_cast<float>(half_size * (half_size + (points.size() % 2)));
+    float norm = std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    if (norm > std::numeric_limits<float>::epsilon())
+    {
+        direction /= norm;
+    }
+
+    return direction;
+}
+
+/**
+ * @brief 计算两直线交点
+ *
+ * @tparam Tp 数据类型
+ * @param[in] p1 直线1上的点1
+ * @param[in] p2 直线1上的点2
+ * @param[in] p3 直线2上的点1
+ * @param[in] p4 直线2上的点2
+ * @return 交点坐标
+ * @note 若两直线平行，返回 (std::numeric_limits<Tp>::quiet_NaN(), std::numeric_limits<Tp>::quiet_NaN())
+ */
+template <typename Tp>
+inline cv::Point_<Tp> getLineIntersection(const cv::Point_<Tp> &p1, const cv::Point_<Tp> &p2, const cv::Point_<Tp> &p3, const cv::Point_<Tp> &p4)
+{
+    Tp A1 = p2.y - p1.y;
+    Tp B1 = p1.x - p2.x;
+    Tp C1 = A1 * p1.x + B1 * p1.y;
+
+    Tp A2 = p4.y - p3.y;
+    Tp B2 = p3.x - p4.x;
+    Tp C2 = A2 * p3.x + B2 * p3.y;
+
+    Tp delta = A1 * B2 - A2 * B1;
+
+    if (std::abs(delta) < std::numeric_limits<double>::epsilon())
+    {
+        return cv::Point_<Tp>(std::numeric_limits<Tp>::quiet_NaN(), std::numeric_limits<Tp>::quiet_NaN());
+    }
+    Tp x = static_cast<int>((B2 * C1 - B1 * C2) / delta);
+    Tp y = static_cast<int>((A1 * C2 - A2 * C1) / delta);
+    return cv::Point_<Tp>(x, y);
+}
+
+/**
+ * @brief 计算两直线交点
+ *
+ * @tparam Tp 数据类型
+ * @param[in] line1 直线1 (vx, vy, x0, y0)
+ * @param[in] line2 直线2  (vx, vy, x0, y0)
+ * @return 交点坐标
+ * @note 若两直线平行，返回 (std::numeric_limits<Tp>::quiet_NaN(), std::numeric_limits<Tp>::quiet_NaN())
+ */
+template <typename Tp1, typename Tp2>
+inline auto getLineIntersection(const cv::Vec<Tp1, 4> &line1, const cv::Vec<Tp2, 4> &line2)
+{
+    auto A1 = line1[1], B1 = -line1[0], C1 = line1[0] * line1[3] - line1[1] * line1[2];
+    auto A2 = line2[1], B2 = -line2[0], C2 = line2[0] * line2[3] - line2[1] * line2[2];
+    if (auto delta = A1 * B2 - A2 * B1; std::abs(delta) < std::numeric_limits<decltype(delta)>::epsilon())
+    {
+        using ResultT = decltype((B1 * C2 - B2 * C1) / delta);
+        return cv::Point_<ResultT>(std::numeric_limits<ResultT>::quiet_NaN(),
+                                   std::numeric_limits<ResultT>::quiet_NaN());
+    }
+    else
+    {
+        return cv::Point_((B1 * C2 - B2 * C1) / delta, (A2 * C1 - A1 * C2) / delta);
+    }
+}
+
+/**
+ * @brief 计算投影向量
+ *
+ * @tparam Tp 数据类型
+ * @param[in] v1 向量1
+ * @param[in] v2 向量2
+ * @return 向量1在向量2上的投影向量
+ */
+template <typename Tp>
+inline cv::Point_<Tp> getProjectionVector(const cv::Point_<Tp> &v1, const cv::Point_<Tp> &v2)
+{
+    return (v1.x * v2.x + v1.y * v2.y) / (v2.x * v2.x + v2.y * v2.y) * v2;
+}
+
+/**
+ * @brief 计算投影长度
+ *
+ * @tparam Tp 数据类型
+ * @param[in] v1 向量1
+ * @param[in] v2 向量2
+ * @return 向量1在向量2上的投影长度
+ */
+template <typename Tp>
+inline Tp getProjection(const cv::Point_<Tp> &v1, const cv::Point_<Tp> &v2)
+{
+    return (v1.x * v2.x + v1.y * v2.y) / sqrt(v2.x * v2.x + v2.y * v2.y);
+}
+
+/**
  * @brief 平面向量外积计算
  *
  * @param v1 第一个向量

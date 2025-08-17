@@ -4,6 +4,10 @@
 // #include "vc/feature/rune_target.h"
 #include "vc/feature/rune_target_inactive.h"
 #include "vc/feature/rune_target_active.h"
+#include "vc/feature/rune_fan_hump.h"
+#include "vc/feature/rune_fan_active.h"
+#include "vc/core/debug_tools.h"
+#include "vc/feature/rune_fan.h"
 #include <vector>
 #include <iostream>
 #include <cmath>
@@ -11,7 +15,40 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, char** argv)
+//! 像素通道枚举
+enum PixChannel : uint8_t
+{
+    BLUE = 0U,  //!< 蓝色通道
+    GREEN = 1U, //!< 绿色通道
+    RED = 2U    //!< 红色通道
+};
+
+inline cv::Mat binary(cv::Mat src, PixChannel ch1, PixChannel ch2, uint8_t thresh)
+{
+    if (src.type() != CV_8UC3)
+    {
+        VC_THROW_ERROR("The image type of \"src\" is incorrect");
+    }
+    Mat bin = Mat::zeros(Size(src.cols, src.rows), CV_8UC1);
+    // Image process
+    parallel_for_(Range(0, src.rows),
+                  [&](const Range &range)
+                  {
+                      uchar *data_src = nullptr;
+                      uchar *data_bin = nullptr;
+                      for (int row = range.start; row < range.end; ++row)
+                      {
+                          data_src = src.ptr<uchar>(row);
+                          data_bin = bin.ptr<uchar>(row);
+                          for (int col = 0; col < src.cols; ++col)
+                              if (data_src[3 * col + ch1] - data_src[3 * col + ch2] > thresh)
+                                  data_bin[col] = 255;
+                      }
+                  });
+    return bin;
+}
+
+int main(int argc, char **argv)
 {
     // 将第一个参数作为视频路径，读取视频
     if (argc < 2)
@@ -26,8 +63,27 @@ int main(int argc, char** argv)
         cerr << "Error: Could not open video file." << endl;
         return -1;
     }
-
     Mat frame;
+
+    // 获取视频总帧数
+    int total_frames = static_cast<int>(cap.get(CAP_PROP_FRAME_COUNT));
+    int current_frame = 0;
+
+    // 创建进度条窗口
+    const string trackbar_window = "Camera Feed";
+    namedWindow(trackbar_window, WINDOW_NORMAL);
+
+    // 回调函数用于拖动进度条时跳转到指定帧
+    auto on_trackbar = [](int pos, void* userdata) {
+        VideoCapture* cap_ptr = static_cast<VideoCapture*>(userdata);
+        cap_ptr->set(CAP_PROP_POS_FRAMES, pos);
+    };
+    createTrackbar("Frame", trackbar_window, &current_frame, max(1, total_frames - 1), on_trackbar, &cap);
+
+    // 读取第一帧
+    cap.set(CAP_PROP_POS_FRAMES, current_frame);
+    cap >> frame;
+
     while (true)
     {
         cap >> frame; // 从摄像头捕获一帧
@@ -36,56 +92,35 @@ int main(int argc, char** argv)
             cerr << "Error: Could not read frame." << endl;
             break;
         }
+        DebugTools::get().setImage(frame);
 
         // 二值化
-        Mat gray, binary;
-        cvtColor(frame, gray, COLOR_BGR2GRAY);
-        threshold(gray, binary, 70, 255, THRESH_BINARY);
+        Mat bin = binary(frame, PixChannel::RED, PixChannel::BLUE, 160);
         Mat contourImage = frame.clone();
 
         // 提取轮廓
         vector<Contour_ptr> contours;
         vector<Vec4i> hierarchy;
-        findContours(binary, contours, hierarchy, RETR_TREE, CHAIN_APPROX_SIMPLE);
+        findContours(bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
-        // 搜索靶心轮廓
-        vector<RuneTarget_ptr> targets_inactive;
-        vector<RuneTarget_ptr> targets_active;
-        unordered_set<size_t> all_sub_idx;
-        unordered_map<RuneTarget_ptr, unordered_set<size_t>> used_contour_idxs;
-        RuneTarget::find_inactive_targets(targets_inactive, contours, hierarchy, all_sub_idx, used_contour_idxs);
-        RuneTarget::find_active_targets(targets_active, contours, hierarchy, all_sub_idx, used_contour_idxs);
-        // 合并
-        vector<RuneTarget_ptr> all_targets;
-        all_targets.reserve(targets_inactive.size() + targets_active.size());
-        all_targets.insert(all_targets.end(), targets_inactive.begin(), targets_inactive.end());
-        all_targets.insert(all_targets.end(), targets_active.begin(), targets_active.end());
+        // 搜索扇叶轮廓
+        vector<RuneFanActive_ptr> activeFans;
+        unordered_map<FeatureNode_ptr, unordered_set<size_t>> used_contour_idxs;
+        unordered_set<size_t> mask; // 可以跳过的轮廓下标集合
+        RuneFanActive::find(activeFans, contours, hierarchy, mask, used_contour_idxs);
 
-        // 绘制靶心轮廓
-        for (const auto& target : all_targets)
+        for (const auto &fan : activeFans)
         {
-            if (target->getActiveFlag())
+            const auto& corners = fan->getImageCache().getCorners();
+            if (corners.empty())
+                continue;
+            // 连线
+            for (size_t i = 0; i < corners.size(); ++i)
             {
-                // 绘制激活靶心
-                drawContours(contourImage, target->imageCache().getContours(), -1, Scalar(0, 200, 100), 2);
-            }
-            else
-            {
-                // 绘制未激活靶心
-                drawContours(contourImage, target->imageCache().getContours(), -1, Scalar(120, 0, 0), 2);
+                line(contourImage, corners[i], corners[(i + 1) % corners.size()], Scalar(0, 255, 0), 2);
             }
         }
-
-
-
-
-        
-
-
-
         // 绘制轮廓
-
-        // drawContours(contourImage, contours, -1, Scalar(0, 255, 0), 2);
         // 在这里添加图像处理代码
 
         namedWindow("Camera Feed", WINDOW_NORMAL);
@@ -103,8 +138,29 @@ int main(int argc, char** argv)
 
         imshow("Camera Feed", frame);
         imshow("Contours", contourImage);
-        imshow("Binary Image", binary);
-        if (waitKey(30) >= 0)
-            break; // 按任意键退出
+        imshow("Binary Image", bin);
+
+        DebugTools::get().show();
+
+        int key = waitKey(16);
+        if(key == 27) // 按 'ESC' 键退出
+        {
+            break;
+        }
+        else if (key == ' ') // 按空格键暂停/继续
+        {
+            while (true)
+            {
+                int key2 = waitKey(0);
+                if (key2 == ' ') // 再次按空格键继续
+                {
+                    break;
+                }
+                else if (key2 == 27) // 按 'ESC' 键退出
+                {
+                    return 0;
+                }
+            }
+        }
     }
 }

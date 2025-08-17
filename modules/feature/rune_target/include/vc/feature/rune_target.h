@@ -9,6 +9,7 @@
 //! 神符靶心特征
 class RuneTarget : public FeatureNode
 {
+    using Ptr = std::shared_ptr<RuneTarget>;
     //! 激活标志位
     DEFINE_PROPERTY(ActiveFlag, public, protected, (bool));
 
@@ -32,11 +33,11 @@ public:
      * @param[in] mask 可以跳过构造的轮廓下标集合
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static void find_inactive_targets(std::vector<std::shared_ptr<RuneTarget>> &targets,
+    static void find_inactive_targets(std::vector<RuneTarget::Ptr> &targets,
                                       const std::vector<Contour_ptr> &contours,
                                       const std::vector<cv::Vec4i> &hierarchy,
                                       const std::unordered_set<size_t> &mask,
-                                      std::unordered_map<std::shared_ptr<RuneTarget>, std::unordered_set<size_t>> &used_contour_idxs);
+                                      std::unordered_map<RuneTarget::Ptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 找到所有激活靶心
@@ -47,11 +48,11 @@ public:
      * @param[in] mask 可以跳过构造的轮廓下标集合
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static void find_active_targets(std::vector<std::shared_ptr<RuneTarget>> &targets,
+    static void find_active_targets(std::vector<RuneTarget::Ptr> &targets,
                                     const std::vector<Contour_ptr> &contours,
                                     const std::vector<cv::Vec4i> &hierarchy,
                                     const std::unordered_set<size_t> &mask,
-                                    std::unordered_map<std::shared_ptr<RuneTarget>, std::unordered_set<size_t>> &used_contour_idxs);
+                                    std::unordered_map<RuneTarget::Ptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 获取角点在图像坐标系和特征坐标系下的坐标
