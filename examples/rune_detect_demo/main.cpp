@@ -6,6 +6,7 @@
 #include "vc/feature/rune_target_active.h"
 #include "vc/feature/rune_fan_hump.h"
 #include "vc/feature/rune_fan_active.h"
+#include "vc/feature/rune_fan_inactive.h"
 #include "vc/core/debug_tools.h"
 #include "vc/feature/rune_fan.h"
 #include <vector>
@@ -129,6 +130,15 @@ int main(int argc, char **argv)
             mask.insert(used_contour_idxs[target].begin(), used_contour_idxs[target].end());
         }
 
+        // 搜索未激活扇叶
+        vector<FeatureNode_ptr> inactiveFans;
+        RuneFanInactive::find(inactiveFans, contours, hierarchy, mask, used_contour_idxs, inactiveTargets);
+        for(const auto &fan : inactiveFans)
+        {
+            mask.insert(used_contour_idxs[fan].begin(), used_contour_idxs[fan].end());  
+        }
+
+
         vector<FeatureNode_ptr> features;
         for(const auto &target : inactiveTargets)
         {
@@ -142,16 +152,33 @@ int main(int argc, char **argv)
         {
             features.push_back(target);
         }
+        for(const auto &fan : inactiveFans)
+        {
+            features.push_back(fan);
+        }
 
-        // 绘制角点
         for (const auto &feature : features)
         {
+            // 绘制角点
             const auto& corners = feature->imageCache().getCorners();
             const Scalar color = Scalar(0, 255, 0); // 绿色
             for(int i = 0 ;i < static_cast<int>(corners.size()); ++i)
             {
                 line(contourImage, corners[i], corners[(i + 1) % corners.size()], color, 2);
             }
+            // 绘制方向
+            do
+            {
+                const auto fan_ptr = RuneFan::cast(feature);
+                if(!fan_ptr)
+                    break;
+                const auto &direction = fan_ptr->getDirection();
+                if (norm(direction) < 1e-6)
+                    break;
+                const auto &center = fan_ptr->imageCache().getCenter();
+                const auto end_point = center + direction * 50; // 方向线长度为50
+                cv::arrowedLine(contourImage, center, end_point, color, 2, LINE_AA, 0, 0.1);
+            }while(0);
         }
 
 

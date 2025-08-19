@@ -14,7 +14,7 @@
  *
  * @note 用于承载视觉识别的特征节点基类
  */
-class FeatureNode
+class FeatureNode : public std::enable_shared_from_this<FeatureNode>
 {
     using Ptr = std::shared_ptr<FeatureNode>;                    //! 指针类型
     using FeatureNodeMap = std::unordered_map<std::string, Ptr>; //! 特征节点映射表类型

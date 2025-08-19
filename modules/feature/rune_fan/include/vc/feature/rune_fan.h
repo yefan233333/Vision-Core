@@ -9,6 +9,7 @@ class RuneFan : public FeatureNode
     //! 激活标志位
     DEFINE_PROPERTY(ActiveFlag, public, protected, (bool));
     DEFINE_PROPERTY(Direction, public, protected, (cv::Point2f)); //!< 方向
+    DEFINE_PROPERTY(RotatedRect, public, protected, (cv::RotatedRect)); //!< 外接矩形
 
 public:
     RuneFan() = default;
@@ -30,11 +31,11 @@ public:
      * @param[in] mask 可以跳过构造的轮廓下标集合
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static void find_inactive_fans(std::vector<RuneFan::Ptr> &fans,
+    static void find_inactive_fans(std::vector<FeatureNode_ptr> &fans,
                                    const std::vector<Contour_ptr> &contours,
                                    const std::vector<cv::Vec4i> &hierarchy,
                                    const std::unordered_set<size_t> &mask,
-                                   std::unordered_map<FeatureNode_ptr,std::unordered_set<size_t>> &used_contour_idxs);
+                                   std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 找到所有激活扇叶
@@ -46,7 +47,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      * @param[in] inactive_targets 未激活的靶心特征
      */
-    static void find_active_fans(std::vector<RuneFan::Ptr> &fans,
+    static void find_active_fans(std::vector<FeatureNode_ptr> &fans,
                                  const std::vector<Contour_ptr> &contours,
                                  const std::vector<cv::Vec4i> &hierarchy,
                                  const std::unordered_set<size_t> &mask,
@@ -63,7 +64,7 @@ public:
      * @param[in] rotate_center 旋转中心
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static void find_incomplete_active_fans(std::vector<RuneFan::Ptr> &fans,
+    static void find_incomplete_active_fans(std::vector<FeatureNode_ptr> &fans,
                                             const std::vector<Contour_ptr> &contours,
                                             const std::vector<cv::Vec4i> &hierarchy,
                                             const std::unordered_set<size_t> &mask,
