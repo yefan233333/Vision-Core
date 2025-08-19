@@ -103,23 +103,58 @@ int main(int argc, char **argv)
         vector<Vec4i> hierarchy;
         findContours(bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
-        // 搜索扇叶轮廓
-        vector<RuneFanActive_ptr> activeFans;
+        // 搜索靶心轮廓
+        vector<FeatureNode_ptr> inactiveTargets;
         unordered_map<FeatureNode_ptr, unordered_set<size_t>> used_contour_idxs;
         unordered_set<size_t> mask; // 可以跳过的轮廓下标集合
-        RuneFanActive::find(activeFans, contours, hierarchy, mask, used_contour_idxs);
-
-        for (const auto &fan : activeFans)
+        RuneTarget::find_inactive_targets(inactiveTargets, contours, hierarchy, mask, used_contour_idxs);
+        for(const auto &target : inactiveTargets)
         {
-            const auto& corners = fan->getImageCache().getCorners();
-            if (corners.empty())
-                continue;
-            // 连线
-            for (size_t i = 0; i < corners.size(); ++i)
+            mask.insert(used_contour_idxs[target].begin(), used_contour_idxs[target].end());
+        }
+
+        // 搜索扇叶轮廓
+        vector<FeatureNode_ptr> activeFans;
+        RuneFanActive::find(activeFans, contours, hierarchy, mask, used_contour_idxs);
+        for(const auto &fan : activeFans)
+        {
+            mask.insert(used_contour_idxs[fan].begin(), used_contour_idxs[fan].end());
+        }
+
+        // 搜索已激活靶心
+        vector<FeatureNode_ptr> activeTargets;
+        RuneTarget::find_active_targets(activeTargets, contours, hierarchy, mask, used_contour_idxs);
+        for(const auto &target : activeTargets)
+        {
+            mask.insert(used_contour_idxs[target].begin(), used_contour_idxs[target].end());
+        }
+
+        vector<FeatureNode_ptr> features;
+        for(const auto &target : inactiveTargets)
+        {
+            features.push_back(target);
+        }
+        for(const auto &fan : activeFans)
+        {
+            features.push_back(fan);
+        }
+        for(const auto &target : activeTargets)
+        {
+            features.push_back(target);
+        }
+
+        // 绘制角点
+        for (const auto &feature : features)
+        {
+            const auto& corners = feature->imageCache().getCorners();
+            const Scalar color = Scalar(0, 255, 0); // 绿色
+            for(int i = 0 ;i < static_cast<int>(corners.size()); ++i)
             {
-                line(contourImage, corners[i], corners[(i + 1) % corners.size()], Scalar(0, 255, 0), 2);
+                line(contourImage, corners[i], corners[(i + 1) % corners.size()], color, 2);
             }
         }
+
+
         // 绘制轮廓
         // 在这里添加图像处理代码
 

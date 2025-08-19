@@ -61,7 +61,7 @@ public:
      * @param[in] mask 可以跳过构造的轮廓下标集合
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static void find(std::vector<Ptr> &fans,
+    static void find(std::vector<FeatureNode_ptr> &fans,
                      const std::vector<Contour_ptr> &contours,
                      const std::vector<cv::Vec4i> &hierarchy,
                      const std::unordered_set<size_t> &mask,
@@ -77,7 +77,7 @@ public:
      * @param[in] rotate_center 旋转中心
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static bool find_incomplete(std::vector<Ptr> &fans,
+    static bool find_incomplete(std::vector<FeatureNode_ptr> &fans,
                                 const std::vector<Contour_ptr> &contours,
                                 const std::vector<cv::Vec4i> &hierarchy,
                                 const std::unordered_set<size_t> &mask,

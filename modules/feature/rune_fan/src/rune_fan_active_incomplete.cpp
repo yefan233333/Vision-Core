@@ -61,11 +61,11 @@ inline bool isOverlap(const RuneFanActive_ptr &fan1, const RuneFanActive_ptr &fa
     return (rrect1.boundingRect() & rrect2.boundingRect()).area() > 0;
 }
 
-inline bool filterFan(const vector<RuneFanActive_ptr> &fans,
-                      vector<RuneFanActive_ptr> &filtered_fans,
+inline bool filterFan(const vector<FeatureNode_ptr> &fans,
+                      vector<FeatureNode_ptr> &filtered_fans,
                       const Point2f &rotate_center)
 {
-    unordered_set<RuneFanActive_ptr> used_fans{};
+    unordered_set<FeatureNode_ptr> used_fans{};
     used_fans.insert(fans.begin(), fans.end());
 
     // 删除方向明显偏移旋转中心的扇叶
@@ -73,9 +73,10 @@ inline bool filterFan(const vector<RuneFanActive_ptr> &fans,
     {
         if (used_fans.find(fan) == used_fans.end())
             continue;
-        Point2f direction = fan->getDirection();
-        Point2f center = fan->getRotatedRect().center;
-        Point2f fan_to_center = rotate_center - fan->getImageCache().getCenter();
+        const auto rune_fan = RuneFanActive::cast(fan);
+        Point2f direction = rune_fan->getDirection();
+        Point2f center = rune_fan->getRotatedRect().center;
+        Point2f fan_to_center = rotate_center - rune_fan->getImageCache().getCenter();
         double angle = getVectorMinAngle(direction, fan_to_center, DEG);
         if (abs(angle) > rune_fan_param.ACTIVE_MAX_DIRECTION_DELTA_INCOMPLETE)
             used_fans.erase(fan);
@@ -88,7 +89,7 @@ inline bool filterFan(const vector<RuneFanActive_ptr> &fans,
     return true;
 }
 
-bool RuneFanActive::find_incomplete(std::vector<RuneFanActive_ptr> &fans,
+bool RuneFanActive::find_incomplete(std::vector<FeatureNode_ptr> &fans,
                                     const std::vector<Contour_ptr> &contours,
                                     const std::vector<cv::Vec4i> &hierarchy,
                                     const std::unordered_set<size_t> &mask,
@@ -274,7 +275,7 @@ bool RuneFanActive::find_incomplete(std::vector<RuneFanActive_ptr> &fans,
     }
 
     // 过滤获取到的扇叶
-    vector<RuneFanActive_ptr> filtered_fans{};
+    vector<FeatureNode_ptr> filtered_fans{};
     filterFan(fans, filtered_fans, rotate_center);
 
     return true;

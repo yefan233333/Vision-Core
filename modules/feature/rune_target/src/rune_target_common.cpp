@@ -6,14 +6,14 @@
 using namespace std;
 using namespace cv;
 
-void RuneTarget::find_active_targets(std::vector<std::shared_ptr<RuneTarget>> &targets,
-                                    const std::vector<Contour_ptr> &contours,
-                                    const std::vector<cv::Vec4i> &hierarchy,
-                                    const std::unordered_set<size_t> &mask,
-                                    std::unordered_map<std::shared_ptr<RuneTarget>, std::unordered_set<size_t>> &used_contour_idxs)
+void RuneTarget::find_active_targets(std::vector<FeatureNode_ptr> &targets,
+                                     const std::vector<Contour_ptr> &contours,
+                                     const std::vector<cv::Vec4i> &hierarchy,
+                                     const std::unordered_set<size_t> &mask,
+                                     std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)
 {
-    vector<RuneTargetActive_ptr> active_targets;
-    unordered_map<RuneTargetActive_ptr, unordered_set<size_t>> active_used_contour_idxs;
+    vector<FeatureNode_ptr> active_targets;
+    unordered_map<FeatureNode_ptr, unordered_set<size_t>> active_used_contour_idxs;
     RuneTargetActive::find(active_targets, contours, hierarchy, mask, active_used_contour_idxs);
     targets.clear();
     used_contour_idxs.clear();
@@ -24,14 +24,14 @@ void RuneTarget::find_active_targets(std::vector<std::shared_ptr<RuneTarget>> &t
     }
 }
 
-void RuneTarget::find_inactive_targets(std::vector<std::shared_ptr<RuneTarget>> &targets,
-                                      const std::vector<Contour_ptr> &contours,
-                                      const std::vector<cv::Vec4i> &hierarchy,
-                                      const std::unordered_set<size_t> &mask,
-                                      std::unordered_map<std::shared_ptr<RuneTarget>, std::unordered_set<size_t>> &used_contour_idxs)
+void RuneTarget::find_inactive_targets(std::vector<FeatureNode_ptr> &targets,
+                                       const std::vector<Contour_ptr> &contours,
+                                       const std::vector<cv::Vec4i> &hierarchy,
+                                       const std::unordered_set<size_t> &mask,
+                                       std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)
 {
-    vector<RuneTargetInactive_ptr> inactive_targets;
-    unordered_map<RuneTargetInactive_ptr, unordered_set<size_t>> inactive_used_contour_idxs;
+    vector<FeatureNode_ptr> inactive_targets;
+    unordered_map<FeatureNode_ptr, unordered_set<size_t>> inactive_used_contour_idxs;
     RuneTargetInactive::find(inactive_targets, contours, hierarchy, mask, inactive_used_contour_idxs);
     targets.clear();
     used_contour_idxs.clear();

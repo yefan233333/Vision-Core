@@ -26,11 +26,11 @@ inline bool isHierarchyActiveFan(const vector<Contour_ptr> &contours, const vect
     return true;
 }
 
-void RuneFanActive::find(std::vector<RuneFanActive_ptr> &fans,
+void RuneFanActive::find(std::vector<FeatureNode_ptr> &fans,
                          const std::vector<Contour_ptr> &contours,
                          const std::vector<cv::Vec4i> &hierarchy,
                          const std::unordered_set<size_t> &mask,
-                         std::unordered_map<FeatureNode_ptr,unordered_set<size_t>> &used_contour_idxs)
+                         std::unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
 {
     for (size_t i = 0; i < contours.size(); i++)
     {
@@ -40,7 +40,7 @@ void RuneFanActive::find(std::vector<RuneFanActive_ptr> &fans,
             continue;
         if (isHierarchyActiveFan(contours, hierarchy, i))
         {
-            RuneFanActive_ptr p_fan = RuneFanActive::make_feature(contours[i]);
+            auto p_fan = RuneFanActive::make_feature(contours[i]);
             if (p_fan != nullptr)
             {
                 fans.push_back(p_fan);

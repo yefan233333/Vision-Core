@@ -465,11 +465,11 @@ auto RuneTargetInactive::make_feature(const std::vector<Contour_ptr> &contours,
 }
 
 // 方案二：找出所有未激活靶心
-void RuneTargetInactive::find(vector<RuneTargetInactive_ptr> &targets,
-                                             const vector<Contour_ptr> &contours,
-                                             const vector<Vec4i> &hierarchy,
-                                             const unordered_set<size_t> &mask,
-                                             unordered_map<RuneTargetInactive_ptr, unordered_set<size_t>> &used_contour_idxs)
+void RuneTargetInactive::find(vector<FeatureNode_ptr> &targets,
+                              const vector<Contour_ptr> &contours,
+                              const vector<Vec4i> &hierarchy,
+                              const unordered_set<size_t> &mask,
+                              unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
 {
     for (size_t i = 0; i < contours.size(); i++)
     {

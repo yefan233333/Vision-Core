@@ -25,11 +25,11 @@ inline bool isHierarchyActiveTarget(const vector<Contour_ptr> &contours, const v
     return true;
 }
 
-void RuneTargetActive::find(std::vector<RuneTargetActive_ptr> &targets,
-                                   const std::vector<Contour_ptr> &contours,
-                                   const std::vector<cv::Vec4i> &hierarchy,
-                                   const std::unordered_set<size_t> &mask,
-                                   std::unordered_map<RuneTargetActive_ptr, unordered_set<size_t>> &used_contour_idxs)
+void RuneTargetActive::find(std::vector<FeatureNode_ptr> &targets,
+                            const std::vector<Contour_ptr> &contours,
+                            const std::vector<cv::Vec4i> &hierarchy,
+                            const std::unordered_set<size_t> &mask,
+                            std::unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
 {
 
     for (size_t i = 0; i < contours.size(); i++)

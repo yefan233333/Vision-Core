@@ -41,11 +41,11 @@ public:
      * @param[in] mask 可以跳过构造的轮廓下标集合
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static void find(std::vector<Ptr> &targets,
+    static void find(std::vector<FeatureNode_ptr> &targets,
                      const std::vector<Contour_ptr> &contours,
                      const std::vector<cv::Vec4i> &hierarchy,
                      const std::unordered_set<size_t> &mask,
-                     std::unordered_map<Ptr, std::unordered_set<size_t>> &used_contour_idxs);
+                     std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 未激活靶心的矫正
