@@ -196,3 +196,48 @@ inline void drawContours(cv::InputOutputArray image,
         }
     }
 }
+
+/**
+ * @brief 轮廓移除函数
+ *
+ * @param[in,out] contours 所有轮廓
+ * @param[in,out] hierarchy 所有的等级向量
+ * @param[in] index 要删除的轮廓下标
+ */
+static bool deleteContour(std::vector<Contour_cptr> &contours, std::vector<cv::Vec4i> &hierarchy, int index)
+{
+    if (index < 0 || index >= contours.size())
+        return false;
+    auto updateHierarchy = [&](int idx, int new_val, int pos)
+    {
+        if (idx != -1)
+            hierarchy[idx][pos] = new_val;
+    };
+    updateHierarchy(hierarchy[index][0], hierarchy[index][1], 1);
+    updateHierarchy(hierarchy[index][1], hierarchy[index][0], 0);
+    int first_sub_idx = hierarchy[index][2];
+    while (first_sub_idx != -1)
+    {
+        hierarchy[first_sub_idx][3] = hierarchy[index][3];
+        first_sub_idx = hierarchy[first_sub_idx][1];
+    }
+    int last_sub_idx = hierarchy[index][2];
+    while (last_sub_idx != -1)
+    {
+        hierarchy[last_sub_idx][3] = hierarchy[index][3];
+        last_sub_idx = hierarchy[last_sub_idx][0];
+    }
+    if (hierarchy[hierarchy[index][3]][2] == index)
+    {
+        hierarchy[hierarchy[index][3]][2] = (hierarchy[index][2] != -1) ? hierarchy[index][2] : (hierarchy[index][0] != -1) ? hierarchy[index][0]
+                                                                                            : (hierarchy[index][1] != -1)   ? hierarchy[index][1]
+                                                                                                                            : -1;
+    }
+    for (auto &h : hierarchy)
+        for (size_t i = 0; i < 4; i++)
+            if (h[i] > index)
+                h[i]--;
+    contours.erase(contours.begin() + index);
+    hierarchy.erase(hierarchy.begin() + index);
+    return true;
+}

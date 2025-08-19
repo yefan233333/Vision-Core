@@ -7,6 +7,7 @@
 #include "vc/feature/rune_fan_hump.h"
 #include "vc/feature/rune_fan_active.h"
 #include "vc/feature/rune_fan_inactive.h"
+#include "vc/feature/rune_center.h"
 #include "vc/core/debug_tools.h"
 #include "vc/feature/rune_fan.h"
 #include <vector>
@@ -103,6 +104,14 @@ int main(int argc, char **argv)
         vector<Contour_cptr> contours;
         vector<Vec4i> hierarchy;
         findContours(bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
+        //! 删除一些面积过小的轮廓
+        for(size_t i = 0;i < contours.size(); ++i){
+            auto area = contours[i]->area();
+            if(area < 20)
+            {
+                deleteContour(contours, hierarchy, i);
+            }
+        }
 
         // 搜索靶心轮廓
         vector<FeatureNode_ptr> inactiveTargets;
@@ -116,7 +125,7 @@ int main(int argc, char **argv)
 
         // 搜索扇叶轮廓
         vector<FeatureNode_ptr> activeFans;
-        RuneFanActive::find(activeFans, contours, hierarchy, mask, used_contour_idxs);
+        RuneFan::find_active_fans(activeFans, contours, hierarchy, mask, used_contour_idxs);
         for(const auto &fan : activeFans)
         {
             mask.insert(used_contour_idxs[fan].begin(), used_contour_idxs[fan].end());
@@ -132,12 +141,19 @@ int main(int argc, char **argv)
 
         // 搜索未激活扇叶
         vector<FeatureNode_ptr> inactiveFans;
-        RuneFanInactive::find(inactiveFans, contours, hierarchy, mask, used_contour_idxs, to_const_ptr(inactiveTargets));
+        RuneFan::find_inactive_fans(inactiveFans, contours, hierarchy, mask, used_contour_idxs, to_const_ptr(inactiveTargets));
         for(const auto &fan : inactiveFans)
         {
             mask.insert(used_contour_idxs[fan].begin(), used_contour_idxs[fan].end());  
         }
 
+        // 搜索神符中心
+        vector<FeatureNode_ptr> runeCenters;
+        RuneCenter::find(runeCenters, contours, hierarchy, mask, used_contour_idxs);    
+        for(const auto &center : runeCenters)
+        {
+            mask.insert(used_contour_idxs[center].begin(), used_contour_idxs[center].end());
+        }
 
         vector<FeatureNode_ptr> features;
         for(const auto &target : inactiveTargets)
@@ -156,6 +172,11 @@ int main(int argc, char **argv)
         {
             features.push_back(fan);
         }
+        for(const auto &center : runeCenters)
+        {
+            features.push_back(center);
+        }
+
 
         for (const auto &feature : features)
         {
