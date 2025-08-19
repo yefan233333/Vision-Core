@@ -265,6 +265,7 @@ void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
     }
 }
 
+
 // ------------------------【未激活扇叶】------------------------
 RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_cptr> &contours)
 {
@@ -315,17 +316,17 @@ RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_cptr> &co
     return make_shared<RuneFanInactive>(hull_contour, contours, rotated_rect);
 }
 
-// RuneFanInactive_ptr RuneFanInactive::make_feature(const Point2f &top_left,
-//                                               const Point2f &top_right,
-//                                               const Point2f &bottom_right,
-//                                               const Point2f &bottom_left)
-// {
-//     // 若点发生重合，返回空指针
-//     if (top_left == top_right || top_left == bottom_right || top_left == bottom_left || top_right == bottom_right || top_right == bottom_left || bottom_right == bottom_left)
-//         return nullptr;
+RuneFanInactive_ptr RuneFanInactive::make_feature(const Point2f &top_left,
+                                                      const Point2f &top_right,
+                                                      const Point2f &bottom_right,
+                                                      const Point2f &bottom_left)
+{
+    // 若点发生重合，返回空指针
+    if (top_left == top_right || top_left == bottom_right || top_left == bottom_left || top_right == bottom_right || top_right == bottom_left || bottom_right == bottom_left)
+        return nullptr;
 
-//     return make_shared<RuneFan>(top_left, top_right, bottom_right, bottom_left);
-// }
+    return make_shared<RuneFanInactive>(top_left, top_right, bottom_right, bottom_left);
+}
 
 // ------------------------【构造函数】------------------------
 RuneFanInactive::RuneFanInactive(const Contour_cptr hull_contour, const vector<Contour_cptr> &arrow_contours, const RotatedRect &rotated_rect)
@@ -520,4 +521,26 @@ Contour_cptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, 
 
     // 6. 返回
     return far_contour;
+}
+
+
+auto RuneFanInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>
+{
+    vector<Point2f> points_2d{};
+    vector<Point3f> points_3d{};
+    vector<float> weights{};
+
+    const auto& corners = getImageCache().getCorners();
+    points_2d.push_back(corners[0]);
+    points_2d.push_back(corners[1]);
+    points_3d.push_back(rune_fan_param.INACTIVE_3D[0]);
+    points_3d.push_back(rune_fan_param.INACTIVE_3D[1]);
+    
+    if (points_2d.size() != points_3d.size())
+    {
+        VC_THROW_ERROR("The size of points_2d and points_3d must be equal");
+    }
+    weights.resize(points_2d.size(), 1.0);
+
+    return make_tuple(points_2d, points_3d, weights);
 }

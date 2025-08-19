@@ -71,7 +71,28 @@ public:
                                             const cv::Point2f &rotate_center,
                                             std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
 
-    virtual auto getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> {};
+    /**
+     * @brief 构造接口(通过位姿信息)
+     * 
+     * @param fan_to_cam 扇叶到相机的变换
+     * @param is_active 是否激活
+     * @return 若构造成功则返回指针，否则返回 nullptr
+     */
+    auto make_feature(const PoseNode &fan_to_cam, bool is_active) -> std::shared_ptr<RuneFan>;
+
+    /**
+     * @brief 获取角点在图像坐标系和特征坐标系下的坐标
+     *
+     * @return [0] 图像坐标系 [1] 特征坐标系 [2] 各个点的权重
+     */
+    virtual auto getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>;
+
+    /**
+     * @brief 获取角点在图像坐标系和旋转中心坐标系下的坐标
+     *
+     * @return [0] 图像坐标系 [1] 旋转中心坐标系 [2] 各个点的权重
+     */
+    auto getRelativePnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>;
 };
 //! 神符扇叶特征共享指针
 using RuneFan_ptr = std::shared_ptr<RuneFan>;

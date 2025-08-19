@@ -74,7 +74,7 @@ protected:
      * @param[in] target_to_cam 靶心相对于相机的位姿解算结果
      * @param[in] is_active 是否激活
      */
-    static Ptr make_feature(Transform6D &target_to_cam, bool is_active);
+    static Ptr make_feature(PoseNode &target_to_cam, bool is_active);
 
     /**
      * @brief 未激活靶心的方向修正

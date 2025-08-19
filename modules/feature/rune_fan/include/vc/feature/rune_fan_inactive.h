@@ -61,7 +61,21 @@ public:
                         std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs,
                         const std::vector<FeatureNode_cptr> &inactive_targets);
 
-
+    /**
+     * @brief 未激活 RuneFan 的强制构造接口
+     *
+     * @param[in] top_left 左上角点
+     * @param[in] top_right 右上角点
+     * @param[in] bottom_right 右下角点
+     * @param[in] bottom_left 左下角点
+     *
+     * @return 如果成功，返回 RuneFan 的共享指针，否则返回 nullptr
+     * @note 利用从PNP解算获取到的角点构造
+     */
+    static std::shared_ptr<RuneFanInactive> make_feature(const cv::Point2f &top_left,
+                                                 const cv::Point2f &top_right,
+                                                 const cv::Point2f &bottom_right,
+                                                 const cv::Point2f &bottom_left);
     /**
      * @brief 未激活扇叶的方向矫正
      * @param[in] fan 待矫正的扇叶
@@ -91,6 +105,13 @@ public:
      *        2. 此函数会重新构造 fan ,所以需要在 fan 的 correct 函数之前调用
      */
     static Contour_cptr getEndArrowContour(FeatureNode_ptr &fan, const std::vector<FeatureNode_cptr> &target_inactve);
+
+    /**
+     * @brief 获取角点在图像坐标系和特征坐标系下的坐标
+     *
+     * @return [0] 图像坐标系 [1] 特征坐标系 [2] 各个点的权重
+     */
+    virtual auto getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> override;
 
 protected:
     /**

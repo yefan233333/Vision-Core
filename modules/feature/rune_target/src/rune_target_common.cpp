@@ -12,16 +12,7 @@ void RuneTarget::find_active_targets(std::vector<FeatureNode_ptr> &targets,
                                      const std::unordered_set<size_t> &mask,
                                      std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)
 {
-    vector<FeatureNode_ptr> active_targets;
-    unordered_map<FeatureNode_ptr, unordered_set<size_t>> active_used_contour_idxs;
-    RuneTargetActive::find(active_targets, contours, hierarchy, mask, active_used_contour_idxs);
-    targets.clear();
-    used_contour_idxs.clear();
-    for (const auto &target : active_targets)
-    {
-        targets.push_back(target);
-        used_contour_idxs[target] = active_used_contour_idxs[target];
-    }
+    RuneTargetActive::find(targets, contours, hierarchy, mask, used_contour_idxs);
 }
 
 void RuneTarget::find_inactive_targets(std::vector<FeatureNode_ptr> &targets,
@@ -30,16 +21,7 @@ void RuneTarget::find_inactive_targets(std::vector<FeatureNode_ptr> &targets,
                                        const std::unordered_set<size_t> &mask,
                                        std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)
 {
-    vector<FeatureNode_ptr> inactive_targets;
-    unordered_map<FeatureNode_ptr, unordered_set<size_t>> inactive_used_contour_idxs;
-    RuneTargetInactive::find(inactive_targets, contours, hierarchy, mask, inactive_used_contour_idxs);
-    targets.clear();
-    used_contour_idxs.clear();
-    for (const auto &target : inactive_targets)
-    {
-        targets.push_back(target);
-        used_contour_idxs[target] = inactive_used_contour_idxs[target];
-    }
+    RuneTargetInactive::find(targets, contours, hierarchy, mask, used_contour_idxs);
 }
 
 auto RuneTarget::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>

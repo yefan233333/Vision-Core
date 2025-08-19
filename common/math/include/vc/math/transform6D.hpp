@@ -421,5 +421,3 @@ namespace transform6D_utils
         return rmat;
     }
 }
-
-using PoseNode = Transform6D; //!< 位姿节点类型

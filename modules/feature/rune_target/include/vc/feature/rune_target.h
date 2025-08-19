@@ -2,7 +2,7 @@
 
 #include "vc/contour_proc/contour_wrapper.hpp"
 #include "vc/feature/feature_node.h"
-#include "vc/math/transform6D.hpp"
+#include "vc/math/pose_node.hpp"
 #include <unordered_map>
 #include <unordered_set>
 

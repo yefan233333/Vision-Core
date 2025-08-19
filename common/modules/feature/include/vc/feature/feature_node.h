@@ -7,7 +7,7 @@
 
 #include "vc/core/property_wrapper.hpp"
 #include "vc/contour_proc/contour_wrapper.hpp"
-#include "vc/math/transform6D.hpp"
+#include "vc/math/pose_node.hpp"
 #include "vc/core/type_utils.h"
 
 /**
@@ -48,7 +48,7 @@ public:
         //! 位姿节点映射表类型
         using PoseNodeMap = std::unordered_map<std::string, PoseNode>;
         //! 位姿节点映射
-        DEFINE_PROPERTY(PoseNodes, public, public, (PoseNodeMap));
+        DEFINE_PROPERTY_WITH_INIT(PoseNodes, public, public, (PoseNodeMap), PoseNodeMap{});
     };
 
 private:

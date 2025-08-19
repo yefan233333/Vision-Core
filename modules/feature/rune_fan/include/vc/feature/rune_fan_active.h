@@ -84,14 +84,6 @@ public:
                                 const cv::Point2f &rotate_center,
                                 std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
 
-protected:
-    /**
-     * @brief 已激活 RuneFan 的构造接口
-     * 
-     * @param[in] contour 轮廓
-     * @return 若构造成功则返回指针，否则返回 nullptr
-     */
-    static Ptr make_feature(const Contour_cptr &contour);
 
     /**
      * @brief 已激活 RuneFan 的强制构造接口
@@ -107,7 +99,17 @@ protected:
     static Ptr make_feature(const std::vector<cv::Point2f> &top_corners,
                                                  const std::vector<cv::Point2f> &bottom_center_corners,
                                                  const std::vector<cv::Point2f> &side_corners,
-                                                 const std::vector<cv::Point2f> &bottom_side_corners);
+                                                 const std::vector<cv::Point2f> &bottom_side_corners);                                
+protected:
+    /**
+     * @brief 已激活 RuneFan 的构造接口
+     * 
+     * @param[in] contour 轮廓
+     * @return 若构造成功则返回指针，否则返回 nullptr
+     */
+    static Ptr make_feature(const Contour_cptr &contour);
+
+
 
     /**
      * @brief 已激活 RuneFan 的缺陷构造接口
@@ -128,7 +130,7 @@ protected:
      * @param[in] fan_to_cam 扇叶相对于相机的位姿解算结果
      * @param[in] is_active 是否激活？
      */
-    static Ptr make_feature(const Transform6D &fan_to_cam, bool is_active);
+    static Ptr make_feature(const PoseNode &fan_to_cam, bool is_active);
 
 public:
     /**

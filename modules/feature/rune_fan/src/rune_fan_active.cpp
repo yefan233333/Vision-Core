@@ -514,42 +514,32 @@ auto RuneFanActive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>,
     vector<Point2f> points_2d{};
     vector<Point3f> points_3d{};
     vector<float> weights{};
-    if (this->getActiveFlag())
-    {
 
-        if (isSetTopHumpCorners())
-        {
-            auto &corners = getTopHumpCorners();
-            points_2d.insert(points_2d.end(), corners.begin(), corners.end());
-            points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_TOP_3D.begin(), rune_fan_param.ACTIVE_TOP_3D.end());
-        }
-        if (isSetBottomCenterHumpCorners())
-        {
-            auto &corners = getBottomCenterHumpCorners();
-            points_2d.insert(points_2d.end(), corners.begin(), corners.end());
-            points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_BOTTOM_CENTER_3D.begin(), rune_fan_param.ACTIVE_BOTTOM_CENTER_3D.end());
-        }
-        if (isSetSideHumpCorners())
-        {
-            auto &corners = getSideHumpCorners();
-            points_2d.insert(points_2d.end(), corners.begin(), corners.end());
-            points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_SIDE_3D.begin(), rune_fan_param.ACTIVE_SIDE_3D.end());
-        }
-        if (isSetBottomSideHumpCorners())
-        {
-            auto &corners = getBottomSideHumpCorners();
-            points_2d.insert(points_2d.end(), corners.begin(), corners.end());
-            points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_BOTTOM_SIDE_3D.begin(), rune_fan_param.ACTIVE_BOTTOM_SIDE_3D.end());
-        }
-    }
-    else
+    if (isSetTopHumpCorners())
     {
-        const auto& corners = getImageCache().getCorners();
-        points_2d.push_back(corners[0]);
-        points_2d.push_back(corners[1]);
-        points_3d.push_back(rune_fan_param.INACTIVE_3D[0]);
-        points_3d.push_back(rune_fan_param.INACTIVE_3D[1]);
+        auto &corners = getTopHumpCorners();
+        points_2d.insert(points_2d.end(), corners.begin(), corners.end());
+        points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_TOP_3D.begin(), rune_fan_param.ACTIVE_TOP_3D.end());
     }
+    if (isSetBottomCenterHumpCorners())
+    {
+        auto &corners = getBottomCenterHumpCorners();
+        points_2d.insert(points_2d.end(), corners.begin(), corners.end());
+        points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_BOTTOM_CENTER_3D.begin(), rune_fan_param.ACTIVE_BOTTOM_CENTER_3D.end());
+    }
+    if (isSetSideHumpCorners())
+    {
+        auto &corners = getSideHumpCorners();
+        points_2d.insert(points_2d.end(), corners.begin(), corners.end());
+        points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_SIDE_3D.begin(), rune_fan_param.ACTIVE_SIDE_3D.end());
+    }
+    if (isSetBottomSideHumpCorners())
+    {
+        auto &corners = getBottomSideHumpCorners();
+        points_2d.insert(points_2d.end(), corners.begin(), corners.end());
+        points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_BOTTOM_SIDE_3D.begin(), rune_fan_param.ACTIVE_BOTTOM_SIDE_3D.end());
+    }
+    
     if (points_2d.size() != points_3d.size())
     {
         VC_THROW_ERROR("The size of points_2d and points_3d must be equal");
