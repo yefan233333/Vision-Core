@@ -7,7 +7,7 @@ using namespace std;
 using namespace cv;
 
 void RuneTarget::find_active_targets(std::vector<FeatureNode_ptr> &targets,
-                                     const std::vector<Contour_ptr> &contours,
+                                     const std::vector<Contour_cptr> &contours,
                                      const std::vector<cv::Vec4i> &hierarchy,
                                      const std::unordered_set<size_t> &mask,
                                      std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)
@@ -25,7 +25,7 @@ void RuneTarget::find_active_targets(std::vector<FeatureNode_ptr> &targets,
 }
 
 void RuneTarget::find_inactive_targets(std::vector<FeatureNode_ptr> &targets,
-                                       const std::vector<Contour_ptr> &contours,
+                                       const std::vector<Contour_cptr> &contours,
                                        const std::vector<cv::Vec4i> &hierarchy,
                                        const std::unordered_set<size_t> &mask,
                                        std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)

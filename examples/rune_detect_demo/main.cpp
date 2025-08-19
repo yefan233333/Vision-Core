@@ -100,7 +100,7 @@ int main(int argc, char **argv)
         Mat contourImage = frame.clone();
 
         // 提取轮廓
-        vector<Contour_ptr> contours;
+        vector<Contour_cptr> contours;
         vector<Vec4i> hierarchy;
         findContours(bin, contours, hierarchy, RETR_TREE, CHAIN_APPROX_NONE);
 
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
 
         // 搜索未激活扇叶
         vector<FeatureNode_ptr> inactiveFans;
-        RuneFanInactive::find(inactiveFans, contours, hierarchy, mask, used_contour_idxs, inactiveTargets);
+        RuneFanInactive::find(inactiveFans, contours, hierarchy, mask, used_contour_idxs, to_const_ptr(inactiveTargets));
         for(const auto &fan : inactiveFans)
         {
             mask.insert(used_contour_idxs[fan].begin(), used_contour_idxs[fan].end());  

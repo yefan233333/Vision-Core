@@ -81,7 +81,7 @@ public:
     /**
      * @brief 获取可视化的突起点轮廓
      */
-    virtual Contour_ptr getContour() const
+    virtual Contour_cptr getContour() const
     {
         if (__contour_ptr == nullptr)
         {
@@ -161,7 +161,7 @@ public:
     /**
      * @brief 获取顶部突起点组合体数组
      */
-    static std::vector<TopHumpCombo> getTopHumpCombos(const std::vector<Contour_ptr> &contours,
+    static std::vector<TopHumpCombo> getTopHumpCombos(const std::vector<Contour_cptr> &contours,
                                                       const std::vector<cv::Point2f> &contour_centers,
                                                       const std::vector<std::tuple<Line, Line>> &line_pairs);
 
@@ -195,7 +195,7 @@ struct TopHumpCombo
         __humps[2] = hump_3;
     }
     // 获取调试用的轮廓
-    Contour_ptr getContour() const
+    Contour_cptr getContour() const
     {
         if (__contour_ptr == nullptr)
         {

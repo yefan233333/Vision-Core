@@ -90,7 +90,7 @@ inline bool filterFan(const vector<FeatureNode_ptr> &fans,
 }
 
 bool RuneFanActive::find_incomplete(std::vector<FeatureNode_ptr> &fans,
-                                    const std::vector<Contour_ptr> &contours,
+                                    const std::vector<Contour_cptr> &contours,
                                     const std::vector<cv::Vec4i> &hierarchy,
                                     const std::unordered_set<size_t> &mask,
                                     const cv::Point2f &rotate_center,
@@ -146,7 +146,7 @@ bool RuneFanActive::find_incomplete(std::vector<FeatureNode_ptr> &fans,
     }
 
     // 计算轮廓下标
-    static auto getContourIdx = [](const Contour_ptr &contour, const std::vector<Contour_ptr> &contours) -> size_t
+    static auto getContourIdx = [](const Contour_cptr &contour, const std::vector<Contour_cptr> &contours) -> size_t
     {
         auto it = std::find(contours.begin(), contours.end(), contour);
         if (it != contours.end())
@@ -159,7 +159,7 @@ bool RuneFanActive::find_incomplete(std::vector<FeatureNode_ptr> &fans,
             return -1; // 或者抛出异常
         }
     };
-    vector<tuple<TopHump, Contour_ptr>> all_humps{}; // 突起点和对应的轮廓下标
+    vector<tuple<TopHump, Contour_cptr>> all_humps{}; // 突起点和对应的轮廓下标
     {
         for (auto idx : pending_idxs)
         {
@@ -281,7 +281,7 @@ bool RuneFanActive::find_incomplete(std::vector<FeatureNode_ptr> &fans,
     return true;
 }
 
-RuneFanActive::RuneFanActive(const std::vector<Contour_ptr> &contours,
+RuneFanActive::RuneFanActive(const std::vector<Contour_cptr> &contours,
                  const std::vector<cv::Point2f> &top_hump_corners,
                  const cv::Point2f &direction)
 {
@@ -327,7 +327,7 @@ RuneFanActive::RuneFanActive(const std::vector<Contour_ptr> &contours,
 
     // 设置图像属性
     auto image_info = this->getImageCache();
-    image_info.setContours(vector<Contour_ptr>{contour});
+    image_info.setContours(vector<Contour_cptr>{contour});
     image_info.setWidth(width);
     image_info.setHeight(height);
     image_info.setCenter(center);
@@ -335,10 +335,10 @@ RuneFanActive::RuneFanActive(const std::vector<Contour_ptr> &contours,
 }
 
 // 获取突起点组的中心点
-inline Point2f getHumpCenter(const std::array<std::tuple<TopHump, Contour_ptr>, 3> &humps)
+inline Point2f getHumpCenter(const std::array<std::tuple<TopHump, Contour_cptr>, 3> &humps)
 {
     // 计算凸包
-    unordered_set<Contour_ptr> contours{};
+    unordered_set<Contour_cptr> contours{};
     for (const auto &[hump, contour] : humps)
     {
         contours.insert(contour);
@@ -376,9 +376,9 @@ inline Point2f getHumpCenter(const std::array<std::tuple<TopHump, Contour_ptr>, 
     return Point2f(0, 0);
 }
 
-std::shared_ptr<RuneFanActive> RuneFanActive::make_feature(const std::tuple<TopHump, Contour_ptr> &hump_1,
-                                                           const std::tuple<TopHump, Contour_ptr> &hump_2,
-                                                           const std::tuple<TopHump, Contour_ptr> &hump_3)
+std::shared_ptr<RuneFanActive> RuneFanActive::make_feature(const std::tuple<TopHump, Contour_cptr> &hump_1,
+                                                           const std::tuple<TopHump, Contour_cptr> &hump_2,
+                                                           const std::tuple<TopHump, Contour_cptr> &hump_3)
 {
     const auto &[hump_1_obj, contour_1] = hump_1;
     const auto &[hump_2_obj, contour_2] = hump_2;
@@ -427,7 +427,7 @@ std::shared_ptr<RuneFanActive> RuneFanActive::make_feature(const std::tuple<TopH
     }
 
     // 复制需要的轮廓
-    vector<Contour_ptr> fan_contours{contour_1, contour_2, contour_3};
+    vector<Contour_cptr> fan_contours{contour_1, contour_2, contour_3};
     // 获取扇叶的方向
     auto &top_humps = hump_combo.humps();
 

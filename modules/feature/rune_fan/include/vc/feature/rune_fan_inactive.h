@@ -8,7 +8,7 @@ class RuneFanInactive : public RuneFan
     using Ptr = std::shared_ptr<RuneFanInactive>;
 
     //! 箭头轮廓组
-    DEFINE_PROPERTY(ArrowContours, public, protected, (std::vector<Contour_ptr>));
+    DEFINE_PROPERTY(ArrowContours, public, protected, (std::vector<Contour_cptr>));
 
 public:
     RuneFanInactive() = default;
@@ -28,7 +28,7 @@ public:
      * @param[in] arrow_contours 箭头轮廓
      * @param[in] rotated_rect 最小面积矩形
      */
-    RuneFanInactive(const Contour_ptr hull_contour, const std::vector<Contour_ptr> &arrow_contours, const cv::RotatedRect &rotated_rect);
+    RuneFanInactive(const Contour_cptr hull_contour, const std::vector<Contour_cptr> &arrow_contours, const cv::RotatedRect &rotated_rect);
 
     /**
      * @brief 使用四个顶点构造 RuneFan(未激活)
@@ -55,11 +55,11 @@ public:
      *
      */
     static void find(std::vector<FeatureNode_ptr> &fans,
-                        const std::vector<Contour_ptr> &contours,
+                        const std::vector<Contour_cptr> &contours,
                         const std::vector<cv::Vec4i> &hierarchy,
                         const std::unordered_set<size_t> &mask,
                         std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs,
-                        const std::vector<FeatureNode_ptr> &inactive_targets);
+                        const std::vector<FeatureNode_cptr> &inactive_targets);
 
 
     /**
@@ -90,7 +90,7 @@ public:
      * @note 1. 返回灯臂中距离靶心最远的轮廓，用于强制构造神符中心
      *        2. 此函数会重新构造 fan ,所以需要在 fan 的 correct 函数之前调用
      */
-    static Contour_ptr getEndArrowContour(FeatureNode_ptr &fan, const std::vector<FeatureNode_ptr> &target_inactve);
+    static Contour_cptr getEndArrowContour(FeatureNode_ptr &fan, const std::vector<FeatureNode_cptr> &target_inactve);
 
 protected:
     /**
@@ -99,6 +99,7 @@ protected:
      * @param[in] contours 轮廓组
      * @return 如果成功，返回 RuneFanInactive 对象指针；否则返回 nullptr
      */
-    static Ptr make_feature(const std::vector<Contour_ptr> &contours);
+    static Ptr make_feature(const std::vector<Contour_cptr> &contours);
 };
 using RuneFanInactive_ptr = std::shared_ptr<RuneFanInactive>;
+using RuneFanInactive_cptr = std::shared_ptr<const RuneFanInactive>;

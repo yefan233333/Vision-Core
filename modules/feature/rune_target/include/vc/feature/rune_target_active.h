@@ -32,7 +32,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
     static void find(std::vector<FeatureNode_ptr> &targets,
-                     const std::vector<Contour_ptr> &contours,
+                     const std::vector<Contour_cptr> &contours,
                      const std::vector<cv::Vec4i> &hierarchy,
                      const std::unordered_set<size_t> &mask,
                      std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
@@ -46,7 +46,7 @@ private:
      * @param[in] idx 最外层轮廓的下标
      * @param[out] used_contour_idxs 使用了的轮廓下标
      */
-    static Ptr make_feature(const std::vector<Contour_ptr> &contours,
+    static Ptr make_feature(const std::vector<Contour_cptr> &contours,
                             const std::vector<cv::Vec4i> &hierarchy,
                             size_t idx,
                             std::unordered_set<size_t> &used_contour_idxs);
@@ -56,3 +56,4 @@ private:
     virtual auto getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> override;
 };
 using RuneTargetActive_ptr = std::shared_ptr<RuneTargetActive>;
+using RuneTargetActive_cptr = std::shared_ptr<const RuneTargetActive>;

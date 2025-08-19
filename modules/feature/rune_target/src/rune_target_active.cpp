@@ -15,7 +15,7 @@ using namespace cv;
  * @param[in] idx 指定的等级向量的下标
  * @return 等级结构是否满足要求
  */
-inline bool isHierarchyActiveTarget(const vector<Contour_ptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
+inline bool isHierarchyActiveTarget(const vector<Contour_cptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
 {
     if (hierarchy[idx][3] != -1) // 该轮廓有父轮廓，退出
         return false;
@@ -26,7 +26,7 @@ inline bool isHierarchyActiveTarget(const vector<Contour_ptr> &contours, const v
 }
 
 void RuneTargetActive::find(std::vector<FeatureNode_ptr> &targets,
-                            const std::vector<Contour_ptr> &contours,
+                            const std::vector<Contour_cptr> &contours,
                             const std::vector<cv::Vec4i> &hierarchy,
                             const std::unordered_set<size_t> &mask,
                             std::unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
@@ -63,7 +63,7 @@ auto RuneTargetActive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2
  *
  * @param contours 轮廓
  */
-inline bool checkEllipse(const Contour_ptr &contour)
+inline bool checkEllipse(const Contour_cptr &contour)
 {
     if (contour->points().size() < 6)
     {
@@ -150,7 +150,7 @@ inline bool checkEllipse(const Contour_ptr &contour)
  *
  * @return 是否符合要求
  */
-inline bool checkConcentricity(const std::vector<Contour_ptr> &contours,
+inline bool checkConcentricity(const std::vector<Contour_cptr> &contours,
                                const std::vector<cv::Vec4i> &hierarchy,
                                const std::vector<int> &all_sub_idx,
                                size_t idx,
@@ -195,7 +195,7 @@ inline bool checkConcentricity(const std::vector<Contour_ptr> &contours,
  * @param contour_area 轮廓面积
  *
  */
-inline bool checkTenRing(const std::vector<Contour_ptr> &contours,
+inline bool checkTenRing(const std::vector<Contour_cptr> &contours,
                          const std::vector<cv::Vec4i> &hierarchy,
                          const std::vector<int> &all_sub_idx,
                          size_t idx,
@@ -217,7 +217,7 @@ inline bool checkTenRing(const std::vector<Contour_ptr> &contours,
     return true;
 }
 
-RuneTargetActive_ptr RuneTargetActive::make_feature(const std::vector<Contour_ptr> &contours,
+RuneTargetActive_ptr RuneTargetActive::make_feature(const std::vector<Contour_cptr> &contours,
                                                                  const std::vector<cv::Vec4i> &hierarchy,
                                                                  size_t idx,
                                                                  std::unordered_set<size_t> &used_contour_idxs)
@@ -265,7 +265,7 @@ RuneTargetActive_ptr RuneTargetActive::make_feature(const std::vector<Contour_pt
 
     // 图像属性
     auto &image_info = rune_target->getImageCache();
-    image_info.setContours(vector<Contour_ptr>{contour_outer}); // 设置轮廓集
+    image_info.setContours(vector<Contour_cptr>{contour_outer}); // 设置轮廓集
     image_info.setCorners(corners);                             // 设置角点
     image_info.setHeight(height);
     image_info.setWidth(width);

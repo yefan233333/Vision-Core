@@ -363,7 +363,7 @@ public:
     /**
      * @brief 获取轮廓的凸包轮廓——接口
      */
-    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHull(const std::vector<std::shared_ptr<ContourWrapper<ValueType>>> &contours)
+    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHull(const std::vector<std::shared_ptr<const ContourWrapper<ValueType>>> &contours)
     {
         // 检查所有轮廓是否有效
         for (const auto &contour : contours)
@@ -375,6 +375,8 @@ public:
         }
         return getConvexHullImpl(contours);
     }
+
+
     // /**
     //  * @brief 加入调试信息码
     //  */
@@ -468,7 +470,7 @@ private:
     /**
      * @brief 获取多轮廓的凸包轮廓
      */
-    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHullImpl(const std::vector<std::shared_ptr<ContourWrapper<ValueType>>> &contours)
+    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHullImpl(const std::vector<std::shared_ptr<const ContourWrapper<ValueType>>> &contours)
     {
         size_t total_point_size = 0;
         for (const auto &contour : contours)
@@ -489,6 +491,10 @@ private:
 using Contour_ptr = std::shared_ptr<ContourWrapper<int>>;
 using ContourF_ptr = std::shared_ptr<ContourWrapper<float>>;
 using ContourD_ptr = std::shared_ptr<ContourWrapper<double>>;
+
+using Contour_cptr = std::shared_ptr<const ContourWrapper<int>>;
+using ContourF_cptr = std::shared_ptr<const ContourWrapper<float>>;
+using ContourD_cptr = std::shared_ptr<const ContourWrapper<double>>;
 
 /**
  * @brief 类型检验，是否为 ContourWrapper<T>，T符合ContourWrapperBaseType

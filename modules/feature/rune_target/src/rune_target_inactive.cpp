@@ -52,7 +52,7 @@ inline bool isHierarchyInactiveTarget(const vector<Vec4i> &hierarchy, size_t idx
  * @param[in] current_idx 当前轮廓下标
  * @param[in] sub_idxs 所有子轮廓的下标
  */
-inline bool isContourInactiveTarget(const vector<Contour_ptr> &contours, const int &outer_idx, const unordered_set<size_t> &sub_idxs)
+inline bool isContourInactiveTarget(const vector<Contour_cptr> &contours, const int &outer_idx, const unordered_set<size_t> &sub_idxs)
 {
     if (contours[outer_idx]->points().size() < 6)
         return false;
@@ -198,7 +198,7 @@ inline Matx33f getEllipseCorrectionMat(const RotatedRect &ellipse, float &radius
     return R_inv * T_inv * S * T * R;
 }
 
-inline unordered_set<size_t> getAllGapsIdx(const vector<Contour_ptr> &contours, const vector<Vec4i> &hierarchy, const int outer_idx, const unordered_set<size_t> &all_sub_idx)
+inline unordered_set<size_t> getAllGapsIdx(const vector<Contour_cptr> &contours, const vector<Vec4i> &hierarchy, const int outer_idx, const unordered_set<size_t> &all_sub_idx)
 {
     unordered_set<size_t> pending_idx{}; // 待查找的轮廓下标
     pending_idx.insert(all_sub_idx.begin(), all_sub_idx.end());
@@ -283,7 +283,7 @@ inline tuple<int, int> getLeftRightIdx(const vector<Point2f> &contour, const Poi
     return make_tuple(left_idx, right_idx);
 }
 
-inline bool make_gap(const Contour_ptr &contour, const RotatedRect &outer_ellipse, RuneTargetGap &result_gap)
+inline bool make_gap(const Contour_cptr &contour, const RotatedRect &outer_ellipse, RuneTargetGap &result_gap)
 {
     //----------------------【通过矫正后的轮廓的属性判断】----------------------
     // 获取矫正矩阵
@@ -384,7 +384,7 @@ inline bool filterGaps(vector<RuneTargetGap> &filter_gaps, const vector<RuneTarg
  *
  * @return true 如果成功获取缺口
  */
-inline bool findGaps(vector<RuneTargetGap> &gaps, const vector<Contour_ptr> &contours, const vector<Vec4i> &hierarchy, size_t outer_idx, const unordered_set<size_t> &all_sub_idx)
+inline bool findGaps(vector<RuneTargetGap> &gaps, const vector<Contour_cptr> &contours, const vector<Vec4i> &hierarchy, size_t outer_idx, const unordered_set<size_t> &all_sub_idx)
 {
     unordered_set<size_t> pending_idx = getAllGapsIdx(contours, hierarchy, outer_idx, all_sub_idx); // 待查找的轮廓下标
 
@@ -417,7 +417,7 @@ inline bool findGaps(vector<RuneTargetGap> &gaps, const vector<Contour_ptr> &con
     return true;
 }
 
-auto RuneTargetInactive::make_feature(const std::vector<Contour_ptr> &contours,
+auto RuneTargetInactive::make_feature(const std::vector<Contour_cptr> &contours,
                                       const std::vector<cv::Vec4i> &hierarchy,
                                       size_t idx,
                                       std::unordered_set<size_t> &used_contour_idxs) -> RuneTargetInactive_ptr
@@ -455,7 +455,7 @@ auto RuneTargetInactive::make_feature(const std::vector<Contour_ptr> &contours,
 
     // 图像属性
     auto& image_info = rune_target->getImageCache();
-    image_info.setContours(vector<Contour_ptr>{outer_contour}); // 设置轮廓集
+    image_info.setContours(vector<Contour_cptr>{outer_contour}); // 设置轮廓集
     image_info.setCorners(corners); // 设置角点
     image_info.setHeight(height);
     image_info.setWidth(width);
@@ -466,7 +466,7 @@ auto RuneTargetInactive::make_feature(const std::vector<Contour_ptr> &contours,
 
 // 方案二：找出所有未激活靶心
 void RuneTargetInactive::find(vector<FeatureNode_ptr> &targets,
-                              const vector<Contour_ptr> &contours,
+                              const vector<Contour_cptr> &contours,
                               const vector<Vec4i> &hierarchy,
                               const unordered_set<size_t> &mask,
                               unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)

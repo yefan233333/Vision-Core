@@ -34,7 +34,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
     static void find_inactive_targets(std::vector<FeatureNode_ptr> &targets,
-                                      const std::vector<Contour_ptr> &contours,
+                                      const std::vector<Contour_cptr> &contours,
                                       const std::vector<cv::Vec4i> &hierarchy,
                                       const std::unordered_set<size_t> &mask,
                                       std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
@@ -49,7 +49,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
     static void find_active_targets(std::vector<FeatureNode_ptr> &targets,
-                                    const std::vector<Contour_ptr> &contours,
+                                    const std::vector<Contour_cptr> &contours,
                                     const std::vector<cv::Vec4i> &hierarchy,
                                     const std::unordered_set<size_t> &mask,
                                     std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
@@ -71,3 +71,4 @@ public:
 
 //! 神符靶心特征共享指针
 using RuneTarget_ptr = std::shared_ptr<RuneTarget>;
+using RuneTarget_cptr = std::shared_ptr<const RuneTarget>;

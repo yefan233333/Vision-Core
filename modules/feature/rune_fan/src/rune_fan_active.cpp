@@ -18,7 +18,7 @@ using namespace cv;
  * @param[in] idx 指定的等级向量的下标
  * @return 等级结构是否满足要求
  */
-inline bool isHierarchyActiveFan(const vector<Contour_ptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
+inline bool isHierarchyActiveFan(const vector<Contour_cptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
 {
     if (hierarchy[idx][3] != -1) // 无父轮廓
         return false;
@@ -27,7 +27,7 @@ inline bool isHierarchyActiveFan(const vector<Contour_ptr> &contours, const vect
 }
 
 void RuneFanActive::find(std::vector<FeatureNode_ptr> &fans,
-                         const std::vector<Contour_ptr> &contours,
+                         const std::vector<Contour_cptr> &contours,
                          const std::vector<cv::Vec4i> &hierarchy,
                          const std::unordered_set<size_t> &mask,
                          std::unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
@@ -51,7 +51,7 @@ void RuneFanActive::find(std::vector<FeatureNode_ptr> &fans,
 }
 
 // ------------------------【已激活扇叶】------------------------
-shared_ptr<RuneFanActive> RuneFanActive::make_feature(const Contour_ptr &contour)
+shared_ptr<RuneFanActive> RuneFanActive::make_feature(const Contour_cptr &contour)
 {
 
     // 获取扇叶的最小面积矩形
@@ -602,7 +602,7 @@ bool RuneFanActive::getLinePairs(const vector<Point> &contour_plus, const Mat &a
 }
 
 // ------------------------【已激活扇叶】------------------------
-bool RuneFanActive::getActiveFunCorners(const Contour_ptr &contour,
+bool RuneFanActive::getActiveFunCorners(const Contour_cptr &contour,
                                         std::vector<cv::Point2f> &top_hump_corners,
                                         std::vector<cv::Point2f> &bottom_center_hump_corners,
                                         std::vector<cv::Point2f> &side_hump_corners,
@@ -669,7 +669,7 @@ bool RuneFanActive::getActiveFunCorners(const Contour_ptr &contour,
 }
 
 // ------------------------【已激活扇叶】------------------------
-RuneFanActive::RuneFanActive(const Contour_ptr &contour,
+RuneFanActive::RuneFanActive(const Contour_cptr &contour,
                              const cv::RotatedRect &rotated_rect,
                              const std::vector<cv::Point2f> &top_hump_corners,
                              const std::vector<cv::Point2f> &bottom_center_hump_corners,
@@ -743,7 +743,7 @@ RuneFanActive::RuneFanActive(const Contour_ptr &contour,
     setRotatedRect(rotated_rect);                                                     // 设置最小外接矩形
     // 图像属性
     auto &image_info = this->getImageCache();
-    image_info.setContours(vector<Contour_ptr>{contour}); // 设置轮廓
+    image_info.setContours(vector<Contour_cptr>{contour}); // 设置轮廓
     image_info.setCorners(corners);
     image_info.setWidth(width);
     image_info.setHeight(height);

@@ -29,7 +29,7 @@
  * @note 自动执行抗锯齿处理(根据ENABLE_SMOOTH_CONTOUR_CALC配置)
  */
 inline void findContours(cv::InputArray image,
-                         std::vector<Contour_ptr> &contours,
+                         std::vector<Contour_cptr> &contours,
                          cv::OutputArray hierarchy,
                          int mode = cv::RETR_TREE,
                          int method = cv::CHAIN_APPROX_NONE,
@@ -61,8 +61,8 @@ inline void findContours(cv::InputArray image,
             unordered_map < 当前轮廓, std::tuple<后一个轮廓,前一个轮廓,内嵌轮廓,父轮廓>>
  */
 inline void findContours(cv::InputArray image,
-                         std::vector<Contour_ptr> &contours,
-                         std::unordered_map<Contour_ptr, std::tuple<Contour_ptr, Contour_ptr, Contour_ptr, Contour_ptr>> &hierarchy,
+                         std::vector<Contour_cptr> &contours,
+                         std::unordered_map<Contour_cptr, std::tuple<Contour_cptr, Contour_cptr, Contour_cptr, Contour_cptr>> &hierarchy,
                          int mode = cv::RETR_TREE,
                          int method = cv::CHAIN_APPROX_NONE,
                          const cv::Point &offset = cv::Point(0, 0))
@@ -105,7 +105,7 @@ inline void findContours(cv::InputArray image,
 template <ContourWrapperBaseType T>
 void drawContour(
     cv::Mat &image,
-    const std::shared_ptr<ContourWrapper<T>> &contour,
+    const std::shared_ptr<const ContourWrapper<T>> &contour,
     const cv::Scalar &color = cv::Scalar(0, 255, 0),
     int thickness = 2,
     int lineType = cv::LINE_AA)
@@ -169,7 +169,7 @@ void drawContour(
  * @param[in] lineType 绘制线条的类型
  */
 inline void drawContours(cv::InputOutputArray image,
-                         const std::vector<Contour_ptr> &contours,
+                         const std::vector<Contour_cptr> &contours,
                          int contourIdx,
                          const cv::Scalar &color,
                          int thickness = 1,

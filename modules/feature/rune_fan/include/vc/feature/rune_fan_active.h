@@ -30,7 +30,7 @@ public:
      * @param side_hump_corners 侧面突起角点
      * @param bottom_side_hump_corners 底部侧面突起角点
      */
-    RuneFanActive(const Contour_ptr &contour,
+    RuneFanActive(const Contour_cptr &contour,
                   const cv::RotatedRect &rotated_rect,
                   const std::vector<cv::Point2f> &top_hump_corners,
                   const std::vector<cv::Point2f> &bottom_center_hump_corners,
@@ -43,7 +43,7 @@ public:
      * @param top_hump_corners 顶部突起角点
      * @param direction 扇叶方向
      */
-    RuneFanActive(const std::vector<Contour_ptr> &contours,
+    RuneFanActive(const std::vector<Contour_cptr> &contours,
                   const std::vector<cv::Point2f> &top_hump_corners,
                   const cv::Point2f &direction);
 
@@ -62,7 +62,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
     static void find(std::vector<FeatureNode_ptr> &fans,
-                     const std::vector<Contour_ptr> &contours,
+                     const std::vector<Contour_cptr> &contours,
                      const std::vector<cv::Vec4i> &hierarchy,
                      const std::unordered_set<size_t> &mask,
                      std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
@@ -78,7 +78,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
     static bool find_incomplete(std::vector<FeatureNode_ptr> &fans,
-                                const std::vector<Contour_ptr> &contours,
+                                const std::vector<Contour_cptr> &contours,
                                 const std::vector<cv::Vec4i> &hierarchy,
                                 const std::unordered_set<size_t> &mask,
                                 const cv::Point2f &rotate_center,
@@ -91,7 +91,7 @@ protected:
      * @param[in] contour 轮廓
      * @return 若构造成功则返回指针，否则返回 nullptr
      */
-    static Ptr make_feature(const Contour_ptr &contour);
+    static Ptr make_feature(const Contour_cptr &contour);
 
     /**
      * @brief 已激活 RuneFan 的强制构造接口
@@ -118,9 +118,9 @@ protected:
      * @return 如果成功，返回 RuneFan 的共享指针，否则返回 nullptr
      *
      */
-    static Ptr make_feature(const std::tuple<TopHump, Contour_ptr> &hump_1,
-                                                 const std::tuple<TopHump, Contour_ptr> &hump_2,
-                                                 const std::tuple<TopHump, Contour_ptr> &hump_3);
+    static Ptr make_feature(const std::tuple<TopHump, Contour_cptr> &hump_1,
+                                                 const std::tuple<TopHump, Contour_cptr> &hump_2,
+                                                 const std::tuple<TopHump, Contour_cptr> &hump_3);
 
     /**
      * @brief 通过扇叶位姿PNP解算结果构造 RuneFan
@@ -178,7 +178,7 @@ public:
      * @param[out] direction 输出的扇叶方向单位向量，指向神符中心
      * @return 是否获取成功
      */
-    static bool getActiveFunCorners(const Contour_ptr &contour,
+    static bool getActiveFunCorners(const Contour_cptr &contour,
                                     std::vector<cv::Point2f> &top_hump_corners,
                                     std::vector<cv::Point2f> &bottom_center_hump_corners,
                                     std::vector<cv::Point2f> &side_hump_corners,
@@ -186,3 +186,4 @@ public:
 
 };
 using RuneFanActive_ptr = std::shared_ptr<RuneFanActive>;
+using RuneFanActive_cptr = std::shared_ptr<const RuneFanActive>;

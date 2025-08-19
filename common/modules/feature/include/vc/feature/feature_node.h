@@ -8,6 +8,7 @@
 #include "vc/core/property_wrapper.hpp"
 #include "vc/contour_proc/contour_wrapper.hpp"
 #include "vc/math/transform6D.hpp"
+#include "vc/core/type_utils.h"
 
 /**
  * @brief 特征节点
@@ -28,7 +29,7 @@ public:
     struct ImageCache
     {
         //! 轮廓组
-        DEFINE_PROPERTY(Contours, public, public, (std::vector<Contour_ptr>));
+        DEFINE_PROPERTY(Contours, public, public, (std::vector<Contour_cptr>));
         //! 角点集
         DEFINE_PROPERTY(Corners, public, public, (std::vector<cv::Point2f>));
         //! 中心位置
@@ -113,3 +114,4 @@ protected:
 };
 
 using FeatureNode_ptr = std::shared_ptr<FeatureNode>;
+using FeatureNode_cptr = std::shared_ptr<const FeatureNode>;

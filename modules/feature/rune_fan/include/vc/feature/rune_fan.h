@@ -32,7 +32,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
     static void find_inactive_fans(std::vector<FeatureNode_ptr> &fans,
-                                   const std::vector<Contour_ptr> &contours,
+                                   const std::vector<Contour_cptr> &contours,
                                    const std::vector<cv::Vec4i> &hierarchy,
                                    const std::unordered_set<size_t> &mask,
                                    std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
@@ -48,7 +48,7 @@ public:
      * @param[in] inactive_targets 未激活的靶心特征
      */
     static void find_active_fans(std::vector<FeatureNode_ptr> &fans,
-                                 const std::vector<Contour_ptr> &contours,
+                                 const std::vector<Contour_cptr> &contours,
                                  const std::vector<cv::Vec4i> &hierarchy,
                                  const std::unordered_set<size_t> &mask,
                                  std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs,
@@ -65,7 +65,7 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
     static void find_incomplete_active_fans(std::vector<FeatureNode_ptr> &fans,
-                                            const std::vector<Contour_ptr> &contours,
+                                            const std::vector<Contour_cptr> &contours,
                                             const std::vector<cv::Vec4i> &hierarchy,
                                             const std::unordered_set<size_t> &mask,
                                             const cv::Point2f &rotate_center,
@@ -75,3 +75,4 @@ public:
 };
 //! 神符扇叶特征共享指针
 using RuneFan_ptr = std::shared_ptr<RuneFan>;
+using RuneFan_cptr = std::shared_ptr<const RuneFan>;

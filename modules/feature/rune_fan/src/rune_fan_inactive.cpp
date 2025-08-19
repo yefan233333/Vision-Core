@@ -22,7 +22,7 @@ using namespace cv;
  * @return 等级结构是否满足要求
  *
  */
-inline bool isHierarchyInactiveFan(const vector<Contour_ptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
+inline bool isHierarchyInactiveFan(const vector<Contour_cptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
 {
     if (hierarchy[idx][3] != -1) // 无父轮廓
         return false;
@@ -165,7 +165,7 @@ inline double calculateProjectionRatio(const RotatedRect &rect1, const RotatedRe
  *
  * @note 尝试删除远离未激活靶心那端的轮廓，防止神符中心轮廓被误识别成未激活靶心的一部分
  */
-inline void filterFanContours(const std::vector<Contour_ptr> &in_contours, std::vector<Contour_ptr> &out_contours, vector<FeatureNode_ptr> &inactive_targets)
+inline void filterFanContours(const std::vector<Contour_cptr> &in_contours, std::vector<Contour_cptr> &out_contours, vector<FeatureNode_ptr> &inactive_targets)
 {
     // 0. 判空
     if (in_contours.size() < 2 || inactive_targets.empty()) // 当轮廓数量为1时，不进行过滤
@@ -176,7 +176,7 @@ inline void filterFanContours(const std::vector<Contour_ptr> &in_contours, std::
     if (inactive_targets.size() > 1) // 多个靶心，选择最近的那个
     {
         // 1. 设置所有轮廓的权重。
-        unordered_map<Contour_ptr, double> contour_weights{};
+        unordered_map<Contour_cptr, double> contour_weights{};
         double area_sum = 0;
         for (auto &contour : in_contours)
             area_sum += contour->area();
@@ -204,22 +204,22 @@ inline void filterFanContours(const std::vector<Contour_ptr> &in_contours, std::
     }
 
     // 2. 获取最远的轮廓
-    auto far_contour = *max_element(in_contours.begin(), in_contours.end(), [&](const Contour_ptr &a, const Contour_ptr &b)
+    auto far_contour = *max_element(in_contours.begin(), in_contours.end(), [&](const Contour_cptr &a, const Contour_cptr &b)
                                     { return norm(static_cast<Point2f>(a->center()) - ref_target->getImageCache().getCenter()) < norm(static_cast<Point2f>(b->center()) - ref_target->getImageCache().getCenter()); });
 
     // 3. 删除远离靶心的轮廓
     out_contours = in_contours;
-    out_contours.erase(remove_if(out_contours.begin(), out_contours.end(), [&](const Contour_ptr &contour)
+    out_contours.erase(remove_if(out_contours.begin(), out_contours.end(), [&](const Contour_cptr &contour)
                                  { return contour == far_contour; }),
                        out_contours.end());
 }
 
 void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
-                 const std::vector<Contour_ptr> &contours,
+                 const std::vector<Contour_cptr> &contours,
                  const std::vector<cv::Vec4i> &hierarchy,
                  const std::unordered_set<size_t> &mask,
                  std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs,
-                 const std::vector<FeatureNode_ptr> &inactive_targets)
+                 const std::vector<FeatureNode_cptr> &inactive_targets)
 {
     // SRVL_Error(SRVL_StsBadArg, "The number of 1 in \"order\" must be less than or equal to the number of nodes.");
     if (contours.empty() || hierarchy.empty())
@@ -253,7 +253,7 @@ void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
 
     for (auto &group : contours_group)
     {
-        vector<Contour_ptr> temp_contours{};
+        vector<Contour_cptr> temp_contours{};
         for (auto &idx : group)
             temp_contours.push_back(contours[idx]);
         auto p_fan = RuneFanInactive::make_feature(temp_contours);
@@ -266,7 +266,7 @@ void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
 }
 
 // ------------------------【未激活扇叶】------------------------
-RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_ptr> &contours)
+RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_cptr> &contours)
 {
     if (contours.empty())
         return nullptr;
@@ -277,7 +277,7 @@ RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_ptr> &con
         temp_contour.insert(temp_contour.end(), contour->points().begin(), contour->points().end());
     vector<Point> hull_contour_temp{};
     convexHull(temp_contour, hull_contour_temp);
-    Contour_ptr hull_contour = ContourWrapper<int>::make_contour(hull_contour_temp);
+    Contour_cptr hull_contour = ContourWrapper<int>::make_contour(hull_contour_temp);
     double hull_area = hull_contour->area();
     RotatedRect rotated_rect = hull_contour->minAreaRect();
 
@@ -328,7 +328,7 @@ RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_ptr> &con
 // }
 
 // ------------------------【构造函数】------------------------
-RuneFanInactive::RuneFanInactive(const Contour_ptr hull_contour, const vector<Contour_ptr> &arrow_contours, const RotatedRect &rotated_rect)
+RuneFanInactive::RuneFanInactive(const Contour_cptr hull_contour, const vector<Contour_cptr> &arrow_contours, const RotatedRect &rotated_rect)
 {
     auto width = min(rotated_rect.size.width, rotated_rect.size.height);
     auto height = max(rotated_rect.size.width, rotated_rect.size.height);
@@ -350,7 +350,7 @@ RuneFanInactive::RuneFanInactive(const Contour_ptr hull_contour, const vector<Co
 
     // 设置图像属性
     auto& image_info = getImageCache();
-    image_info.setContours(vector<Contour_ptr>{hull_contour});
+    image_info.setContours(vector<Contour_cptr>{hull_contour});
     image_info.setCorners(corners);
     image_info.setWidth(width);
     image_info.setHeight(height);
@@ -380,7 +380,7 @@ RuneFanInactive::RuneFanInactive(const Point2f &top_left,
     setRotatedRect(contour->minAreaRect());
 
     auto& image_info = getImageCache();
-    image_info.setContours(vector<Contour_ptr>{contour});
+    image_info.setContours(vector<Contour_cptr>{contour});
     image_info.setWidth(width);
     image_info.setHeight(height);
     image_info.setCenter(center);
@@ -452,7 +452,7 @@ bool RuneFanInactive::correctCorners(FeatureNode_ptr &fan)
     return true;
 }
 
-Contour_ptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, const vector<FeatureNode_ptr> &inactive_targets)
+Contour_cptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, const vector<FeatureNode_cptr> &inactive_targets)
 {
     // 0. 判空
     if (inactive_targets.empty())
@@ -464,8 +464,8 @@ Contour_ptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, c
         return nullptr;
 
     // 1. 用于参考的未激活靶心
-    FeatureNode_ptr ref_target = nullptr;
-    vector<Contour_ptr> arrow_contours = fan->getArrowContours();
+    FeatureNode_cptr ref_target = nullptr;
+    vector<Contour_cptr> arrow_contours = fan->getArrowContours();
     if (inactive_targets.size() == 1)
     {
         ref_target = inactive_targets.front();
@@ -473,7 +473,7 @@ Contour_ptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, c
     else
     {
         // 1. 设置所有轮廓的权重。
-        unordered_map<Contour_ptr, double> contour_weights{};
+        unordered_map<Contour_cptr, double> contour_weights{};
         double area_sum = 0;
         for (auto &contour : arrow_contours)
             area_sum += contour->area();
@@ -492,18 +492,18 @@ Contour_ptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, c
             all_contours_center += static_cast<Point2f>(contour->center()) * contour_weights[contour];
 
         // 3. 获取距离重心最近的未激活靶心
-        auto near_target = *min_element(inactive_targets.begin(), inactive_targets.end(), [&](const FeatureNode_ptr &a, const FeatureNode_ptr &b)
+        auto near_target = *min_element(inactive_targets.begin(), inactive_targets.end(), [&](const FeatureNode_cptr &a, const FeatureNode_cptr &b)
                                         { return norm(a->getImageCache().getCenter() - all_contours_center) < norm(b->getImageCache().getCenter() - all_contours_center); });
         ref_target = near_target;
     }
 
     // 2. 获取最远的轮廓
-    auto far_contour = *max_element(arrow_contours.begin(), arrow_contours.end(), [&](const Contour_ptr &a, const Contour_ptr &b)
+    auto far_contour = *max_element(arrow_contours.begin(), arrow_contours.end(), [&](const Contour_cptr &a, const Contour_cptr &b)
                                     { return norm(static_cast<Point2f>(a->center()) - ref_target->getImageCache().getCenter()) < norm(static_cast<Point2f>(b->center()) - ref_target->getImageCache().getCenter()); });
 
     // 3. 获取剩余轮廓
-    vector<Contour_ptr> rest_contours = arrow_contours;
-    rest_contours.erase(remove_if(rest_contours.begin(), rest_contours.end(), [&](const Contour_ptr &contour)
+    vector<Contour_cptr> rest_contours = arrow_contours;
+    rest_contours.erase(remove_if(rest_contours.begin(), rest_contours.end(), [&](const Contour_cptr &contour)
                                   { return contour == far_contour; }),
                         rest_contours.end());
 
