@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 
         // 搜索靶心轮廓
         vector<FeatureNode_ptr> inactiveTargets;
-        unordered_map<FeatureNode_ptr, unordered_set<size_t>> used_contour_idxs;
+        unordered_map<FeatureNode_cptr, unordered_set<size_t>> used_contour_idxs;
         unordered_set<size_t> mask; // 可以跳过的轮廓下标集合
         RuneTarget::find_inactive_targets(inactiveTargets, contours, hierarchy, mask, used_contour_idxs);
         for(const auto &target : inactiveTargets)

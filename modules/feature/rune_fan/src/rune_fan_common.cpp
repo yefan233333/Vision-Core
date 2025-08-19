@@ -9,10 +9,64 @@
 using namespace std;
 using namespace cv;
 
+/**
+ * @brief 找到所有未激活扇叶
+ *
+ * @param[out] fans 返回找到的未激活扇叶
+ * @param[in] contours 输入的轮廓点集
+ * @param[in] hierarchy 输入的层级结构
+ * @param[in] mask 可以跳过构造的轮廓下标集合
+ * @param[out] used_contour_idxs 使用了的轮廓下标集合
+ */
+void RuneFan::find_active_fans(std::vector<FeatureNode_ptr> &fans,
+                               const std::vector<Contour_cptr> &contours,
+                               const std::vector<cv::Vec4i> &hierarchy,
+                               const std::unordered_set<size_t> &mask,
+                               std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs)
+{
+    RuneFanActive::find(fans, contours, hierarchy, mask, used_contour_idxs);
+}
 
-#define rune_fan_debug_0
 
-#define rune_fan_show
+/**
+ * @brief 找到所有激活扇叶
+ *
+ * @param[out] fans 返回找到的激活扇叶
+ * @param[in] contours 输入的轮廓点集
+ * @param[in] hierarchy 输入的层级结构
+ * @param[in] mask 可以跳过构造的轮廓下标集合
+ * @param[out] used_contour_idxs 使用了的轮廓下标集合
+ * @param[in] inactive_targets 未激活的靶心特征
+ */
+void RuneFan::find_inactive_fans(std::vector<FeatureNode_ptr> &fans,
+                             const std::vector<Contour_cptr> &contours,
+                             const std::vector<cv::Vec4i> &hierarchy,
+                             const std::unordered_set<size_t> &mask,
+                             std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs,
+                             const std::vector<FeatureNode_cptr> &inactive_targets)
+{
+    RuneFanInactive::find(fans, contours, hierarchy, mask, used_contour_idxs, inactive_targets);
+}                             
+
+/**
+ * @brief 找到所有残缺的已激活扇叶
+ *
+ * @param[out] fans 返回找到的残缺的已激活扇叶
+ * @param[in] contours 输入的轮廓点集
+ * @param[in] hierarchy 输入的层级结构
+ * @param[in] mask 可以跳过构造的轮廓下标集合
+ * @param[in] rotate_center 旋转中心
+ * @param[out] used_contour_idxs 使用了的轮廓下标集合
+ */
+void RuneFan::find_incomplete_active_fans(std::vector<FeatureNode_ptr> &fans,
+                                        const std::vector<Contour_cptr> &contours,
+                                        const std::vector<cv::Vec4i> &hierarchy,
+                                        const std::unordered_set<size_t> &mask,
+                                        const cv::Point2f &rotate_center,
+                                        std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs)
+{
+    RuneFanActive::find_incomplete_active_fans(fans, contours, hierarchy, mask, rotate_center, used_contour_idxs);
+}                                        
 
 auto RuneFan::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>
 {

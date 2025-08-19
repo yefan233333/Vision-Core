@@ -30,7 +30,7 @@ void RuneFanActive::find(std::vector<FeatureNode_ptr> &fans,
                          const std::vector<Contour_cptr> &contours,
                          const std::vector<cv::Vec4i> &hierarchy,
                          const std::unordered_set<size_t> &mask,
-                         std::unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
+                         std::unordered_map<FeatureNode_cptr, unordered_set<size_t>> &used_contour_idxs)
 {
     for (size_t i = 0; i < contours.size(); i++)
     {

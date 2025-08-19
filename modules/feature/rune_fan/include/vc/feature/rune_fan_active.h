@@ -65,7 +65,7 @@ public:
                      const std::vector<Contour_cptr> &contours,
                      const std::vector<cv::Vec4i> &hierarchy,
                      const std::unordered_set<size_t> &mask,
-                     std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
+                     std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 找到所有残缺的已激活扇叶
@@ -82,7 +82,7 @@ public:
                                 const std::vector<cv::Vec4i> &hierarchy,
                                 const std::unordered_set<size_t> &mask,
                                 const cv::Point2f &rotate_center,
-                                std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
+                                std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
 
     /**

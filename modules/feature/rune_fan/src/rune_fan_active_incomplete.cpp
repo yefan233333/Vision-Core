@@ -94,7 +94,7 @@ bool RuneFanActive::find_incomplete(std::vector<FeatureNode_ptr> &fans,
                                     const std::vector<cv::Vec4i> &hierarchy,
                                     const std::unordered_set<size_t> &mask,
                                     const cv::Point2f &rotate_center,
-                                    std::unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
+                                    std::unordered_map<FeatureNode_cptr, unordered_set<size_t>> &used_contour_idxs)
 {
 
     // 待匹配的轮廓下标

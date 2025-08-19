@@ -10,7 +10,7 @@ void RuneTarget::find_active_targets(std::vector<FeatureNode_ptr> &targets,
                                      const std::vector<Contour_cptr> &contours,
                                      const std::vector<cv::Vec4i> &hierarchy,
                                      const std::unordered_set<size_t> &mask,
-                                     std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)
+                                     std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs)
 {
     RuneTargetActive::find(targets, contours, hierarchy, mask, used_contour_idxs);
 }
@@ -19,7 +19,7 @@ void RuneTarget::find_inactive_targets(std::vector<FeatureNode_ptr> &targets,
                                        const std::vector<Contour_cptr> &contours,
                                        const std::vector<cv::Vec4i> &hierarchy,
                                        const std::unordered_set<size_t> &mask,
-                                       std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs)
+                                       std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs)
 {
     RuneTargetInactive::find(targets, contours, hierarchy, mask, used_contour_idxs);
 }

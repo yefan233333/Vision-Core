@@ -218,7 +218,7 @@ void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
                  const std::vector<Contour_cptr> &contours,
                  const std::vector<cv::Vec4i> &hierarchy,
                  const std::unordered_set<size_t> &mask,
-                 std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs,
+                 std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs,
                  const std::vector<FeatureNode_cptr> &inactive_targets)
 {
     // SRVL_Error(SRVL_StsBadArg, "The number of 1 in \"order\" must be less than or equal to the number of nodes.");

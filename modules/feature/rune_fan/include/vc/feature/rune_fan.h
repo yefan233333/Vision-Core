@@ -31,11 +31,11 @@ public:
      * @param[in] mask 可以跳过构造的轮廓下标集合
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      */
-    static void find_inactive_fans(std::vector<FeatureNode_ptr> &fans,
+    static void find_active_fans(std::vector<FeatureNode_ptr> &fans,
                                    const std::vector<Contour_cptr> &contours,
                                    const std::vector<cv::Vec4i> &hierarchy,
                                    const std::unordered_set<size_t> &mask,
-                                   std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
+                                   std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 找到所有激活扇叶
@@ -47,12 +47,12 @@ public:
      * @param[out] used_contour_idxs 使用了的轮廓下标集合
      * @param[in] inactive_targets 未激活的靶心特征
      */
-    static void find_active_fans(std::vector<FeatureNode_ptr> &fans,
+    static void find_inactive_fans(std::vector<FeatureNode_ptr> &fans,
                                  const std::vector<Contour_cptr> &contours,
                                  const std::vector<cv::Vec4i> &hierarchy,
                                  const std::unordered_set<size_t> &mask,
-                                 std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs,
-                                 const std::vector<FeatureNode_ptr> &inactive_targets);
+                                 std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs,
+                                 const std::vector<FeatureNode_cptr> &inactive_targets);
 
     /**
      * @brief 找到所有残缺的已激活扇叶
@@ -69,7 +69,7 @@ public:
                                             const std::vector<cv::Vec4i> &hierarchy,
                                             const std::unordered_set<size_t> &mask,
                                             const cv::Point2f &rotate_center,
-                                            std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
+                                            std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 构造接口(通过位姿信息)

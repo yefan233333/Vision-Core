@@ -469,7 +469,7 @@ void RuneTargetInactive::find(vector<FeatureNode_ptr> &targets,
                               const vector<Contour_cptr> &contours,
                               const vector<Vec4i> &hierarchy,
                               const unordered_set<size_t> &mask,
-                              unordered_map<FeatureNode_ptr, unordered_set<size_t>> &used_contour_idxs)
+                              unordered_map<FeatureNode_cptr, unordered_set<size_t>> &used_contour_idxs)
 {
     for (size_t i = 0; i < contours.size(); i++)
     {

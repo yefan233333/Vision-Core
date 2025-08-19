@@ -45,7 +45,7 @@ public:
                      const std::vector<Contour_cptr> &contours,
                      const std::vector<cv::Vec4i> &hierarchy,
                      const std::unordered_set<size_t> &mask,
-                     std::unordered_map<FeatureNode_ptr, std::unordered_set<size_t>> &used_contour_idxs);
+                     std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
     /**
      * @brief 未激活靶心的矫正
