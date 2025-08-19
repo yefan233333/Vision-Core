@@ -8,12 +8,12 @@ class RuneFanActive : public RuneFan
 {
     using Ptr = std::shared_ptr<RuneFanActive>;
 
-    DEFINE_PROPERTY(RotatedRect, public, public, (cv::RotatedRect)); //!< 外接矩形
-    DEFINE_PROPERTY(TopHumpCorners, protected, protected, (std::vector<cv::Point2f>));              //!< 顶部突起角点
-    DEFINE_PROPERTY(BottomCenterHumpCorners, protected, protected, (std::vector<cv::Point2f>));        //!< 底部中心突起角点
-    DEFINE_PROPERTY(SideHumpCorners, protected, protected, (std::vector<cv::Point2f>));                //!< 侧面突起角点
+    DEFINE_PROPERTY(RotatedRect, public, public, (cv::RotatedRect));                            //!< 外接矩形
+    DEFINE_PROPERTY(TopHumpCorners, protected, protected, (std::vector<cv::Point2f>));          //!< 顶部突起角点
+    DEFINE_PROPERTY(BottomCenterHumpCorners, protected, protected, (std::vector<cv::Point2f>)); //!< 底部中心突起角点
+    DEFINE_PROPERTY(SideHumpCorners, protected, protected, (std::vector<cv::Point2f>));         //!< 侧面突起角点
     DEFINE_PROPERTY(BottomSideHumpCorners, protected, protected, (std::vector<cv::Point2f>));   //!< 底部侧面突起角点
-    DEFINE_PROPERTY(Error, protected, protected, (float));                                     //!< 误差量
+    DEFINE_PROPERTY(Error, protected, protected, (float));                                      //!< 误差量
 public:
     RuneFanActive() = default;
     RuneFanActive(const RuneFanActive &) = delete;
@@ -54,7 +54,7 @@ public:
 
     /**
      * @brief 找到所有已激活扇叶
-     * 
+     *
      * @param[out] fans 返回找到的神符扇叶
      * @param[in] contours 输入的轮廓点集
      * @param[in] hierarchy 输入的层级结构
@@ -69,7 +69,7 @@ public:
 
     /**
      * @brief 找到所有残缺的已激活扇叶
-     * 
+     *
      * @param[out] fans 返回找到的残缺的已激活扇叶
      * @param[in] contours 输入的轮廓点集
      * @param[in] hierarchy 输入的层级结构
@@ -84,7 +84,6 @@ public:
                                 const cv::Point2f &rotate_center,
                                 std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
-
     /**
      * @brief 已激活 RuneFan 的强制构造接口
      *
@@ -97,19 +96,18 @@ public:
      * @note 利用从PNP解算获取到的角点构造，输入的角点有顺序要求
      */
     static Ptr make_feature(const std::vector<cv::Point2f> &top_corners,
-                                                 const std::vector<cv::Point2f> &bottom_center_corners,
-                                                 const std::vector<cv::Point2f> &side_corners,
-                                                 const std::vector<cv::Point2f> &bottom_side_corners);                                
+                            const std::vector<cv::Point2f> &bottom_center_corners,
+                            const std::vector<cv::Point2f> &side_corners,
+                            const std::vector<cv::Point2f> &bottom_side_corners);
+
 protected:
     /**
      * @brief 已激活 RuneFan 的构造接口
-     * 
+     *
      * @param[in] contour 轮廓
      * @return 若构造成功则返回指针，否则返回 nullptr
      */
     static Ptr make_feature(const Contour_cptr &contour);
-
-
 
     /**
      * @brief 已激活 RuneFan 的缺陷构造接口
@@ -121,8 +119,8 @@ protected:
      *
      */
     static Ptr make_feature(const std::tuple<TopHump, Contour_cptr> &hump_1,
-                                                 const std::tuple<TopHump, Contour_cptr> &hump_2,
-                                                 const std::tuple<TopHump, Contour_cptr> &hump_3);
+                            const std::tuple<TopHump, Contour_cptr> &hump_2,
+                            const std::tuple<TopHump, Contour_cptr> &hump_3);
 
     /**
      * @brief 通过扇叶位姿PNP解算结果构造 RuneFan
@@ -131,6 +129,18 @@ protected:
      * @param[in] is_active 是否激活？
      */
     static Ptr make_feature(const PoseNode &fan_to_cam, bool is_active);
+
+    /**
+     * @brief 绘制特征
+     *
+     * @param image 要绘制的图像
+     * @param config 绘制配置
+     *
+     * @note - 该方法用于在图像上绘制特征节点的可视化表示
+     *
+     *       - 默认实现为空，子类可以重载此方法以实现具体的绘制逻辑
+     */
+    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
 
 public:
     /**
@@ -185,7 +195,6 @@ public:
                                     std::vector<cv::Point2f> &bottom_center_hump_corners,
                                     std::vector<cv::Point2f> &side_hump_corners,
                                     std::vector<cv::Point2f> &bottom_side_hump_corners);
-
 };
 using RuneFanActive_ptr = std::shared_ptr<RuneFanActive>;
 using RuneFanActive_cptr = std::shared_ptr<const RuneFanActive>;

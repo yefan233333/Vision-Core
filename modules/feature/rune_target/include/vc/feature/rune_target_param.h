@@ -132,3 +132,54 @@ struct RuneTargetParam
 
 //! RuneTargetParam 参数模块
 inline RuneTargetParam rune_target_param;
+
+
+//! 靶心绘制参数结构体
+struct RuneTargetDrawParam
+{
+    //! 已激活靶心
+    struct Active
+    {
+        cv::Scalar color = cv::Scalar(0, 255, 0);          // 绿色
+        int thickness = 2;                                 // 线条粗细
+        int point_radius = 3;                              // 点的半径
+        //! 默认圆圈的大小
+        double default_circle_radius = 150.0; // 默认圆圈的大小
+
+        YML_INIT(
+            Active,
+            YML_ADD_PARAM(color);
+            YML_ADD_PARAM(thickness);
+            YML_ADD_PARAM(point_radius);
+            YML_ADD_PARAM(default_circle_radius);
+        );
+    } active;
+
+    //! 未激活靶心
+    struct Inactive
+    {
+        cv::Scalar color = cv::Scalar(0, 255, 0);        // 绿色
+        int thickness = 2;                                 // 线条粗细
+        int point_radius = 3;                              // 点的半径
+        //! 默认圆圈的大小
+        double default_circle_radius = 150.0; // 默认圆圈的大小
+        //! 角点标注字体的大小
+        double font_scale = 0.5;
+        //! 角点标注字体的粗细
+        int font_thickness = 1;
+        //! 角点标注字体的颜色
+        cv::Scalar font_color = cv::Scalar(255, 255, 255);
+
+        YML_INIT(
+            Inactive,
+            YML_ADD_PARAM(color);
+            YML_ADD_PARAM(thickness);
+            YML_ADD_PARAM(point_radius);
+            YML_ADD_PARAM(default_circle_radius);
+            YML_ADD_PARAM(font_scale);
+            YML_ADD_PARAM(font_thickness);
+            YML_ADD_PARAM(font_color);
+        );
+    } inactive;
+};
+inline RuneTargetDrawParam rune_target_draw_param;

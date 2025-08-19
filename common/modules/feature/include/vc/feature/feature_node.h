@@ -51,6 +51,11 @@ public:
         DEFINE_PROPERTY_WITH_INIT(PoseNodes, public, public, (PoseNodeMap), PoseNodeMap{});
     };
 
+    //! 绘制配置结构体
+    struct DrawConfig;
+    using DrawConfig_ptr = std::shared_ptr<DrawConfig>;
+    using DrawConfig_cptr = std::shared_ptr<const DrawConfig>;
+
 private:
     //! 图像信息缓存
     DEFINE_PROPERTY_WITH_INIT(ImageCache, public, protected, (ImageCache), ImageCache());
@@ -89,25 +94,17 @@ public:
      * @brief 绘制特征
      *
      * @param image 要绘制的图像
-     * @param color 绘制颜色
-     * @param thickness 绘制线条的粗细
-     * @param type 绘制类型
+     * @param config 绘制配置
      *
      * @note - 该方法用于在图像上绘制特征节点的可视化表示
      *
      *       - 默认实现为空，子类可以重载此方法以实现具体的绘制逻辑
-     *
-     *       - 绘制类型 type : 是否需要绘制子特征、是否需要标注角点的位置等，需要子类实现具体逻辑
      */
-    virtual void drawFeature(cv::Mat &image, const cv::Scalar &color = cv::Scalar(100, 255, 0), int thickness = 2, DrawMask type = 0) const
+    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const
     {
         // 默认实现为空，子类可以重载此方法以实现具体的绘制逻辑
         (void)image; // 避免未使用参数警告
-        (void)color;
-        (void)thickness;
-        (void)type;
-        // 抛出警告信息，提示未实现绘制逻辑
-        VC_WARNING_INFO("Feature Node 未实现绘制逻辑");
+        (void)config; // 避免未使用参数警告
     }
 
 protected:
@@ -115,3 +112,16 @@ protected:
 
 using FeatureNode_ptr = std::shared_ptr<FeatureNode>;
 using FeatureNode_cptr = std::shared_ptr<const FeatureNode>;
+
+
+//! 绘制配置结构体
+struct FeatureNode::DrawConfig
+{
+    cv::Scalar color = cv::Scalar(100, 255, 0); //!< 绘制颜色
+    int thickness = 2;                           //!< 绘制线条粗细
+    DrawMask type = 0;                           //!< 绘制类型掩码
+    bool draw_contours = false;                   //!< 是否绘制轮廓
+    bool draw_corners = false;                    //!< 是否绘制角点
+    bool draw_center = false;                     //!< 是否绘制中心点
+    bool draw_pose_nodes = false;                 //!< 是否绘制位姿节点
+};

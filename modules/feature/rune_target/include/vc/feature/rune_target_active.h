@@ -37,6 +37,18 @@ public:
                      const std::unordered_set<size_t> &mask,
                      std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
+        /**
+     * @brief 绘制特征
+     *
+     * @param image 要绘制的图像
+     * @param config 绘制配置
+     *
+     * @note - 该方法用于在图像上绘制特征节点的可视化表示
+     *
+     *       - 默认实现为空，子类可以重载此方法以实现具体的绘制逻辑
+     */
+    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
+
 private:
     /**
      * @brief 未激活 RuneTarget 的构造接口

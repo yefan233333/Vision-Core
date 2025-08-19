@@ -93,6 +93,8 @@ public:
      * @return [0] 图像坐标系 [1] 旋转中心坐标系 [2] 各个点的权重
      */
     auto getRelativePnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>;
+
+protected:
 };
 //! 神符扇叶特征共享指针
 using RuneFan_ptr = std::shared_ptr<RuneFan>;

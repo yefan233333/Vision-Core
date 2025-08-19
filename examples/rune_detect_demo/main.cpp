@@ -180,26 +180,8 @@ int main(int argc, char **argv)
 
         for (const auto &feature : features)
         {
-            // 绘制角点
-            const auto& corners = feature->imageCache().getCorners();
-            const Scalar color = Scalar(0, 255, 0); // 绿色
-            for(int i = 0 ;i < static_cast<int>(corners.size()); ++i)
-            {
-                line(contourImage, corners[i], corners[(i + 1) % corners.size()], color, 2);
-            }
-            // 绘制方向
-            do
-            {
-                const auto fan_ptr = RuneFan::cast(feature);
-                if(!fan_ptr)
-                    break;
-                const auto &direction = fan_ptr->getDirection();
-                if (norm(direction) < 1e-6)
-                    break;
-                const auto &center = fan_ptr->imageCache().getCenter();
-                const auto end_point = center + direction * 50; // 方向线长度为50
-                cv::arrowedLine(contourImage, center, end_point, color, 2, LINE_AA, 0, 0.1);
-            }while(0);
+            // 尝试绘制
+            feature->drawFeature(contourImage);
         }
 
 

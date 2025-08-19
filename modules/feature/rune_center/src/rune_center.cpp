@@ -295,3 +295,53 @@ std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float
     }
     return make_tuple(points_2d, relative_points_3d, weights);
 }
+
+
+void RuneCenter::drawFeature(cv::Mat &image, const DrawConfig_cptr &config) const
+{
+    const auto& image_info = this->getImageCache();
+    // 使用默认半径进行绘制
+    auto draw_circle = [&]()->bool
+    {
+        if(!image_info.isSetCenter())
+        {
+            return false;
+        }
+
+        const auto& center = image_info.getCenter();
+        auto radius = rune_center_draw_param.default_radius;
+        auto color = rune_center_draw_param.color;
+        cv::circle(image, center, radius, color, 2);
+        return true;
+    };
+
+    // 使用轮廓椭圆进行绘制
+    auto draw_contour_fit_ellipse = [&]()->bool
+    {
+        if(!image_info.isSetContours() || image_info.getContours().empty())
+        {
+            return false;
+        }
+        const auto& contour = image_info.getContours().front();
+        if(contour->points().size() < 6)
+        {
+            return false;
+        }
+        auto ellipse = contour->fittedEllipse();
+        cv::ellipse(image, ellipse, rune_center_draw_param.color, 2);
+        return true;
+    };
+
+    do
+    {
+        if (draw_contour_fit_ellipse())
+        {
+            break;
+        }
+        else
+        {
+            draw_circle();
+        }
+    }while(0);
+
+}

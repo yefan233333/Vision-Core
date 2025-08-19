@@ -54,3 +54,24 @@ struct RuneCenterParam
         YML_ADD_PARAM(ROTATION););
 };
 inline RuneCenterParam rune_center_param; //!< 神符中心参数实例
+
+
+//! 神符中心的绘制参数
+struct RuneCenterDrawParam
+{
+    //! 颜色
+    cv::Scalar color = cv::Scalar(0, 255, 0);
+    //! 线条粗细
+    int thickness = 2;
+    //! 默认半径
+    double default_radius = 150.0; // 默认半径
+
+    YML_INIT(
+        RuneCenterDrawParam,
+        YML_ADD_PARAM(color);
+        YML_ADD_PARAM(thickness);
+        YML_ADD_PARAM(default_radius);
+    );
+
+};
+inline RuneCenterDrawParam rune_center_draw_param; //!< 神符中心绘制参数实例

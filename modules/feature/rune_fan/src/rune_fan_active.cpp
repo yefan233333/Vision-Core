@@ -740,3 +740,60 @@ RuneFanActive::RuneFanActive(const Contour_cptr &contour,
     image_info.setCenter(center);
     setActiveFlag(true); // 激活标志位
 }
+
+/**
+ * @brief 绘制特征
+ *
+ * @param image 要绘制的图像
+ * @param config 绘制配置
+ *
+ * @note - 该方法用于在图像上绘制特征节点的可视化表示
+ *
+ *       - 默认实现为空，子类可以重载此方法以实现具体的绘制逻辑
+ */
+void RuneFanActive::drawFeature(cv::Mat &image, const FeatureNode::DrawConfig_cptr &config) const
+{
+    // 绘制角点
+    do
+    {
+        const auto &image_info = getImageCache();
+        if (!image_info.isSetCorners())
+            break;
+        const auto &corners = image_info.getCorners();
+        for (int i = 0; i < static_cast<int>(corners.size()); i++)
+        {
+            auto color = rune_fan_draw_param.active.color;
+            auto thickness = rune_fan_draw_param.active.thickness;
+            line(image, corners[i], corners[(i + 1) % corners.size()], color, thickness, LINE_AA);
+            auto point_radius = rune_fan_draw_param.active.point_radius;
+            circle(image, corners[i], point_radius, color, thickness, LINE_AA);
+        }
+        for (int i = 0; i < static_cast<int>(corners.size()); i++)
+        {
+            auto font_scale = rune_fan_draw_param.active.font_scale;
+            auto font_thickness = rune_fan_draw_param.active.font_thickness;
+            auto font_color = rune_fan_draw_param.active.font_color;
+            putText(image, to_string(i), corners[i], FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, LINE_AA);
+        }
+
+    } while (0);
+
+    // 绘制方向
+    do
+    {
+        if (!isSetDirection())
+            break;
+        auto arrow_thickness = rune_fan_draw_param.active.arrow_thickness;
+        auto arrow_length = rune_fan_draw_param.active.arrow_length;
+        auto arrow_color = rune_fan_draw_param.active.arrow_color;
+        const auto &image_info = getImageCache();
+        if (!image_info.isSetCenter())
+            break;
+        auto center = image_info.getCenter();
+        auto direction = getDirection();
+        if (direction == Point2f(0, 0))
+            break;
+        // 绘制箭头
+        cv::arrowedLine(image, center, center + direction * arrow_length, arrow_color, arrow_thickness, LINE_AA, 0, 0.1);
+    } while (0);
+}

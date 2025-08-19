@@ -544,3 +544,51 @@ auto RuneFanInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f
 
     return make_tuple(points_2d, points_3d, weights);
 }
+
+void RuneFanInactive::drawFeature(cv::Mat &image, const FeatureNode::DrawConfig_cptr &config) const
+{
+    // 绘制角点
+    do
+    {
+        const auto& image_info = getImageCache();
+        if(!image_info.isSetCorners())
+            break;
+        const auto& corners = image_info.getCorners();
+        for(int i = 0 ; i < static_cast<int>(corners.size()); i++)
+        {
+            auto color = rune_fan_draw_param.inactive.color;
+            auto thickness = rune_fan_draw_param.inactive.thickness;
+            line(image, corners[i], corners[(i + 1) % corners.size()], color, thickness, LINE_AA);
+            auto point_radius = rune_fan_draw_param.inactive.point_radius;
+            circle(image, corners[i], point_radius, color, thickness, LINE_AA);
+        }
+        for(int i = 0 ; i < static_cast<int>(corners.size()); i++)
+        {
+            auto font_scale = rune_fan_draw_param.inactive.font_scale;
+            auto font_thickness = rune_fan_draw_param.inactive.font_thickness;
+            auto font_color = rune_fan_draw_param.inactive.font_color;
+            putText(image, to_string(i), corners[i], FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, LINE_AA);
+        }
+
+    } while (0);
+
+    // 绘制方向
+    do
+    {
+        if(!isSetDirection())
+            break;
+        auto arrow_thickness = rune_fan_draw_param.inactive.arrow_thickness;
+        auto arrow_length = rune_fan_draw_param.inactive.arrow_length;
+        auto arrow_color = rune_fan_draw_param.inactive.arrow_color;
+        const auto& image_info = getImageCache();
+        if(!image_info.isSetCenter())
+            break;
+        auto center = image_info.getCenter();
+        auto direction = getDirection();
+        if (direction == Point2f(0, 0))
+            break;
+        // 绘制箭头
+        cv::arrowedLine(image, center, center + direction * arrow_length, arrow_color, arrow_thickness, LINE_AA, 0, 0.1);
+    }while(0);
+    
+}

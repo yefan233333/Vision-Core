@@ -71,7 +71,7 @@ struct RuneFanParam
     cv::Matx33f INACTIVE_ROTATION = cv::Matx33f(1, 0, 0,
                                                 0, 1, 0,
                                                 0, 0, 1);
-    
+
     YML_INIT(
         RuneFanParam,
         YML_ADD_PARAM(ACTIVE_MAX_SIDE_RATIO);
@@ -101,9 +101,70 @@ struct RuneFanParam
         YML_ADD_PARAM(INACTIVE_MAX_DISTANCE_RATIO);
         YML_ADD_PARAM(INACTIVE_3D);
         YML_ADD_PARAM(INACTIVE_TRANSLATION);
-        YML_ADD_PARAM(INACTIVE_ROTATION);
-    );
+        YML_ADD_PARAM(INACTIVE_ROTATION););
 };
 
 //! RuneFanParam 参数模块
 inline RuneFanParam rune_fan_param;
+
+//! 神符扇叶的绘制参数
+struct RuneFanDrawParam
+{
+    //! 已激活扇叶
+    struct Active
+    {
+        cv::Scalar color = cv::Scalar(0, 255, 0);          // 绿色
+        int thickness = 2;                                 // 线条粗细
+        int point_radius = 3;                              // 点的半径
+        double font_scale = 0.5;                           //!< 文字大小
+        int font_thickness = 1;                            //!< 文字粗细
+        cv::Scalar font_color = cv::Scalar(255, 255, 255); //!< 文字颜色
+        int arrow_thickness = 2;                           //!< 箭头粗细
+        double arrow_length = 50.0;                        //!< 箭头长度
+        cv::Scalar arrow_color = cv::Scalar(255, 255, 255); //!< 箭头颜色
+
+        YML_INIT(
+            Active,
+            YML_ADD_PARAM(color);
+            YML_ADD_PARAM(thickness);
+            YML_ADD_PARAM(point_radius);
+            YML_ADD_PARAM(font_scale);
+            YML_ADD_PARAM(font_thickness);
+            YML_ADD_PARAM(font_color);
+            YML_ADD_PARAM(arrow_thickness);
+            YML_ADD_PARAM(arrow_length);
+            YML_ADD_PARAM(arrow_color);
+        );
+            
+    } active;
+
+    //! 未激活扇叶
+    struct Inactive
+    {
+        cv::Scalar color = cv::Scalar(0, 255, 0);          // 绿色
+        int thickness = 2;                                 // 线条粗细
+        int point_radius = 3;                              // 点的半径
+        double font_scale = 0.5;                           //!< 文字大小
+        int font_thickness = 1;                            //!< 文字粗细
+        cv::Scalar font_color = cv::Scalar(255, 255, 255); //!< 文字颜色
+        int arrow_thickness = 2;                           //!< 箭头粗细
+        double arrow_length = 50.0;                         //!< 箭头长度
+        cv::Scalar arrow_color = cv::Scalar(255, 255, 255); //!< 箭头颜色
+
+        YML_INIT(
+            Inactive,
+            YML_ADD_PARAM(color);
+            YML_ADD_PARAM(thickness);
+            YML_ADD_PARAM(point_radius);
+            YML_ADD_PARAM(font_scale);
+            YML_ADD_PARAM(font_thickness);
+            YML_ADD_PARAM(font_color);
+            YML_ADD_PARAM(arrow_thickness);
+            YML_ADD_PARAM(arrow_length);
+            YML_ADD_PARAM(arrow_color);
+        );
+    } inactive;
+
+};
+
+inline RuneFanDrawParam rune_fan_draw_param;

@@ -106,6 +106,18 @@ protected:
      */
     virtual auto getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> override;
 
+    /**
+     * @brief 绘制特征
+     *
+     * @param image 要绘制的图像
+     * @param config 绘制配置
+     *
+     * @note - 该方法用于在图像上绘制特征节点的可视化表示
+     *
+     *       - 默认实现为空，子类可以重载此方法以实现具体的绘制逻辑
+     */
+    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
+
 protected:
 
     DEFINE_PROPERTY(Direction, public, protected, (cv::Point2f));                       //!< 方向

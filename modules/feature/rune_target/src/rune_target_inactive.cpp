@@ -761,3 +761,97 @@ auto RuneTargetInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Poin
 
     return make_tuple(pnp_points_2d, pnp_points_3d, pnp_points_weight);
 }
+
+void RuneTargetInactive::drawFeature(cv::Mat &image, const DrawConfig_cptr &config) const
+{
+    // 利用半径绘制正圆
+    auto draw_circle = [&]()->bool
+    {
+        const auto &image_info = this->getImageCache();
+        if (!image_info.isSetCorners())
+            return false;
+        const auto &center = image_info.getCenter();
+        auto default_radius = rune_target_draw_param.inactive.point_radius;
+        auto circle_color = rune_target_draw_param.inactive.color;
+        auto circle_thickness = rune_target_draw_param.inactive.thickness;
+        float radius = image_info.isSetHeight() && image_info.isSetWidth() ? std::min(image_info.getHeight(), image_info.getWidth()) / 2.0f : default_radius;
+        cv::circle(image, center, radius, circle_color, circle_thickness);
+        if (radius > 30)
+        {
+            cv::circle(image, center, radius * 0.5f, circle_color, circle_thickness);
+        }
+        if (radius > 50)
+        {
+            cv::circle(image, center, radius * 0.25f, circle_color, circle_thickness);
+        }
+        if (radius > 100)
+        {
+            cv::circle(image, center, radius * 0.125f, circle_color, circle_thickness);
+        }
+        
+        return true;
+    };
+
+    // 绘制椭圆
+    auto draw_ellipse = [&]()->bool
+    {
+        const auto &image_info = this->getImageCache();
+        if (!image_info.isSetContours())
+            return false;
+        const auto &contours = image_info.getContours();
+        if (contours.empty())
+            return false;
+        if (contours.front()->points().size() < 6)
+        {
+            return false;
+        }
+        auto fit_ellipse = contours.front()->fittedEllipse();
+        auto circle_color = rune_target_draw_param.inactive.color;
+        auto circle_thickness = rune_target_draw_param.inactive.thickness;
+        cv::ellipse(image, fit_ellipse, circle_color, circle_thickness);
+        cv::circle(image, fit_ellipse.center, 2, circle_color, -1); // 绘制中心点
+        return true;
+    };
+
+    // 绘制角点
+    auto draw_corners = [&]()->bool
+    {
+        const auto& image_info = this->getImageCache();
+        if (!image_info.isSetCorners())
+            return false;
+        const auto& corners = image_info.getCorners();
+        for (int i = 0; i < static_cast<int>(corners.size()); i++)
+        {
+            auto color = rune_target_draw_param.inactive.color;
+            auto thickness = rune_target_draw_param.inactive.thickness;
+            line(image, corners[i], corners[(i + 1) % corners.size()], color, thickness, LINE_AA);
+            auto point_radius = rune_target_draw_param.inactive.point_radius;
+            circle(image, corners[i], point_radius, color, thickness, LINE_AA);
+        }
+        for (int i = 0; i < static_cast<int>(corners.size()); i++)
+        {
+            auto font_scale = rune_target_draw_param.inactive.font_scale;
+            auto font_thickness = rune_target_draw_param.inactive.font_thickness;
+            auto font_color = rune_target_draw_param.inactive.font_color;
+            putText(image, to_string(i), corners[i], FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, LINE_AA);
+        }
+    };
+
+    do
+    {
+        // 尝试绘制椭圆，若成功
+        if (draw_ellipse())
+        {
+            break;
+        }
+        else if(draw_corners())
+        {
+            break;
+        }
+        else
+        {
+            draw_circle();
+        }
+
+    }while(0);
+}
