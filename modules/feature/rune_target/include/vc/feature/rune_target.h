@@ -74,14 +74,6 @@ public:
      * @return [0] 图像坐标系 [1] 旋转中心坐标系 [2] 各个点的权重
      */
     auto getRelativePnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>;
-
-    // /**
-    //  * @brief 通过神符位姿PNP解算结果构造 RuneTarget
-    //  *
-    //  * @param[in] target_to_cam 靶心相对于相机的位姿解算结果
-    //  * @param[in] is_active 是否激活
-    //  */
-    // static std::shared_ptr<RuneTarget> make_feature(const PoseNode &target_to_cam, bool is_active);
 };
 
 //! 神符靶心特征共享指针

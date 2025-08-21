@@ -17,6 +17,7 @@ public:
     {
         this->setActiveFlag(true);
     }
+    
     /**
      * @brief 构造函数
      * 

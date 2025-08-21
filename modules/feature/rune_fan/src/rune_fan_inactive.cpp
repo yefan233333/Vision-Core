@@ -346,7 +346,6 @@ RuneFanInactive::RuneFanInactive(const Contour_cptr hull_contour, const vector<C
     // 设置基本属性
     setArrowContours(arrow_contours);
     setActiveFlag(false);
-    setDirection(getUnitVector(direction_temp)); // 扇叶的方向指向神符中心
     setRotatedRect(rotated_rect);
 
     // 设置图像属性
@@ -356,6 +355,7 @@ RuneFanInactive::RuneFanInactive(const Contour_cptr hull_contour, const vector<C
     image_info.setWidth(width);
     image_info.setHeight(height);
     image_info.setCenter(center);
+    image_info.setDirection(getUnitVector(direction_temp)); // 扇叶的方向指向神符中心
 }
 
 RuneFanInactive::RuneFanInactive(const Point2f &top_left,
@@ -377,15 +377,14 @@ RuneFanInactive::RuneFanInactive(const Point2f &top_left,
     auto height = getDist(top_center, bottom_center);
     auto is_active = false;
 
-    setDirection(getUnitVector(bottom_center - top_center)); // 扇叶的方向指向神符中心
     setRotatedRect(contour->minAreaRect());
-
     auto& image_info = getImageCache();
     image_info.setContours(vector<Contour_cptr>{contour});
     image_info.setWidth(width);
     image_info.setHeight(height);
     image_info.setCenter(center);
     image_info.setCorners(corners);
+    image_info.setDirection(getUnitVector(bottom_center - top_center)); // 扇叶的方向指向神符中心
 }
 
 // ------------------------【未激活扇叶的方向矫正】------------------------
@@ -396,7 +395,7 @@ bool RuneFanInactive::correctDirection(FeatureNode_ptr &fan, const cv::Point2f &
         return false;
     if (rune_fan->getActiveFlag())
         return false;
-    if (rune_fan->getDirection() == cv::Point2f(0, 0))
+    if (rune_fan->getImageCache().getDirection() == cv::Point2f(0, 0))
         return false;
     if (correct_center == cv::Point2f(0, 0))
         return false;
@@ -412,7 +411,7 @@ bool RuneFanInactive::correctDirection(FeatureNode_ptr &fan, const cv::Point2f &
     Point2f reference_direction = getUnitVector(correct_center - rune_fan->getImageCache().getCenter());
     if (direction.dot(reference_direction) < 0)
         direction = -direction;
-    rune_fan->setDirection(getUnitVector(direction));
+    rune_fan->getImageCache().setDirection(getUnitVector(direction));
 
     return true;
 }
@@ -425,13 +424,13 @@ bool RuneFanInactive::correctCorners(FeatureNode_ptr &fan)
         return false;
     if (rune_fan->getActiveFlag())
         return false;
-    if (rune_fan->getDirection() == cv::Point2f(0, 0))
+    if (rune_fan->getImageCache().getDirection() == cv::Point2f(0, 0))
         return false;
 
     vector<Point2f> rect_points(4);
     rune_fan->getRotatedRect().points(rect_points.data());
     vector<Point2f> temp_corners(rect_points.begin(), rect_points.end());
-    Point2f dirction = rune_fan->getDirection();
+    Point2f dirction = rune_fan->getImageCache().getDirection();
     Point2f center = rune_fan->getRotatedRect().center;
     // 按照在方向上的投影排序
     sort(temp_corners.begin(), temp_corners.end(), [&](Point2f p1, Point2f p2)
@@ -575,7 +574,7 @@ void RuneFanInactive::drawFeature(cv::Mat &image, const FeatureNode::DrawConfig_
     // 绘制方向
     do
     {
-        if(!isSetDirection())
+        if(!getImageCache().isSetDirection())
             break;
         auto arrow_thickness = rune_fan_draw_param.inactive.arrow_thickness;
         auto arrow_length = rune_fan_draw_param.inactive.arrow_length;
@@ -584,7 +583,7 @@ void RuneFanInactive::drawFeature(cv::Mat &image, const FeatureNode::DrawConfig_
         if(!image_info.isSetCenter())
             break;
         auto center = image_info.getCenter();
-        auto direction = getDirection();
+        auto direction = getImageCache().getDirection();
         if (direction == Point2f(0, 0))
             break;
         // 绘制箭头

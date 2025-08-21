@@ -35,6 +35,8 @@ public:
         DEFINE_PROPERTY(Corners, public, public, (std::vector<cv::Point2f>));
         //! 中心位置
         DEFINE_PROPERTY(Center, public, public, (cv::Point2f));
+        //! 方向
+        DEFINE_PROPERTY(Direction, public, public, (cv::Point2f));
         //! 宽(图像中)
         DEFINE_PROPERTY(Width, public, public, (float));
         //! 高(图像中)

@@ -74,7 +74,7 @@ inline bool filterFan(const vector<FeatureNode_ptr> &fans,
         if (used_fans.find(fan) == used_fans.end())
             continue;
         const auto rune_fan = RuneFanActive::cast(fan);
-        Point2f direction = rune_fan->getDirection();
+        Point2f direction = rune_fan->getImageCache().getDirection();
         Point2f center = rune_fan->getRotatedRect().center;
         Point2f fan_to_center = rotate_center - rune_fan->getImageCache().getCenter();
         double angle = getVectorMinAngle(direction, fan_to_center, DEG);
@@ -87,7 +87,7 @@ inline bool filterFan(const vector<FeatureNode_ptr> &fans,
 
     filtered_fans.insert(filtered_fans.end(), used_fans.begin(), used_fans.end());
     return true;
-}
+}   
 
 bool RuneFanActive::find_incomplete(std::vector<FeatureNode_ptr> &fans,
                                     const std::vector<Contour_cptr> &contours,
@@ -322,7 +322,6 @@ RuneFanActive::RuneFanActive(const std::vector<Contour_cptr> &contours,
     // 设置基本属性
     setActiveFlag(true);
     setTopHumpCorners(top_hump_corners);
-    setDirection(direction);
     setRotatedRect(fit_ellipse);
 
     // 设置图像属性
@@ -332,6 +331,7 @@ RuneFanActive::RuneFanActive(const std::vector<Contour_cptr> &contours,
     image_info.setHeight(height);
     image_info.setCenter(center);
     image_info.setCorners(corners);
+    image_info.setDirection(direction);
 }
 
 // 获取突起点组的中心点

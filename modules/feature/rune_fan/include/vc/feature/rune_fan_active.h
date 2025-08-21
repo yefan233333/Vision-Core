@@ -13,7 +13,6 @@ class RuneFanActive : public RuneFan
     DEFINE_PROPERTY(BottomCenterHumpCorners, protected, protected, (std::vector<cv::Point2f>)); //!< 底部中心突起角点
     DEFINE_PROPERTY(SideHumpCorners, protected, protected, (std::vector<cv::Point2f>));         //!< 侧面突起角点
     DEFINE_PROPERTY(BottomSideHumpCorners, protected, protected, (std::vector<cv::Point2f>));   //!< 底部侧面突起角点
-    DEFINE_PROPERTY(Error, protected, protected, (float));                                      //!< 误差量
 public:
     RuneFanActive() = default;
     RuneFanActive(const RuneFanActive &) = delete;

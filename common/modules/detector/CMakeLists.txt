@@ -1,4 +1,4 @@
 VisCore_add_module(detector
 INTERFACE
-DEPENDS core
+DEPENDS core feature math
 ) 

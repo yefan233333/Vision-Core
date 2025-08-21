@@ -332,3 +332,48 @@ inline cv::Matx<_Tp, 3, 3> euler2Mat(_Tp val, EulerAxis axis)
         return cv::Matx<_Tp, 3, 3>::eye();
     }
 }
+
+/**
+ * @brief 获取两条直线的交点
+ *
+ * @param[in] LineA 直线1(两点式表示法)
+ * @param[in] LineB 直线2（两点式表示法）
+ */
+template <typename Tp1, typename Tp2>
+inline cv::Point2f getCrossPoint(const cv::Vec<Tp1, 4> &LineA, const cv::Vec<Tp2, 4> &LineB)
+{
+    double ka, kb;
+    ka = static_cast<double>(LineA[3] - LineA[1]) / static_cast<double>(LineA[2] - LineA[0]);
+    kb = static_cast<double>(LineB[3] - LineB[1]) / static_cast<double>(LineB[2] - LineB[0]);
+    cv::Point2f crossPoint;
+    crossPoint.x = static_cast<float>((ka * LineA[0] - LineA[1] - kb * LineB[0] + LineB[1]) / (ka - kb));
+    crossPoint.y = static_cast<float>((ka * kb * (LineA[0] - LineB[0]) + ka * LineB[1] - kb * LineA[1]) / (ka - kb));
+    return crossPoint;
+}
+
+/**
+ * @brief 点到直线距离
+ * @note 点 \f$P=(x_0,y_0)\f$ 到直线 \f$l:Ax+By+C=0\f$ 距离公式为
+ *       \f[D(P,l)=\frac{Ax_0+By_0+C}{\sqrt{A^2+B^2}}\f]
+ *
+ * @tparam Tp1 直线方程数据类型
+ * @tparam Tp2 平面点的数据类型
+ * @param[in] line 用 `cv::Vec4_` 表示的直线方程 (vx, vy, x0, y0)
+ * @param[in] pt 平面点
+ * @param[in] direc 是否区分距离的方向
+ * @note
+ * - 计算结果有正负，即区分点在直线分布的方向，通过修改传入参数
+ *   `direc = false` 来设置计算结果不区分正负（统一返回 \f$|D(P,l)|\f$）
+ * - `line` 需要传入元素为 \f$(v_x, v_y, x_0, y_0)\f$ 的用 `cv::Vec4_`
+ *   表示的向量，指代下列直线方程（与 `cv::fitLine` 传入的 `cv::Vec4_`
+ *   参数一致）\f[l:y-y_0=\frac{v_y}{v_x}(x-x_0)\f]
+ * @return 平面欧式距离
+ */
+template <typename Tp1, typename Tp2>
+inline auto getDist(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &pt, bool direc = true)
+{
+    auto retval = (line(1) * pt.x - line(0) * pt.y +
+                   line(0) * line(3) - line(1) * line(2)) /
+                  std::sqrt(line(0) * line(0) + line(1) * line(1));
+    return direc ? retval : std::abs(retval);
+}

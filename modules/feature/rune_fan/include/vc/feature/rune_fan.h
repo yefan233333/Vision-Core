@@ -8,8 +8,8 @@ class RuneFan : public FeatureNode
     using Ptr = std::shared_ptr<RuneFan>;
     //! 激活标志位
     DEFINE_PROPERTY(ActiveFlag, public, protected, (bool));
-    DEFINE_PROPERTY(Direction, public, protected, (cv::Point2f)); //!< 方向
     DEFINE_PROPERTY(RotatedRect, public, protected, (cv::RotatedRect)); //!< 外接矩形
+    DEFINE_PROPERTY(Error, public, protected, (float)); //!< 误差量
 
 public:
     RuneFan() = default;

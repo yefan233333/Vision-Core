@@ -9,7 +9,6 @@ using namespace cv;
 
 #define RUNE_FAN_DEBUG 1
 
-
 /**
  * @brief 已激活神符扇叶等级向量判断
  *
@@ -539,7 +538,7 @@ auto RuneFanActive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>,
         points_2d.insert(points_2d.end(), corners.begin(), corners.end());
         points_3d.insert(points_3d.end(), rune_fan_param.ACTIVE_BOTTOM_SIDE_3D.begin(), rune_fan_param.ACTIVE_BOTTOM_SIDE_3D.end());
     }
-    
+
     if (points_2d.size() != points_3d.size())
     {
         VC_THROW_ERROR("The size of points_2d and points_3d must be equal");
@@ -575,7 +574,7 @@ bool RuneFanActive::getLinePairs(const vector<Point> &contour_plus, const Mat &a
         }
     } while (0);
 #endif
- 
+
     // 匹配正反线段
     vector<tuple<Line, Line>> matched_lines;
     matchLine(contour_plus, angles_mat, lines, matched_lines);
@@ -726,11 +725,11 @@ RuneFanActive::RuneFanActive(const Contour_cptr &contour,
         corners = {top_hump_corners[0], top_hump_corners[1], top_hump_corners[2], side_hump_corners[1], bottom_side_hump_corners[1], bottom_center_hump_corners[0], bottom_side_hump_corners[0], side_hump_corners[0]};
     }
 
-    float width = getDist(top_hump_corners[0], top_hump_corners[2]);                  // 将顶部角点的左右两个角点之间的距离作为宽度
-    float height = getDist(top_hump_corners[1], bottom_center_hump_corners[0]);       // 将顶部中心角点和底部中心角点之间的距离作为高度
-    Point2f center = (top_hump_corners[1] + bottom_center_hump_corners[0]) / 2;       // 将顶部中心角点和底部中心角点的中点作为扇叶的中心点
-    setDirection(getUnitVector(bottom_center_hump_corners[0] - top_hump_corners[1])); // 将顶部中心角点指向底部中心角点的向量作为扇叶的方向
-    setRotatedRect(rotated_rect);                                                     // 设置最小外接矩形
+    float width = getDist(top_hump_corners[0], top_hump_corners[2]);                     // 将顶部角点的左右两个角点之间的距离作为宽度
+    float height = getDist(top_hump_corners[1], bottom_center_hump_corners[0]);          // 将顶部中心角点和底部中心角点之间的距离作为高度
+    Point2f center = (top_hump_corners[1] + bottom_center_hump_corners[0]) / 2;          // 将顶部中心角点和底部中心角点的中点作为扇叶的中心点
+    auto direction = getUnitVector(bottom_center_hump_corners[0] - top_hump_corners[1]); // 将顶部中心角点指向底部中心角点的向量作为扇叶的方向
+    setRotatedRect(rotated_rect);                                                        // 设置最小外接矩形
     // 图像属性
     auto &image_info = this->getImageCache();
     image_info.setContours(vector<Contour_cptr>{contour}); // 设置轮廓
@@ -738,6 +737,7 @@ RuneFanActive::RuneFanActive(const Contour_cptr &contour,
     image_info.setWidth(width);
     image_info.setHeight(height);
     image_info.setCenter(center);
+    image_info.setDirection(direction);
     setActiveFlag(true); // 激活标志位
 }
 
@@ -781,7 +781,7 @@ void RuneFanActive::drawFeature(cv::Mat &image, const FeatureNode::DrawConfig_cp
     // 绘制方向
     do
     {
-        if (!isSetDirection())
+        if (!getImageCache().isSetDirection())
             break;
         auto arrow_thickness = rune_fan_draw_param.active.arrow_thickness;
         auto arrow_length = rune_fan_draw_param.active.arrow_length;
@@ -790,7 +790,7 @@ void RuneFanActive::drawFeature(cv::Mat &image, const FeatureNode::DrawConfig_cp
         if (!image_info.isSetCenter())
             break;
         auto center = image_info.getCenter();
-        auto direction = getDirection();
+        auto direction = getImageCache().getDirection();
         if (direction == Point2f(0, 0))
             break;
         // 绘制箭头
