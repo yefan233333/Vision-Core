@@ -14,12 +14,12 @@ ACTIVE_BOTTOM_SIDE_3D: [ -57., 300., 0., 57., 300., 0. ]
 ACTIVE_TRANSLATION: !!opencv-matrix
    rows: 3
    cols: 1
-   dt: f
+   dt: d
    data: [ 0., 195., 0. ]
 ACTIVE_ROTATION: !!opencv-matrix
    rows: 3
    cols: 3
-   dt: f
+   dt: d
    data: [ 1., 0., 0., 0., 1., 0., 0., 0., 1. ]
 ACTIVE_MIN_AREA_INCOMPLETE: 30.
 ACTIVE_MAX_AREA_PERIMETER_RATIO_INCOMPLETE: 7.0000000298023224e-02
@@ -37,10 +37,10 @@ INACTIVE_3D: [ -30., 0., 0., 30., 0., 0., 30., 330., 0., -30., 330., 0. ]
 INACTIVE_TRANSLATION: !!opencv-matrix
    rows: 3
    cols: 1
-   dt: f
+   dt: d
    data: [ 0., 175., 0. ]
 INACTIVE_ROTATION: !!opencv-matrix
    rows: 3
    cols: 3
-   dt: f
+   dt: d
    data: [ 1., 0., 0., 0., 1., 0., 0., 0., 1. ]

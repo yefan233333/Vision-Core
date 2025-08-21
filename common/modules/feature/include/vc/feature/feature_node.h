@@ -9,6 +9,7 @@
 #include "vc/contour_proc/contour_wrapper.hpp"
 #include "vc/math/pose_node.hpp"
 #include "vc/core/type_utils.h"
+#include "vc/dataio/dataio.h"
 
 /**
  * @brief 特征节点
@@ -49,6 +50,8 @@ public:
         using PoseNodeMap = std::unordered_map<std::string, PoseNode>;
         //! 位姿节点映射
         DEFINE_PROPERTY_WITH_INIT(PoseNodes, public, public, (PoseNodeMap), PoseNodeMap{});
+        //! 陀螺仪位姿信息
+        DEFINE_PROPERTY(GyroPose, public, public, (GyroData));
     };
 
     //! 绘制配置结构体
@@ -56,6 +59,8 @@ public:
     using DrawConfig_ptr = std::shared_ptr<DrawConfig>;
     using DrawConfig_cptr = std::shared_ptr<const DrawConfig>;
 
+    //! 子特征节点映射表类型
+    struct ChildFeatureType;
 private:
     //! 图像信息缓存
     DEFINE_PROPERTY_WITH_INIT(ImageCache, public, protected, (ImageCache), ImageCache());
@@ -63,6 +68,8 @@ private:
     DEFINE_PROPERTY_WITH_INIT(PoseCache, public, protected, (PoseCache), PoseCache());
     //! 子特征节点映射表
     DEFINE_PROPERTY_WITH_INIT(ChildFeatures, public, protected, (FeatureNodeMap), FeatureNodeMap());
+    //! 构建时间戳
+    DEFINE_PROPERTY(Tick, public, protected, (int64_t));
 
 public:
     /**
@@ -113,15 +120,5 @@ protected:
 using FeatureNode_ptr = std::shared_ptr<FeatureNode>;
 using FeatureNode_cptr = std::shared_ptr<const FeatureNode>;
 
-
-//! 绘制配置结构体
-struct FeatureNode::DrawConfig
-{
-    cv::Scalar color = cv::Scalar(100, 255, 0); //!< 绘制颜色
-    int thickness = 2;                           //!< 绘制线条粗细
-    DrawMask type = 0;                           //!< 绘制类型掩码
-    bool draw_contours = false;                   //!< 是否绘制轮廓
-    bool draw_corners = false;                    //!< 是否绘制角点
-    bool draw_center = false;                     //!< 是否绘制中心点
-    bool draw_pose_nodes = false;                 //!< 是否绘制位姿节点
-};
+#include "feature_node_draw_config.h" // 包含绘制配置定义
+#include "feature_node_child_feature_type.h" // 包含子特征节点类型定义

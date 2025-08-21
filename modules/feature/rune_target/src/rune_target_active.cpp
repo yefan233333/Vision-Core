@@ -3,9 +3,24 @@
 
 #include "vc/feature/rune_target_active.h"
 #include "vc/feature/rune_target_param.h"
+#include "vc/camera/camera_param.h"
 
 using namespace std;
 using namespace cv;
+
+RuneTargetActive::RuneTargetActive(const Point2f center,const std::vector<cv::Point2f> corners)
+{
+    vector<Point2f> temp_contours{};
+    float width = rune_target_param.ACTIVE_DEFAULT_SIDE;
+    float height = rune_target_param.ACTIVE_DEFAULT_SIDE;
+
+    setActiveFlag(true);
+    auto &image_info = getImageCache();
+    image_info.setCenter(center);
+    image_info.setWidth(width);
+    image_info.setHeight(height);
+    image_info.setCorners(corners);
+}
 
 /**
  * @brief 已激活神符靶心等级向量判断
@@ -254,23 +269,9 @@ RuneTargetActive_ptr RuneTargetActive::make_feature(const std::vector<Contour_cp
     auto fit_ellipse = contour_outer->fittedEllipse();
 
     // 构建未激活靶心对象，并赋予属性
-    auto rune_target = make_shared<RuneTargetActive>();
-
-    rune_target->setActiveFlag(true); // 设置为激活靶心
     vector<Point2f> corners{};
     corners.push_back(fit_ellipse.center); // 将中心点作为第一个角点
-
-    auto width = max(fit_ellipse.size.width, fit_ellipse.size.height);
-    auto height = min(fit_ellipse.size.width, fit_ellipse.size.height);
-
-    // 图像属性
-    auto &image_info = rune_target->getImageCache();
-    image_info.setContours(vector<Contour_cptr>{contour_outer}); // 设置轮廓集
-    image_info.setCorners(corners);                             // 设置角点
-    image_info.setHeight(height);
-    image_info.setWidth(width);
-    image_info.setCenter(fit_ellipse.center);
-
+    auto rune_target = make_shared<RuneTargetActive>(contour_outer, corners);
     return rune_target;
 }
 
@@ -342,4 +343,32 @@ void RuneTargetActive::drawFeature(cv::Mat &image, const DrawConfig_cptr &config
             draw_circle();
         }
     } while (0);
+}
+
+RuneTargetActive_ptr RuneTargetActive::make_feature(const PoseNode &target_to_cam)
+{
+    vector<Point3f> corners_3d{};
+
+    float radius = rune_target_param.RADIUS;
+    corners_3d.emplace_back(0, -radius, 0);
+    corners_3d.emplace_back(radius, 0, 0);
+    corners_3d.emplace_back(0, radius, 0);
+    corners_3d.emplace_back(-radius, 0, 0);
+    
+    // 重投影
+    vector<Point2f> corners_2d{};
+    projectPoints(corners_3d, target_to_cam.rvec(), target_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, corners_2d);
+
+    Point2f rune_center{};
+    vector<Point2f> temp_rune_center{};
+    projectPoints(vector<Point3f>{Point3f(0, 0, 0)}, target_to_cam.rvec(), target_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, temp_rune_center);
+    
+    auto result_ptr = make_shared<RuneTargetActive>(temp_rune_center[0], corners_2d);
+
+    if (result_ptr)
+    {
+        auto &pose_info = result_ptr->getPoseCache();
+        pose_info.getPoseNodes()[CoordFrame::CAMERA] = target_to_cam;
+    }
+    return result_ptr;
 }

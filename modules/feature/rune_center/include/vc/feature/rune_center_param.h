@@ -32,9 +32,9 @@ struct RuneCenterParam
     //! 神符中心的父子轮廓同心度与最大轮廓的比值
     double CENTER_CONCENTRICITY_RATIO = 0.08;
     //! 神符中心坐标系相对于旋转中心坐标系的平移矩阵
-    cv::Matx31f TRANSLATION = cv::Matx31f(0, 0, -165.44);
+    cv::Matx31d TRANSLATION = cv::Matx31d(0, 0, -165.44);
     //! 神符中心坐标系相对于旋转中心坐标系的旋转矩阵
-    cv::Matx33f ROTATION = cv::Matx33f(1, 0, 0,
+    cv::Matx33d ROTATION = cv::Matx33d(1, 0, 0,
                                        0, 1, 0,
                                        0, 0, 1);
 

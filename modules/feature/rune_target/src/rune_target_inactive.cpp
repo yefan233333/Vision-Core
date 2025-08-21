@@ -5,10 +5,24 @@
 #include "vc/feature/rune_target_param.h"
 #include "vc/feature/rune_target_inactive.h"
 #include "vc/math/geom_utils.hpp"
-
+#include "vc/camera/camera_param.h"
 
 using namespace std;
 using namespace cv;
+
+RuneTargetInactive::RuneTargetInactive(const Point2f center, const std::vector<cv::Point2f> corners)
+{
+    vector<Point2f> temp_contours{};
+    float width = rune_target_param.ACTIVE_DEFAULT_SIDE;
+    float height = rune_target_param.ACTIVE_DEFAULT_SIDE;
+
+    setActiveFlag(false);
+    auto &image_info = getImageCache();
+    image_info.setCenter(center);
+    image_info.setWidth(width);
+    image_info.setHeight(height);
+    image_info.setCorners(corners);
+}
 
 /**
  * @brief 未激活神符靶心等级向量判断
@@ -438,29 +452,13 @@ auto RuneTargetInactive::make_feature(const std::vector<Contour_cptr> &contours,
     vector<RuneTargetGap> gaps;
     if (findGaps(gaps, contours, hierarchy, idx, sub_contours_idx) == false)
         return nullptr;
-        
-    // 构建未激活靶心对象，并赋予属性
-    auto rune_target = make_shared<RuneTargetInactive>();
 
-    rune_target->setActiveFlag(false); // 设置为未激活靶心
-    rune_target->setGaps(gaps); // 设置缺口
-    vector<Point2f> corners{};
     auto &outer_contour = contours[idx];
+    vector<Point2f> corners{};
     auto fit_ellipse = outer_contour->fittedEllipse();
     corners.push_back(fit_ellipse.center); // 将中心点作为第一个角点
-
-    
-    auto width = max(fit_ellipse.size.width, fit_ellipse.size.height);
-    auto height = min(fit_ellipse.size.width, fit_ellipse.size.height);
-
-    // 图像属性
-    auto& image_info = rune_target->getImageCache();
-    image_info.setContours(vector<Contour_cptr>{outer_contour}); // 设置轮廓集
-    image_info.setCorners(corners); // 设置角点
-    image_info.setHeight(height);
-    image_info.setWidth(width);
-    image_info.setCenter(fit_ellipse.center);
-
+    // 构建未激活靶心对象，并赋予属性
+    auto rune_target = make_shared<RuneTargetInactive>(outer_contour, corners, gaps);
     return rune_target;
 }
 
@@ -529,7 +527,7 @@ bool RuneTargetInactive::sortedGap(const cv::Point2f &rune_center)
         return false;
     }
 
-    auto& gaps = getGaps();
+    auto &gaps = getGaps();
     if (gaps.empty() || gaps.size() > 4) // 缺口数量不符合要求
     {
         return false;
@@ -586,7 +584,7 @@ bool RuneTargetInactive::sortedGap(const cv::Point2f &rune_center)
     setRightBottomGap(&sorted_gaps[2]);
     setLeftBottomGap(&sorted_gaps[3]);
 
-    setGaps(sorted_gaps); // 设置缺口
+    setGaps(sorted_gaps);   // 设置缺口
     setGapSortedFlag(true); // 设置缺口已排序标志
 
     return true;
@@ -611,9 +609,9 @@ bool RuneTargetInactive::calcGapCorners(const cv::Point2f &rune_center)
 
     // 按照九点模型,设置角点。角点包括：靶心中心点、缺口中心点、相邻缺口角点的中心点。（例如左上缺口的右侧角点和右上缺口的左侧角点的中点）
 
-    auto& gap = getGaps();
-    auto& gap_corners = getGapCorners();
-    auto& target_corners = getImageCache().getCorners();
+    auto &gap = getGaps();
+    auto &gap_corners = getGapCorners();
+    auto &target_corners = getImageCache().getCorners();
     gap_corners.clear();
 
     // 左上角的缺口的中心点为第一个点
@@ -647,7 +645,6 @@ bool RuneTargetInactive::calcGapCorners(const cv::Point2f &rune_center)
         VC_THROW_ERROR("The gap corners size is not 8.");
         return false;
     }
-
 
     for (auto &gap_corner : gap_corners)
     {
@@ -726,7 +723,7 @@ bool RuneTargetInactive::correctDirection()
     return true;
 }
 
-auto RuneTargetInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>> 
+auto RuneTargetInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>
 {
     vector<Point2f> pnp_points_2d{};
     vector<Point3f> pnp_points_3d{};
@@ -742,7 +739,7 @@ auto RuneTargetInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Poin
         return make_tuple(pnp_points_2d, pnp_points_3d, pnp_points_weight);
     }
 
-    auto& gap_corners = getGapCorners();
+    auto &gap_corners = getGapCorners();
     if (gap_corners.size() != 8)
     {
         VC_THROW_ERROR("The gap corners size is not 8.");
@@ -765,7 +762,7 @@ auto RuneTargetInactive::getPnpPoints() const -> std::tuple<std::vector<cv::Poin
 void RuneTargetInactive::drawFeature(cv::Mat &image, const DrawConfig_cptr &config) const
 {
     // 利用半径绘制正圆
-    auto draw_circle = [&]()->bool
+    auto draw_circle = [&]() -> bool
     {
         const auto &image_info = this->getImageCache();
         if (!image_info.isSetCorners())
@@ -788,12 +785,12 @@ void RuneTargetInactive::drawFeature(cv::Mat &image, const DrawConfig_cptr &conf
         {
             cv::circle(image, center, radius * 0.125f, circle_color, circle_thickness);
         }
-        
+
         return true;
     };
 
     // 绘制椭圆
-    auto draw_ellipse = [&]()->bool
+    auto draw_ellipse = [&]() -> bool
     {
         const auto &image_info = this->getImageCache();
         if (!image_info.isSetContours())
@@ -814,12 +811,12 @@ void RuneTargetInactive::drawFeature(cv::Mat &image, const DrawConfig_cptr &conf
     };
 
     // 绘制角点
-    auto draw_corners = [&]()->bool
+    auto draw_corners = [&]() -> bool
     {
-        const auto& image_info = this->getImageCache();
+        const auto &image_info = this->getImageCache();
         if (!image_info.isSetCorners())
             return false;
-        const auto& corners = image_info.getCorners();
+        const auto &corners = image_info.getCorners();
         for (int i = 0; i < static_cast<int>(corners.size()); i++)
         {
             auto color = rune_target_draw_param.inactive.color;
@@ -844,7 +841,7 @@ void RuneTargetInactive::drawFeature(cv::Mat &image, const DrawConfig_cptr &conf
         {
             break;
         }
-        else if(draw_corners())
+        else if (draw_corners())
         {
             break;
         }
@@ -853,5 +850,31 @@ void RuneTargetInactive::drawFeature(cv::Mat &image, const DrawConfig_cptr &conf
             draw_circle();
         }
 
-    }while(0);
+    } while (0);
+}
+
+RuneTargetInactive_ptr RuneTargetInactive::make_feature(const PoseNode &target_to_cam)
+{
+    vector<Point3f> corners_3d{};
+    for (const auto &corner : rune_target_param.GAP_3D)
+    {
+        corners_3d.emplace_back(corner);
+    }
+
+    // 重投影
+    vector<Point2f> corners_2d{};
+    projectPoints(corners_3d, target_to_cam.rvec(), target_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, corners_2d);
+
+    Point2f rune_center{};
+    vector<Point2f> temp_rune_center{};
+    projectPoints(vector<Point3f>{Point3f(0, 0, 0)}, target_to_cam.rvec(), target_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, temp_rune_center);
+
+    auto result_ptr = make_shared<RuneTargetInactive>(temp_rune_center[0], corners_2d);
+
+    if (result_ptr)
+    {
+        auto &pose_info = result_ptr->getPoseCache();
+        pose_info.getPoseNodes()[CoordFrame::CAMERA] = target_to_cam;
+    }
+    return result_ptr;
 }

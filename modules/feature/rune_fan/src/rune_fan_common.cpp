@@ -84,8 +84,8 @@ auto RuneFan::getRelativePnpPoints() const -> std::tuple<std::vector<cv::Point2f
     vector<Point3f> relative_points_3d(points_3d.size());
     for (int i = 0; i < points_3d.size(); i++)
     {
-        Matx31f points_3d_mat(points_3d[i].x, points_3d[i].y, points_3d[i].z);
-        Matx31f relative_points_3d_mat{};
+        Matx31d points_3d_mat(points_3d[i].x, points_3d[i].y, points_3d[i].z);
+        Matx31d relative_points_3d_mat{};
         if (this->getActiveFlag())
         {
             relative_points_3d_mat = rune_fan_param.ACTIVE_ROTATION * points_3d_mat + rune_fan_param.ACTIVE_TRANSLATION;
@@ -125,10 +125,10 @@ std::shared_ptr<RuneFan> RuneFan::make_feature(const PoseNode &fan_to_cam, bool 
     RuneFan_ptr result_ptr;
     if (is_active)
     {
-        vector<Point3f> top_hump_corners{};
-        vector<Point3f> bottom_center_hump_corners{};
-        vector<Point3f> side_hump_corners{};
-        vector<Point3f> bottom_side_hump_corners{};
+        vector<Point3d> top_hump_corners{};
+        vector<Point3d> bottom_center_hump_corners{};
+        vector<Point3d> side_hump_corners{};
+        vector<Point3d> bottom_side_hump_corners{};
 
         top_hump_corners = rune_fan_param.ACTIVE_TOP_3D;
         bottom_center_hump_corners = rune_fan_param.ACTIVE_BOTTOM_CENTER_3D;

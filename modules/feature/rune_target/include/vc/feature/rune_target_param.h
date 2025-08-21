@@ -79,17 +79,17 @@ struct RuneTargetParam
     //! 缺陷中心到缺陷圆的距离的与最外层圆的半径比值
     float GAP_MIN_DISTANCE_RATIO = 0.50f;
     //! 缺陷角点的PNP结算用的3D坐标
-    std::vector<cv::Point3f> GAP_3D = {cv::Point3f(-67.175, -67.175, 0), cv::Point3f(0, -95, 0),
-                                       cv::Point3f(67.175, -67.175, 0), cv::Point3f(95, 0, 0),
-                                       cv::Point3f(67.175, 67.175, 0), cv::Point3f(0, 95, 0),
-                                       cv::Point3f(-67.175, 67.175, 0), cv::Point3f(-95, 0, 0)};
+    std::vector<cv::Point3d> GAP_3D = {cv::Point3d(-67.175, -67.175, 0), cv::Point3d(0, -95, 0),
+                                       cv::Point3d(67.175, -67.175, 0), cv::Point3d(95, 0, 0),
+                                       cv::Point3d(67.175, 67.175, 0), cv::Point3d(0, 95, 0),
+                                       cv::Point3d(-67.175, 67.175, 0), cv::Point3d(-95, 0, 0)};
 
     //! 靶心坐标系相对于神符中心的旋转矩阵
-    cv::Matx33f ROTATION = (cv::Matx33f(1, 0, 0,
+    cv::Matx33d ROTATION = (cv::Matx33d(1, 0, 0,
                                         0, 1, 0,
                                         0, 0, 1));
     //! 靶心坐标系相对于神符中心的平移矩阵
-    cv::Matx31f TRANSLATION = (cv::Matx31f(0, -700, 0));
+    cv::Matx31d TRANSLATION = (cv::Matx31d(0, -700, 0));
 
     YML_INIT(
         RuneTargetParam,

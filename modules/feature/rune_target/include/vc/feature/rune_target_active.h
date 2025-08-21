@@ -6,11 +6,24 @@
 class RuneTargetActive : public RuneTarget
 {
     using Ptr = std::shared_ptr<RuneTargetActive>;
+
 public:
     RuneTargetActive() = default;
     RuneTargetActive(const RuneTargetActive &) = delete;
     RuneTargetActive(RuneTargetActive &&) = delete;
     virtual ~RuneTargetActive() = default;
+    RuneTargetActive(const Contour_cptr contour, const std::vector<cv::Point2f> corners)
+        : RuneTarget(contour, corners)
+    {
+        this->setActiveFlag(true);
+    }
+    /**
+     * @brief 构造函数
+     * 
+     * @param center 靶心中心点
+     * @param corners 角点
+     */
+    RuneTargetActive(const cv::Point2f center,const std::vector<cv::Point2f> corners);
 
     /**
      * @brief 动态类型转换
@@ -37,7 +50,7 @@ public:
                      const std::unordered_set<size_t> &mask,
                      std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs);
 
-        /**
+    /**
      * @brief 绘制特征
      *
      * @param image 要绘制的图像
@@ -48,6 +61,14 @@ public:
      *       - 默认实现为空，子类可以重载此方法以实现具体的绘制逻辑
      */
     virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
+
+    /**
+     * @brief 通过神符位姿PNP解算结果构造 RuneTargetActive
+     *
+     * @param[in] target_to_cam 靶心相对于相机的位姿解算结果
+     * @return 如果成功，返回构造的 RuneTargetActive 对象指针，否则返回 nullptr
+     */
+    static std::shared_ptr<RuneTargetActive> make_feature(const PoseNode &target_to_cam);
 
 private:
     /**

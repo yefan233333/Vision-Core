@@ -78,7 +78,7 @@ public:
      * @param is_active 是否激活
      * @return 若构造成功则返回指针，否则返回 nullptr
      */
-    auto make_feature(const PoseNode &fan_to_cam, bool is_active) -> std::shared_ptr<RuneFan>;
+    static auto make_feature(const PoseNode &fan_to_cam, bool is_active) -> std::shared_ptr<RuneFan>;
 
     /**
      * @brief 获取角点在图像坐标系和特征坐标系下的坐标
@@ -93,6 +93,8 @@ public:
      * @return [0] 图像坐标系 [1] 旋转中心坐标系 [2] 各个点的权重
      */
     auto getRelativePnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>;
+
+
 
 protected:
 };

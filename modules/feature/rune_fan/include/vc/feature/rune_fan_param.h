@@ -22,17 +22,17 @@ struct RuneFanParam
     float ACTIVE_MIN_AREA_PERIMETER_RATIO = 0.0002;
 
     //! 顶部角点的PNP解算用的3D坐标。（坐标系的中心点是的扇叶顶部中点，此时扇叶转到神符的最高处）
-    std::vector<cv::Point3f> ACTIVE_TOP_3D = {cv::Point3f(-174, -32, 0), cv::Point3f(0, 0, 0), cv::Point3f(174, -32, 0)};
+    std::vector<cv::Point3d> ACTIVE_TOP_3D = {cv::Point3d(-174, -32, 0), cv::Point3d(0, 0, 0), cv::Point3d(174, -32, 0)};
     //! 底部中心角点的PNP解算用的3D坐标
-    std::vector<cv::Point3f> ACTIVE_BOTTOM_CENTER_3D = {cv::Point3f(0, 350, 0)};
+    std::vector<cv::Point3d> ACTIVE_BOTTOM_CENTER_3D = {cv::Point3d(0, 350, 0)};
     //! 侧面角点的PNP解算用的3D坐标
-    std::vector<cv::Point3f> ACTIVE_SIDE_3D = {cv::Point3f(-186, 173, 0), cv::Point3f(186, 173, 0)};
+    std::vector<cv::Point3d> ACTIVE_SIDE_3D = {cv::Point3d(-186, 173, 0), cv::Point3d(186, 173, 0)};
     //! 底部侧面角点的PNP解算用的3D坐标
-    std::vector<cv::Point3f> ACTIVE_BOTTOM_SIDE_3D = {cv::Point3f(-57, 350, 0), cv::Point3f(57, 350, 0)};
+    std::vector<cv::Point3d> ACTIVE_BOTTOM_SIDE_3D = {cv::Point3d(-57, 350, 0), cv::Point3d(57, 350, 0)};
     //! 扇叶坐标系相对于神符中心的平移矩阵
-    cv::Matx31f ACTIVE_TRANSLATION = cv::Matx31f(0, -505, 0);
+    cv::Matx31d ACTIVE_TRANSLATION = cv::Matx31d(0, -505, 0);
     //! 扇叶坐标系相对于神符中心的旋转矩阵
-    cv::Matx33f ACTIVE_ROTATION = cv::Matx33f(1, 0, 0,
+    cv::Matx33d ACTIVE_ROTATION = cv::Matx33d(1, 0, 0,
                                               0, 1, 0,
                                               0, 0, 1);
 
@@ -66,9 +66,9 @@ struct RuneFanParam
     //! 灯臂角点的PNP解算用的3D坐标.(坐标系的中心点是的灯臂顶边中点，此时灯臂转到神符的最高处)(顺序：左上，右上，右下，左下)
     std::vector<cv::Point3f> INACTIVE_3D = {cv::Point3f(-30, 0, 0), cv::Point3f(30, 0, 0), cv::Point3f(30, 330, 0), cv::Point3f(-30, 330, 0)};
     //! 灯臂坐标系相对于神符中心的平移矩阵
-    cv::Matx31f INACTIVE_TRANSLATION = cv::Matx31f(0, -505, 0);
+    cv::Matx31d INACTIVE_TRANSLATION = cv::Matx31d(0, -505, 0);
     //! 灯臂坐标系相对于神符中心的旋转矩阵
-    cv::Matx33f INACTIVE_ROTATION = cv::Matx33f(1, 0, 0,
+    cv::Matx33d INACTIVE_ROTATION = cv::Matx33d(1, 0, 0,
                                                 0, 1, 0,
                                                 0, 0, 1);
 

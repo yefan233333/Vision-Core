@@ -21,6 +21,13 @@ public:
     RuneTargetInactive(const RuneTargetInactive &) = delete;
     RuneTargetInactive(RuneTargetInactive &&) = delete;
     virtual ~RuneTargetInactive() = default;
+    RuneTargetInactive(const Contour_cptr contour, const std::vector<cv::Point2f> corners,std::vector<RuneTargetGap> gaps)
+        : RuneTarget(contour, corners)
+    {
+        this->setActiveFlag(false);
+        this->setGaps(gaps);
+    }
+    RuneTargetInactive(const cv::Point2f center, const std::vector<cv::Point2f> corners);
 
     /**
      * @brief 动态类型转换
@@ -54,6 +61,14 @@ public:
      */
     bool correct(const cv::Point2f &rotate_center);
 
+    /**
+     * @brief 通过神符位姿PNP解算结果构造 RuneTargetInactive
+     *
+     * @param[in] target_to_cam 靶心相对于相机的位姿解算结果
+     * @return 如果成功，返回构造的 RuneTargetInactive 对象指针，否则返回 nullptr
+     */
+    static std::shared_ptr<RuneTargetInactive> make_feature(const PoseNode &target_to_cam);
+
 protected:
     /**
      * @brief 未激活 RuneTarget 的构造接口
@@ -67,6 +82,10 @@ protected:
                             const std::vector<cv::Vec4i> &hierarchy,
                             size_t idx,
                             std::unordered_set<size_t> &used_contour_idxs);
+
+    /**
+     * @brief 
+     */
 
     /**
      * @brief 通过神符位姿PNP解算结果构造 RuneTarget

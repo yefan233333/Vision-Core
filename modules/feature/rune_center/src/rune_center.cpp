@@ -288,8 +288,8 @@ std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float
     vector<Point3f> relative_points_3d(points_3d.size());
     for (size_t i = 0; i < points_3d.size(); i++)
     {
-        Matx31f points_3d_mat(points_3d[i].x, points_3d[i].y, points_3d[i].z);
-        Matx31f relative_points_3d_mat{};
+        Matx31d points_3d_mat(points_3d[i].x, points_3d[i].y, points_3d[i].z);
+        Matx31d relative_points_3d_mat{};
         relative_points_3d_mat = rune_center_param.ROTATION * points_3d_mat + rune_center_param.TRANSLATION;
         relative_points_3d[i] = Point3f(relative_points_3d_mat(0), relative_points_3d_mat(1), relative_points_3d_mat(2));
     }
