@@ -8,7 +8,14 @@
 using namespace std;
 using namespace cv;
 
-RuneTargetActive::RuneTargetActive(const Point2f center,const std::vector<cv::Point2f> corners)
+
+RuneTargetActive::RuneTargetActive(const Contour_cptr contour, const std::vector<cv::Point2f> corners)
+    : RuneTarget(contour, corners)
+{
+    setActiveFlag(true);
+}
+
+RuneTargetActive::RuneTargetActive(const Point2f center, const std::vector<cv::Point2f> corners)
 {
     vector<Point2f> temp_contour{};
     float width = rune_target_param.ACTIVE_DEFAULT_SIDE;
@@ -35,7 +42,6 @@ RuneTargetActive::RuneTargetActive(const Point2f center,const std::vector<cv::Po
     image_info.setHeight(height);
     image_info.setCorners(corners);
     image_info.setContours(vector<Contour_cptr>{contour});
-
 }
 
 /**
@@ -249,9 +255,9 @@ inline bool checkTenRing(const std::vector<Contour_cptr> &contours,
 }
 
 RuneTargetActive_ptr RuneTargetActive::make_feature(const std::vector<Contour_cptr> &contours,
-                                                                 const std::vector<cv::Vec4i> &hierarchy,
-                                                                 size_t idx,
-                                                                 std::unordered_set<size_t> &used_contour_idxs)
+                                                    const std::vector<cv::Vec4i> &hierarchy,
+                                                    size_t idx,
+                                                    std::unordered_set<size_t> &used_contour_idxs)
 {
 
     const auto &contour_outer = contours[idx];
@@ -291,7 +297,6 @@ RuneTargetActive_ptr RuneTargetActive::make_feature(const std::vector<Contour_cp
     return rune_target;
 }
 
-
 void RuneTargetActive::drawFeature(cv::Mat &image, const DrawConfig_cptr &config) const
 {
     // 利用半径绘制正圆
@@ -322,7 +327,7 @@ void RuneTargetActive::drawFeature(cv::Mat &image, const DrawConfig_cptr &config
         {
             cv::circle(image, center, radius * 0.125f, circle_color, circle_thickness);
         }
-        
+
         return true;
     };
 
@@ -370,7 +375,7 @@ RuneTargetActive_ptr RuneTargetActive::make_feature(const PoseNode &target_to_ca
     corners_3d.emplace_back(radius, 0, 0);
     corners_3d.emplace_back(0, radius, 0);
     corners_3d.emplace_back(-radius, 0, 0);
-    
+
     // 重投影
     vector<Point2f> corners_2d{};
     projectPoints(corners_3d, target_to_cam.rvec(), target_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, corners_2d);
@@ -378,7 +383,7 @@ RuneTargetActive_ptr RuneTargetActive::make_feature(const PoseNode &target_to_ca
     Point2f rune_center{};
     vector<Point2f> temp_rune_center{};
     projectPoints(vector<Point3f>{Point3f(0, 0, 0)}, target_to_cam.rvec(), target_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, temp_rune_center);
-    
+
     auto result_ptr = make_shared<RuneTargetActive>(temp_rune_center[0], corners_2d);
 
     if (result_ptr)

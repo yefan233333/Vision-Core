@@ -92,8 +92,3 @@ bool RuneGroup::correctRoll(const PoseNode &raw_cam_pnp_data, PoseNode &correcte
     _correntRoll_last_cam_pnp_data = raw_rune_to_cam_correct;
     return true;
 }
-
-std::shared_ptr<DataConverter> DataConverter::make_converter()
-{
-    return std::make_shared<DataConverter>();
-}

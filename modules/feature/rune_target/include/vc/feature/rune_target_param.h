@@ -1,95 +1,69 @@
+/**
+ * @file rune_target_param.h
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 神符靶心参数定义模块
+ * @date 2025-08-24
+ *
+ * @details
+ * 定义神符靶心参数结构体 RuneTargetParam，用于已激活与未激活靶心的面积、边长比、周长比、PNP 角点、缺口参数等。
+ * 同时定义靶心绘制参数结构体 RuneTargetDrawParam，包括激活与未激活靶心的颜色、线宽、点半径及字体信息。
+ */
+
 #pragma once
 
 #include "vc/core/yml_manager.hpp"
 #include <opencv2/core/types.hpp>
 
-//! RuneTargetParam 参数模块
+//! 神符靶心参数模块
 struct RuneTargetParam
 {
     //--------------------[通用]------------------------
-    //! 靶心的半径 /mm (仅用于可视化，不用作PNP解算)
+    //! 靶心半径 / mm，仅用于可视化
     float RADIUS = 150.f;
 
     //--------------------[已激活靶心]--------------------
+    float ACTIVE_MIN_AREA = 60.f;                                //!< 最小面积
+    float ACTIVE_MAX_AREA = 6000.f;                              //!< 最大面积
+    float ACTIVE_MIN_SIDE_RATIO = 0.99f;                         //!< 最小边长比率
+    float ACTIVE_MAX_SIDE_RATIO = 1.55f;                         //!< 最大边长比率
+    float ACTIVE_MIN_AREA_RATIO = 0.8f;                          //!< 最小面积比率
+    float ACTIVE_MAX_AREA_RATIO = 1.20f;                         //!< 最大面积比率
+    float ACTIVE_MIN_PERI_RATIO = 0.35f;                         //!< 最小周长比率
+    float ACTIVE_MAX_PERI_RATIO = 0.80f;                         //!< 最大周长比率
+    float ACTIVE_MAX_CONVEX_AREA_RATIO = 0.9f;                   //!< 最大凸包面积比率
+    float ACTIVE_MAX_CONVEX_PERI_RATIO = 0.11f;                  //!< 最大凸包周长比率
+    float ACTIVE_MIN_AREA_RATIO_SUB = 0.70f;                     //!< 子轮廓最小面积比
+    float ACTIVE_MAX_AREA_RATIO_SUB_TEN_RING = 0.30f;            //!< 十环时子轮廓面积最大比
+    float ACTIVE_DEFAULT_SIDE = 60.f;                            //!< 默认边长
+    std::vector<cv::Point3f> ACTIVE_3D = {cv::Point3f(0, 0, 0)}; //!< PNP 中心点 3D 坐标
 
-    //! 最小面积——已激活靶心
-    float ACTIVE_MIN_AREA = 60.f;
-    //! 最大面积——已激活靶心
-    float ACTIVE_MAX_AREA = 6000.f;
-    //! 最小边长比率——已激活靶心
-    float ACTIVE_MIN_SIDE_RATIO = 0.99f;
-    //! 最大边长比率——已激活靶心
-    float ACTIVE_MAX_SIDE_RATIO = 1.55f;
-    //! 最小面积比率——已激活靶心
-    float ACTIVE_MIN_AREA_RATIO = 0.8f;
-    //! 最大面积比率——已激活靶心
-    float ACTIVE_MAX_AREA_RATIO = 1.20f;
-    //! 最小周长比率——已激活靶心
-    float ACTIVE_MIN_PERI_RATIO = 0.35f;
-    //! 最大周长比率——已激活靶心
-    float ACTIVE_MAX_PERI_RATIO = 0.80f;
-    //! 最大凸包面积比率——已激活靶心
-    float ACTIVE_MAX_CONVEX_AREA_RATIO = 0.9f;
-    //! 最大凸包周长比例——已激活靶心
-    float ACTIVE_MAX_CONVEX_PERI_RATIO = 0.11f;
-    //! 子轮廓与父轮廓的最小面积比值
-    float ACTIVE_MIN_AREA_RATIO_SUB = 0.70f;
-    //! 十环时，子轮廓面积之和与父轮廓面积的最大比值
-    float ACTIVE_MAX_AREA_RATIO_SUB_TEN_RING = 0.30f;
-    //! 默认边长(用于强制构造时)
-    float ACTIVE_DEFAULT_SIDE = 60.f;
+    //--------------------[未激活靶心]--------------------
+    float INACTIVE_MIN_AREA = 60.f;                                //!< 最小面积
+    float INACTIVE_MAX_AREA = 6000.f;                              //!< 最大面积
+    float INACTIVE_MIN_SIDE_RATIO = 0.99f;                         //!< 最小边长比率
+    float INACTIVE_MAX_SIDE_RATIO = 1.55f;                         //!< 最大边长比率
+    float INACTIVE_MIN_AREA_RATIO = 0.8f;                          //!< 最小面积比率
+    float INACTIVE_MAX_AREA_RATIO = 1.20f;                         //!< 最大面积比率
+    float INACTIVE_MIN_PERI_RATIO = 0.35f;                         //!< 最小周长比率
+    float INACTIVE_MAX_PERI_RATIO = 0.80f;                         //!< 最大周长比率
+    std::vector<cv::Point3f> INACTIVE_3D = {cv::Point3f(0, 0, 0)}; //!< PNP 中心点 3D 坐标
 
-    //! 中心点作PNP解算时的3D坐标——已激活靶心
-    std::vector<cv::Point3f> ACTIVE_3D = {cv::Point3f(0, 0, 0)};
+    //--------------------[缺口检测参数]--------------------
+    float GAP_MIN_AREA_RATIO = 0.025f;       //!< 缺陷面积最小比
+    float GAP_MAX_AREA_RATIO = 0.20f;        //!< 缺陷面积最大比
+    float GAP_MIN_SIDE_RATIO = 1.55f;        //!< 缺陷最小长宽比
+    float GAP_MAX_SIDE_RATIO = 8.0f;         //!< 缺陷最大长宽比
+    float GAP_CIRCLE_RADIUS_RATIO = 0.7037f; //!< 缺陷圆半径与最外层圆半径比
+    float GAP_MAX_DISTANCE_RATIO = 0.80f;    //!< 缺陷中心距最大比例
+    float GAP_MIN_DISTANCE_RATIO = 0.50f;    //!< 缺陷中心距最小比例
+    std::vector<cv::Point3d> GAP_3D = {      //!< PNP 缺口角点 3D 坐标
+        cv::Point3d(-67.175, -67.175, 0), cv::Point3d(0, -95, 0),
+        cv::Point3d(67.175, -67.175, 0), cv::Point3d(95, 0, 0),
+        cv::Point3d(67.175, 67.175, 0), cv::Point3d(0, 95, 0),
+        cv::Point3d(-67.175, 67.175, 0), cv::Point3d(-95, 0, 0)};
 
-    //----------------------【未激活靶心】----------------------
-    //! 未激活靶心的最小面积
-    float INACTIVE_MIN_AREA = 60.f;
-    //! 未激活靶心的最大面积
-    float INACTIVE_MAX_AREA = 6000.f;
-    //! 未激活靶心的最小边长比率
-    float INACTIVE_MIN_SIDE_RATIO = 0.99f;
-    //! 未激活靶心的最大边长比率
-    float INACTIVE_MAX_SIDE_RATIO = 1.55f;
-    //! 未激活靶心的最小面积比率
-    float INACTIVE_MIN_AREA_RATIO = 0.8f;
-    //! 未激活靶心的最大面积比率
-    float INACTIVE_MAX_AREA_RATIO = 1.20f;
-    //! 未激活靶心的最小周长比率
-    float INACTIVE_MIN_PERI_RATIO = 0.35f;
-    //! 未激活靶心的最大周长比率
-    float INACTIVE_MAX_PERI_RATIO = 0.80f;
-    //! 中心点作PNP解算时的3D坐标
-    std::vector<cv::Point3f> INACTIVE_3D = {cv::Point3f(0, 0, 0)};
-
-    //----------------------【缺口检测参数】-------------------------
-
-    //! 缺陷面积比率最小值
-    float GAP_MIN_AREA_RATIO = 0.025f;
-    //! 缺陷面积比率最大值
-    float GAP_MAX_AREA_RATIO = 0.20f;
-    //! 缺陷的长宽比最小值
-    float GAP_MIN_SIDE_RATIO = 1.55f;
-    //! 缺陷的长宽比最大值
-    float GAP_MAX_SIDE_RATIO = 8.0f;
-    //! 缺陷所在圆和最外层圆的半径比值
-    float GAP_CIRCLE_RADIUS_RATIO = 0.7037f;
-    //! 缺陷中心到缺陷圆的距离的与最外层圆的半径比值
-    float GAP_MAX_DISTANCE_RATIO = 0.80f;
-    //! 缺陷中心到缺陷圆的距离的与最外层圆的半径比值
-    float GAP_MIN_DISTANCE_RATIO = 0.50f;
-    //! 缺陷角点的PNP结算用的3D坐标
-    std::vector<cv::Point3d> GAP_3D = {cv::Point3d(-67.175, -67.175, 0), cv::Point3d(0, -95, 0),
-                                       cv::Point3d(67.175, -67.175, 0), cv::Point3d(95, 0, 0),
-                                       cv::Point3d(67.175, 67.175, 0), cv::Point3d(0, 95, 0),
-                                       cv::Point3d(-67.175, 67.175, 0), cv::Point3d(-95, 0, 0)};
-
-    //! 靶心坐标系相对于神符中心的旋转矩阵
-    cv::Matx33d ROTATION = (cv::Matx33d(1, 0, 0,
-                                        0, 1, 0,
-                                        0, 0, 1));
-    //! 靶心坐标系相对于神符中心的平移矩阵
-    cv::Matx31d TRANSLATION = (cv::Matx31d(0, -700, 0));
+    cv::Matx33d ROTATION = cv::Matx33d::eye();         //!< 靶心坐标系相对于神符中心的旋转矩阵
+    cv::Matx31d TRANSLATION = cv::Matx31d(0, -700, 0); //!< 靶心坐标系相对于神符中心的平移矩阵
 
     YML_INIT(
         RuneTargetParam,
@@ -126,49 +100,40 @@ struct RuneTargetParam
         YML_ADD_PARAM(GAP_MIN_DISTANCE_RATIO);
         YML_ADD_PARAM(GAP_3D);
         YML_ADD_PARAM(ROTATION);
-        YML_ADD_PARAM(TRANSLATION);
-    );
+        YML_ADD_PARAM(TRANSLATION););
 };
 
-//! RuneTargetParam 参数模块
-inline RuneTargetParam rune_target_param;
+inline RuneTargetParam rune_target_param; //!< 全局参数实例
 
-
-//! 靶心绘制参数结构体
+//! 靶心绘制参数模块
 struct RuneTargetDrawParam
 {
-    //! 已激活靶心
+    //! 已激活靶心绘制参数
     struct Active
     {
-        cv::Scalar color = cv::Scalar(0, 255, 0);          // 绿色
-        int thickness = 2;                                 // 线条粗细
-        int point_radius = 3;                              // 点的半径
-        //! 默认圆圈的大小
-        double default_circle_radius = 150.0; // 默认圆圈的大小
+        cv::Scalar color = cv::Scalar(0, 255, 0); //!< 颜色
+        int thickness = 2;                        //!< 线条粗细
+        int point_radius = 3;                     //!< 点半径
+        double default_circle_radius = 150.0;     //!< 默认圆圈大小
 
         YML_INIT(
             Active,
             YML_ADD_PARAM(color);
             YML_ADD_PARAM(thickness);
             YML_ADD_PARAM(point_radius);
-            YML_ADD_PARAM(default_circle_radius);
-        );
+            YML_ADD_PARAM(default_circle_radius););
     } active;
 
-    //! 未激活靶心
+    //! 未激活靶心绘制参数
     struct Inactive
     {
-        cv::Scalar color = cv::Scalar(0, 255, 0);        // 绿色
-        int thickness = 2;                                 // 线条粗细
-        int point_radius = 3;                              // 点的半径
-        //! 默认圆圈的大小
-        double default_circle_radius = 150.0; // 默认圆圈的大小
-        //! 角点标注字体的大小
-        double font_scale = 0.5;
-        //! 角点标注字体的粗细
-        int font_thickness = 1;
-        //! 角点标注字体的颜色
-        cv::Scalar font_color = cv::Scalar(255, 255, 255);
+        cv::Scalar color = cv::Scalar(0, 255, 0);          //!< 颜色
+        int thickness = 2;                                 //!< 线条粗细
+        int point_radius = 3;                              //!< 点半径
+        double default_circle_radius = 150.0;              //!< 默认圆圈大小
+        double font_scale = 0.5;                           //!< 角点标注字体大小
+        int font_thickness = 1;                            //!< 角点标注字体粗细
+        cv::Scalar font_color = cv::Scalar(255, 255, 255); //!< 角点标注字体颜色
 
         YML_INIT(
             Inactive,
@@ -178,8 +143,8 @@ struct RuneTargetDrawParam
             YML_ADD_PARAM(default_circle_radius);
             YML_ADD_PARAM(font_scale);
             YML_ADD_PARAM(font_thickness);
-            YML_ADD_PARAM(font_color);
-        );
+            YML_ADD_PARAM(font_color););
     } inactive;
 };
-inline RuneTargetDrawParam rune_target_draw_param;
+
+inline RuneTargetDrawParam rune_target_draw_param; //!< 全局绘制参数实例

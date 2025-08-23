@@ -2,73 +2,49 @@
 
 #include "vc/core/yml_manager.hpp"
 
-//! RuneFanParam 参数模块
+/**
+ * @brief RuneFanParam 参数模块
+ *
+ * 神符扇叶识别参数，包括已激活与未激活扇叶的尺寸、面积、比例、3D坐标及坐标系变换矩阵等。
+ */
 struct RuneFanParam
 {
-    //------------------【已激活】-------------------
-    //! 已激活扇叶的最大长边短边比
-    float ACTIVE_MAX_SIDE_RATIO = 2.0;
-    //! 已激活扇叶的最小面积
-    float ACTIVE_MIN_AREA = 100.0;
-    //! 已激活扇叶的最大面积
-    float ACTIVE_MAX_AREA = 4000.0;
-    //! 已激活扇叶的与其最小外接矩形的最小面积比例
-    float ACTIVE_MIN_AREA_RATIO = 0.05;
-    //! 已激活扇叶与其最小外接矩形的最大面积比例
-    float ACTIVE_MAX_AREA_RATIO = 0.60;
-    //! 已激活扇叶的最大面积周长比
-    float ACTIVE_MAX_AREA_PERIMETER_RATIO = 0.030;
-    //! 已激活扇叶的最小面积周长比
-    float ACTIVE_MIN_AREA_PERIMETER_RATIO = 0.0002;
+    //------------------【已激活扇叶参数】-------------------
+    float ACTIVE_MAX_SIDE_RATIO = 2.0;              //!< 已激活扇叶的最大长边短边比
+    float ACTIVE_MIN_AREA = 100.0;                  //!< 已激活扇叶的最小面积
+    float ACTIVE_MAX_AREA = 4000.0;                 //!< 已激活扇叶的最大面积
+    float ACTIVE_MIN_AREA_RATIO = 0.05;             //!< 已激活扇叶面积占最小外接矩形比例下限
+    float ACTIVE_MAX_AREA_RATIO = 0.60;             //!< 已激活扇叶面积占最小外接矩形比例上限
+    float ACTIVE_MAX_AREA_PERIMETER_RATIO = 0.030;  //!< 已激活扇叶最大面积周长比
+    float ACTIVE_MIN_AREA_PERIMETER_RATIO = 0.0002; //!< 已激活扇叶最小面积周长比
 
-    //! 顶部角点的PNP解算用的3D坐标。（坐标系的中心点是的扇叶顶部中点，此时扇叶转到神符的最高处）
-    std::vector<cv::Point3d> ACTIVE_TOP_3D = {cv::Point3d(-174, -32, 0), cv::Point3d(0, 0, 0), cv::Point3d(174, -32, 0)};
-    //! 底部中心角点的PNP解算用的3D坐标
-    std::vector<cv::Point3d> ACTIVE_BOTTOM_CENTER_3D = {cv::Point3d(0, 350, 0)};
-    //! 侧面角点的PNP解算用的3D坐标
-    std::vector<cv::Point3d> ACTIVE_SIDE_3D = {cv::Point3d(-186, 173, 0), cv::Point3d(186, 173, 0)};
-    //! 底部侧面角点的PNP解算用的3D坐标
-    std::vector<cv::Point3d> ACTIVE_BOTTOM_SIDE_3D = {cv::Point3d(-57, 350, 0), cv::Point3d(57, 350, 0)};
-    //! 扇叶坐标系相对于神符中心的平移矩阵
-    cv::Matx31d ACTIVE_TRANSLATION = cv::Matx31d(0, -505, 0);
-    //! 扇叶坐标系相对于神符中心的旋转矩阵
-    cv::Matx33d ACTIVE_ROTATION = cv::Matx33d(1, 0, 0,
+    std::vector<cv::Point3d> ACTIVE_TOP_3D = {cv::Point3d(-174, -32, 0), cv::Point3d(0, 0, 0), cv::Point3d(174, -32, 0)}; //!< 顶部角点3D坐标
+    std::vector<cv::Point3d> ACTIVE_BOTTOM_CENTER_3D = {cv::Point3d(0, 350, 0)};                                          //!< 底部中心角点3D坐标
+    std::vector<cv::Point3d> ACTIVE_SIDE_3D = {cv::Point3d(-186, 173, 0), cv::Point3d(186, 173, 0)};                      //!< 侧面角点3D坐标
+    std::vector<cv::Point3d> ACTIVE_BOTTOM_SIDE_3D = {cv::Point3d(-57, 350, 0), cv::Point3d(57, 350, 0)};                 //!< 底部侧面角点3D坐标
+
+    cv::Matx31d ACTIVE_TRANSLATION = cv::Matx31d(0, -505, 0); //!< 扇叶坐标系相对神符中心平移矩阵
+    cv::Matx33d ACTIVE_ROTATION = cv::Matx33d(1, 0, 0,        //!< 扇叶坐标系相对神符中心旋转矩阵
                                               0, 1, 0,
                                               0, 0, 1);
 
-    //! 残缺扇叶的最小面积
-    float ACTIVE_MIN_AREA_INCOMPLETE = 30.0;
-    //! 残缺扇叶的最大面积周长比
-    float ACTIVE_MAX_AREA_PERIMETER_RATIO_INCOMPLETE = 0.07;
-    //! 残缺扇叶的方向的最大偏移角度
-    float ACTIVE_MAX_DIRECTION_DELTA_INCOMPLETE = 45.0;
+    float ACTIVE_MIN_AREA_INCOMPLETE = 30.0;                 //!< 残缺扇叶最小面积
+    float ACTIVE_MAX_AREA_PERIMETER_RATIO_INCOMPLETE = 0.07; //!< 残缺扇叶最大面积周长比
+    float ACTIVE_MAX_DIRECTION_DELTA_INCOMPLETE = 45.0;      //!< 残缺扇叶方向最大偏移角度
 
-    //-----------------【未激活】--------------------
-    //! 迭代匹配箭头时的最大面积增长比例
-    float INACTIVE_MAX_AREA_GROWTH_RATIO = 1.5f;
-    //! 箭头匹配时，两矩形的投影比值
-    float INACTIVE_MAX_RECT_PROJECTION_RATIO = 1.5f;
-
-    //! 灯臂的凸包轮廓与其最小外接矩形的最小面积比例
-    float INACTIVE_MIN_AREA_RATIO = 0.70;
-    //! 进行轮廓合并时的距离阈值比例
-    float INACTIVE_MERGE_DISTANCE_RATIO = 0.5;
-    //! 灯臂的长边与短边的最大比例
-    float INACTIVE_MAX_SIDE_RATIO = 6.0;
-    //! 灯臂的长边与短边的最小比例
-    float INACTIVE_MIN_SIDE_RATIO = 2.0;
-    //! 灯臂的最小面积
-    float INACTIVE_MIN_AREA = 100.0;
-    //! 灯臂的最大面积
-    float INACTIVE_MAX_AREA = 4000.0;
-    //! 灯臂距离其它特征的最大距离比例
-    float INACTIVE_MAX_DISTANCE_RATIO = 6.0;
-    //! 灯臂角点的PNP解算用的3D坐标.(坐标系的中心点是的灯臂顶边中点，此时灯臂转到神符的最高处)(顺序：左上，右上，右下，左下)
-    std::vector<cv::Point3d> INACTIVE_3D = {cv::Point3d(-30, 0, 0), cv::Point3d(30, 0, 0), cv::Point3d(30, 330, 0), cv::Point3d(-30, 330, 0)};
-    //! 灯臂坐标系相对于神符中心的平移矩阵
-    cv::Matx31d INACTIVE_TRANSLATION = cv::Matx31d(0, -505, 0);
-    //! 灯臂坐标系相对于神符中心的旋转矩阵
-    cv::Matx33d INACTIVE_ROTATION = cv::Matx33d(1, 0, 0,
+    //-----------------【未激活扇叶参数】--------------------
+    float INACTIVE_MAX_AREA_GROWTH_RATIO = 1.5f;                                                                                               //!< 匹配箭头时最大面积增长比例
+    float INACTIVE_MAX_RECT_PROJECTION_RATIO = 1.5f;                                                                                           //!< 箭头匹配时矩形投影比值
+    float INACTIVE_MIN_AREA_RATIO = 0.70;                                                                                                      //!< 灯臂凸包与最小外接矩形最小面积比例
+    float INACTIVE_MERGE_DISTANCE_RATIO = 0.5;                                                                                                 //!< 轮廓合并距离阈值比例
+    float INACTIVE_MAX_SIDE_RATIO = 6.0;                                                                                                       //!< 灯臂最大长边短边比
+    float INACTIVE_MIN_SIDE_RATIO = 2.0;                                                                                                       //!< 灯臂最小长边短边比
+    float INACTIVE_MIN_AREA = 100.0;                                                                                                           //!< 灯臂最小面积
+    float INACTIVE_MAX_AREA = 4000.0;                                                                                                          //!< 灯臂最大面积
+    float INACTIVE_MAX_DISTANCE_RATIO = 6.0;                                                                                                   //!< 灯臂与其他特征最大距离比例
+    std::vector<cv::Point3d> INACTIVE_3D = {cv::Point3d(-30, 0, 0), cv::Point3d(30, 0, 0), cv::Point3d(30, 330, 0), cv::Point3d(-30, 330, 0)}; //!< 灯臂角点3D坐标
+    cv::Matx31d INACTIVE_TRANSLATION = cv::Matx31d(0, -505, 0);                                                                                //!< 灯臂坐标系相对神符中心平移矩阵
+    cv::Matx33d INACTIVE_ROTATION = cv::Matx33d(1, 0, 0,                                                                                       //!< 灯臂坐标系相对神符中心旋转矩阵
                                                 0, 1, 0,
                                                 0, 0, 1);
 
@@ -104,23 +80,26 @@ struct RuneFanParam
         YML_ADD_PARAM(INACTIVE_ROTATION););
 };
 
-//! RuneFanParam 参数模块
-inline RuneFanParam rune_fan_param;
+inline RuneFanParam rune_fan_param; //!< 全局RuneFan参数实例
 
-//! 神符扇叶的绘制参数
+/**
+ * @brief 神符扇叶绘制参数
+ */
 struct RuneFanDrawParam
 {
-    //! 已激活扇叶
+    /**
+     * @brief 已激活扇叶绘制参数
+     */
     struct Active
     {
-        cv::Scalar color = cv::Scalar(0, 255, 0);          // 绿色
-        int thickness = 2;                                 // 线条粗细
-        int point_radius = 3;                              // 点的半径
-        double font_scale = 0.5;                           //!< 文字大小
-        int font_thickness = 1;                            //!< 文字粗细
-        cv::Scalar font_color = cv::Scalar(255, 255, 255); //!< 文字颜色
-        int arrow_thickness = 2;                           //!< 箭头粗细
-        double arrow_length = 50.0;                        //!< 箭头长度
+        cv::Scalar color = cv::Scalar(0, 255, 0);           //!< 绘制颜色
+        int thickness = 2;                                  //!< 线条粗细
+        int point_radius = 3;                               //!< 点半径
+        double font_scale = 0.5;                            //!< 文字大小
+        int font_thickness = 1;                             //!< 文字粗细
+        cv::Scalar font_color = cv::Scalar(255, 255, 255);  //!< 文字颜色
+        int arrow_thickness = 2;                            //!< 箭头粗细
+        double arrow_length = 50.0;                         //!< 箭头长度
         cv::Scalar arrow_color = cv::Scalar(255, 255, 255); //!< 箭头颜色
 
         YML_INIT(
@@ -133,21 +112,21 @@ struct RuneFanDrawParam
             YML_ADD_PARAM(font_color);
             YML_ADD_PARAM(arrow_thickness);
             YML_ADD_PARAM(arrow_length);
-            YML_ADD_PARAM(arrow_color);
-        );
-            
+            YML_ADD_PARAM(arrow_color););
     } active;
 
-    //! 未激活扇叶
+    /**
+     * @brief 未激活扇叶绘制参数
+     */
     struct Inactive
     {
-        cv::Scalar color = cv::Scalar(0, 255, 0);          // 绿色
-        int thickness = 2;                                 // 线条粗细
-        int point_radius = 3;                              // 点的半径
-        double font_scale = 0.5;                           //!< 文字大小
-        int font_thickness = 1;                            //!< 文字粗细
-        cv::Scalar font_color = cv::Scalar(255, 255, 255); //!< 文字颜色
-        int arrow_thickness = 2;                           //!< 箭头粗细
+        cv::Scalar color = cv::Scalar(0, 255, 0);           //!< 绘制颜色
+        int thickness = 2;                                  //!< 线条粗细
+        int point_radius = 3;                               //!< 点半径
+        double font_scale = 0.5;                            //!< 文字大小
+        int font_thickness = 1;                             //!< 文字粗细
+        cv::Scalar font_color = cv::Scalar(255, 255, 255);  //!< 文字颜色
+        int arrow_thickness = 2;                            //!< 箭头粗细
         double arrow_length = 50.0;                         //!< 箭头长度
         cv::Scalar arrow_color = cv::Scalar(255, 255, 255); //!< 箭头颜色
 
@@ -161,10 +140,8 @@ struct RuneFanDrawParam
             YML_ADD_PARAM(font_color);
             YML_ADD_PARAM(arrow_thickness);
             YML_ADD_PARAM(arrow_length);
-            YML_ADD_PARAM(arrow_color);
-        );
+            YML_ADD_PARAM(arrow_color););
     } inactive;
-
 };
 
-inline RuneFanDrawParam rune_fan_draw_param;
+inline RuneFanDrawParam rune_fan_draw_param; //!< 全局RuneFan绘制参数实例

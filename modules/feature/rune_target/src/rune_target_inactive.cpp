@@ -10,6 +10,13 @@
 using namespace std;
 using namespace cv;
 
+RuneTargetInactive::RuneTargetInactive(const Contour_cptr contour, const std::vector<cv::Point2f> corners, std::vector<RuneTargetGap> gaps)
+    : RuneTarget(contour, corners)
+{
+    this->setActiveFlag(false);
+    this->setGaps(gaps);
+}
+
 RuneTargetInactive::RuneTargetInactive(const Point2f center, const std::vector<cv::Point2f> corners)
 {
     vector<Point2f> temp_contour{};

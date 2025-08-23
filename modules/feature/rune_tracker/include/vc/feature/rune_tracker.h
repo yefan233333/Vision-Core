@@ -1,14 +1,21 @@
-#pragma once
+/**
+ * @file rune_tracker.h
+ * @brief 神符时间序列追踪器头文件
+ * @author 张峰玮 (3480409161@qq.com)
+ * @date 2025-08-24
+ */
 
+#pragma once
 #include "vc/feature/tracking_feature_node.h"
 
-//! 神符时间序列
+//! 神符时间序列追踪器
 class RuneTracker : public TrackingFeatureNode
 {
     using Ptr = std::shared_ptr<RuneTracker>;
 
     //! 掉帧数
     DEFINE_PROPERTY_WITH_INIT(DropFrameCount, public, protected, (int), 0);
+
 public:
     RuneTracker() = default;
     RuneTracker(const RuneTracker &) = delete;
@@ -18,15 +25,15 @@ public:
     /**
      * @brief 构建 RuneTracker
      *
-     * @param[in] p_rune 第一帧神符模块组合特征（不允许为空）
+     * @return 新建的 RuneTracker 智能指针
      */
-    static Ptr make_feature(){return std::make_shared<RuneTracker>();};
+    static Ptr make_feature() { return std::make_shared<RuneTracker>(); };
 
     /**
      * @brief 动态类型转换
      *
-     * @param[in] p_tracker tracker_ptr 抽象指针
-     * @return 派生对象指针
+     * @param[in] p_tracker 抽象 FeatureNode 指针
+     * @return 转换后的 RuneTracker 智能指针
      */
     static inline Ptr cast(FeatureNode_ptr p_tracker)
     {
@@ -37,13 +44,13 @@ public:
      * @brief 更新时间序列
      *
      * @param[in] p_rune 神符共享指针
-     * @param[in] tick 时间戳
-     * @param[in] gyro_data 云台数据
+     * @param[in] tick 当前时间戳
+     * @param[in] gyro_data 云台陀螺仪数据
      */
     void update(FeatureNode_ptr p_rune, int64 tick, const GyroData &gyro_data);
 
     /**
-     * @brief 可见性更新
+     * @brief 更新可见性
      *
      * @param[in] is_visible 是否可见
      */
@@ -51,14 +58,13 @@ public:
 
 private:
     /**
-     * @brief 从 rune 中更新数据
+     * @brief 从神符组合体更新内部数据
      *
-     * @param[in] p_combo 神符组合体
+     * @param[in] p_combo 神符组合体共享指针
      */
     void updateFromRune(FeatureNode_ptr p_combo);
 };
-//! 神符追踪器智能指针类型定义
+
+//! 神符追踪器智能指针类型
 using RuneTracker_ptr = std::shared_ptr<RuneTracker>;
 using RuneTracker_cptr = std::shared_ptr<const RuneTracker>;
-
-
