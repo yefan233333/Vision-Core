@@ -1,4 +1,5 @@
 #include "vc/feature/rune_filter_fusion.h"
+#include "vc/feature/rune_filter_ekf.h"
 
 using namespace std;
 using namespace cv;
@@ -154,6 +155,13 @@ Matx61d RuneFilterFusion::getPredict()
 
 void RuneFilterFusion::initFilter(const Matx61d &first_pos, const int64 tick)
 {
+    auto filter_ekf_xyz = RuneFilterEKF_CV::make_filter(RuneFilterDataType::XYZ);
+    _filters.push_back(filter_ekf_xyz);
+    auto filter_ekf_yp = RuneFilterEKF_CV::make_filter(RuneFilterDataType::YAW_PITCH);
+    _filters.push_back(filter_ekf_yp);
+    auto filter_ekf_roll = RuneFilterEKF_CV::make_filter(RuneFilterDataType::ROLL);
+    _filters.push_back(filter_ekf_roll);
+
     // 初始化Xyz33滤波器
     // auto filter_xyz33 = RuneFilterXyzStatic::make_filter();
     // _filters.push_back(filter_xyz33);
@@ -213,6 +221,15 @@ bool RuneFilterFusion::isValid()
             filter_roll = filter;
         }
     }
+
+    if(_filters.size() == 1)
+    {
+        if(_filters.front()->isValid())
+            return true;
+        else
+            return false;
+    }
+
 
     if (filter_xyz == nullptr || filter_yp == nullptr || filter_roll == nullptr)
     {

@@ -375,9 +375,9 @@ RuneFanInactive::RuneFanInactive(const Point2f &top_left,
     // __angle = __rotated_rect.angle;
     auto width = getDist(left_center, right_center);
     auto height = getDist(top_center, bottom_center);
-    auto is_active = false;
 
     setRotatedRect(contour->minAreaRect());
+    setActiveFlag(false);
     auto& image_info = getImageCache();
     image_info.setContours(vector<Contour_cptr>{contour});
     image_info.setWidth(width);

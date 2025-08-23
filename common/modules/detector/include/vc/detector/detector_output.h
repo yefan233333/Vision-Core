@@ -8,5 +8,7 @@
 struct DetectorOutput
 {
     //! 识别结果
-    DEFINE_PROPERTY(FeatureNodes, public, public, (std::vector<FeatureNode>));
+    DEFINE_PROPERTY(FeatureNodes, public, public, (std::vector<FeatureNode_ptr>));
+    //! 识别有效性
+    DEFINE_PROPERTY(Valid, public, public, (bool));
 };

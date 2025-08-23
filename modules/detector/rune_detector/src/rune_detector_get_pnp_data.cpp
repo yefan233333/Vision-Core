@@ -139,6 +139,8 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
     unordered_set<int> pending_num{0, 1, 2, 3, 4}; // 待匹配的编号
     for (auto &feature_group : temp_runes)
     {
+        if(pending_num.empty())
+            break;
         float angle = angle_map[feature_group];
         int min_delta_idx = -1;
         float min_delta = 1e5;
@@ -153,6 +155,7 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
                 min_delta_idx = static_cast<int>(i);
             }
         }
+        cout << "pending_num.szie() = " << pending_num.size() << endl;
         if (min_delta_idx == -1)
         {
             VC_THROW_ERROR("The min_delta_idx is -1");
@@ -162,6 +165,9 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
         // 从待匹配的编号中移除
         pending_num.erase(min_delta_idx);
     }
+
+    if(rune_idx.size() > 5)
+        VC_THROW_ERROR("The rune_idx size is greater than 5");
 
     // 将 最小编号设置为 0 ，其余编号依次递增
     int min_idx = 1e5;
@@ -174,7 +180,7 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
     {
         if (rune_idx.find(feature_group) == rune_idx.end())
         {
-            VC_THROW_ERROR("The feature_group is not in the rune_num");
+            continue;
         }
         rune_deviation.push_back(rune_idx[feature_group] * 72);
     }

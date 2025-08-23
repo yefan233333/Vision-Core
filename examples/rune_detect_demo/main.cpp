@@ -81,7 +81,8 @@ int main(int argc, char **argv)
     };
     createTrackbar("Frame", trackbar_window, &current_frame, max(1, total_frames - 1), on_trackbar, &cap);
 
-    FeatureNode_ptr rune_group = RuneGroup::make_feature();
+    // FeatureNode_ptr rune_group = RuneGroup::make_feature();
+    vector<FeatureNode_ptr> rune_groups{};
 
     while (true)
     {
@@ -100,24 +101,22 @@ int main(int argc, char **argv)
         input.setImage(frame);
         input.setTick(cv::getTickCount());
         input.setGyroData(GyroData()); // 空数据
-        input.setColor(PixChannel::RED);
-        input.setFeatureNodes(std::vector<FeatureNode_ptr>{rune_group});
+        input.setColor(PixChannel::BLUE);
+        input.setFeatureNodes(rune_groups);
 
         static auto rune_detector = RuneDetector::make_detector();
 
         rune_detector->detect(input, output);
+        rune_groups = output.getFeatureNodes();
 
 
         auto img_show = DebugTools::get().getImage();
-        rune_group->drawFeature(img_show);
+        if(rune_groups.size() > 0 && rune_groups.front() != nullptr)
+            rune_groups.front()->drawFeature(img_show);
 
         imshow(trackbar_window, img_show);
 
         DebugTools::get().show();
-#if FEATURE_NODE_DEBUG
-        // 开始计时
-        auto start_time = chrono::steady_clock::now();
-#endif
         int key = waitKey(1);
         if (key == 27) // 按 'ESC' 键退出
         {
@@ -134,12 +133,6 @@ int main(int argc, char **argv)
                     return 0;
             }
         }
-#if FEATURE_NODE_DEBUG
-        // 计算帧处理时间
-        auto end_time = chrono::steady_clock::now();
-        chrono::duration<double, milli> processing_time = end_time - start_time;
-        cout << "帧处理时间: " << processing_time.count() << " ms" << endl;
-#endif
     }
 }
 

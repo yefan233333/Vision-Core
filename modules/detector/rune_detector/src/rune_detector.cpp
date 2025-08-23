@@ -38,6 +38,8 @@ inline static void setBaseProperties(std::vector<FeatureNode_ptr> &groups, const
     }
 }
 
+
+
 void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
 {
     auto &groups = input.getFeatureNodes();
@@ -144,6 +146,8 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
             // 若掉帧状态下的更新失败，重新构建神符序列组
             groups = {RuneGroup::make_feature()};
             setBaseProperties(groups, gyro_data, tick);
+            output.setFeatureNodes(groups);
+            output.setValid(false);
             return;
         }
     }
@@ -170,6 +174,9 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
     rune_group->setTrackers(rune_trackers);
 
     rune_group->sync(gyro_data, tick);
+    
+    output.setValid(true);
+    output.setFeatureNodes(groups);
 
 #if FEATURE_NODE_DEBUG
     // 计算帧处理时间

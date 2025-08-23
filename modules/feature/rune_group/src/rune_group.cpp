@@ -56,31 +56,37 @@ inline bool checkPoseDiff(const Matx61f &pos1, const Matx61f &pos2)
 
     if (abs(diff_x) > rune_group_param.MAX_X_DEVIATION)
     {
+        VC_WARNING_INFO("X deviation too large : %f", diff_x);
         return false;
     }
 
     if (abs(diff_y) > rune_group_param.MAX_Y_DEVIATION)
     {
+        VC_WARNING_INFO("Y deviation too large : %f", diff_y);
         return false;
     }
 
     if (abs(diff_z) > rune_group_param.MAX_Z_DEVIATION)
     {
+        VC_WARNING_INFO("Z deviation too large : %f", diff_z);
         return false;
     }
 
     if (abs(diff_yaw) > rune_group_param.MAX_YAW_DEVIATION)
     {
+        VC_WARNING_INFO("Yaw deviation too large : %f", diff_yaw);
         return false;
     }
 
     if (abs(diff_pitch) > rune_group_param.MAX_PITCH_DEVIATION)
     {
+        VC_WARNING_INFO("Pitch deviation too large : %f", diff_pitch);
         return false;
     }
 
     if (abs(diff_roll) > rune_group_param.MAX_ROLL_DEVIATION)
     {
+        VC_WARNING_INFO("Roll deviation too large : %f", diff_roll);
         return false;
     }
 
@@ -160,6 +166,7 @@ bool RuneGroup::checkExtremePose(const PoseNode &rune_to_cam, const PoseNode &ru
     float dis_cam = cv::norm(rune_to_cam.tvec());
     if (dis_cam > rune_group_param.MAX_DISTANCE || dis_cam < rune_group_param.MIN_DISTANCE)
     {
+        VC_WARNING_INFO("Camera distance out of range : %f", dis_cam);
         return false;
     }
     // 2. 判断位姿朝向是否触发万向锁
@@ -167,22 +174,26 @@ bool RuneGroup::checkExtremePose(const PoseNode &rune_to_cam, const PoseNode &ru
     Matx61f pos_cam = DataConverter::cvtPos(rune_to_cam.tvec(), rune_to_cam.rvec(), is_gimbal_lock);
     if (is_gimbal_lock)
     {
+        VC_WARNING_INFO("Camera pose triggers gimbal lock");
         return false;
     }
     // 3. 判断yaw角朝向是否极端
     float yaw_cam = pos_cam(3);
     if (yaw_cam > rune_group_param.MAX_YAW_DEVIATION_ANGLE || yaw_cam < -rune_group_param.MAX_YAW_DEVIATION_ANGLE)
     {
+        VC_WARNING_INFO("Camera yaw angle out of range : %f", yaw_cam);
         return false;
     }
     // 4. 判断神符的目标转角是否过于极端
     auto [rotate_yaw, rotate_pitch] = calculateTargetAngle(rune_to_cam.tvec());
     if (rotate_yaw > rune_group_param.MAX_ROTATE_YAW || rotate_yaw < -rune_group_param.MAX_ROTATE_YAW)
     {
+        VC_WARNING_INFO("Camera rotate yaw out of range : %f", rotate_yaw);
         return false;
     }
     if (rotate_pitch > rune_group_param.MAX_ROTATE_PITCH || rotate_pitch < -rune_group_param.MAX_ROTATE_PITCH)
     {
+        VC_WARNING_INFO("Camera rotate pitch out of range : %f", rotate_pitch);
         return false;
     }
 
@@ -191,12 +202,14 @@ bool RuneGroup::checkExtremePose(const PoseNode &rune_to_cam, const PoseNode &ru
     Matx61f pos_gyro = DataConverter::cvtPos(rune_to_gyro.tvec(), rune_to_gyro.rvec(), is_gimbal_lock);
     if (is_gimbal_lock)
     {
+        VC_WARNING_INFO("Gyro pose triggers gimbal lock");
         return false;
     }
     // 2. 判断神符的pitch角朝向是否过于极端
     float pitch_gyro = pos_gyro(4);
     if (pitch_gyro > rune_group_param.MAX_PITCH_DEVIATION_ANGLE || pitch_gyro < -rune_group_param.MAX_PITCH_DEVIATION_ANGLE)
     {
+        VC_WARNING_INFO("Gyro pitch angle out of range : %f", pitch_gyro);
         return false;
     }
 
@@ -424,11 +437,11 @@ bool RuneGroup::visibilityProcess(bool is_observation)
     auto &_vanish_num = this->getVanishNum();
     if (!is_observation)
     {
+        _vanish_num++;
         if (_vanish_num > rune_group_param.MAX_VANISH_NUMBER)
         {
             return false;
         }
-        _vanish_num++;
     }
     else
     {
