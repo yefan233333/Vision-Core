@@ -130,10 +130,8 @@ RuneCombo::RuneCombo(const FeatureNode_ptr &p_target,
     image_info.setHeight(height);
     image_info.setCenter(center);
 
-    // 相机坐标系到转轴坐标系
     PoseNode cam_to_joint(camera_param.cam2joint_rmat, camera_param.cam2joint_tvec);
     PoseNode rune_to_joint = rune_to_cam + cam_to_joint;
-    // 转轴坐标系到陀螺仪坐标系
     Matx33f joint_to_gyro_R = euler2Mat(deg2rad(gyro_data.rotation.yaw), Y) * euler2Mat(deg2rad(-1 * gyro_data.rotation.pitch), X);
     PoseNode joint_to_gyro(joint_to_gyro_R, Vec3f{0, 0, 0});
 
@@ -161,11 +159,6 @@ RuneCombo::RuneCombo(const FeatureNode_ptr &p_target,
     child_features[FeatureNode::ChildFeatureType::RUNE_TARGET] = p_target;
     child_features[FeatureNode::ChildFeatureType::RUNE_CENTER] = p_center;
     child_features[FeatureNode::ChildFeatureType::RUNE_FAN] = p_fan;
-
-    // child_features[0] = p_target;
-    // child_features[1] = p_center;
-    // child_features[2] = p_fan;
-
     // ---------- 更新组合体类型信息 ----------
     setRuneType(type);
     setTick(tick);

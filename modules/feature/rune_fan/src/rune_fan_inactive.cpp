@@ -7,175 +7,60 @@
 using namespace std;
 using namespace cv;
 
-#define rune_fan_debug_0
-
-#define rune_fan_inactive
-
-#define rune_fan_show
-
-/**
- * @brief 未激活神符扇叶等级向量判断
- *
- * @param[in] contours 所有轮廓
- * @param[in] hierarchy 所有的等级向量
- * @param[in] idx 指定的等级向量的下标
- * @return 等级结构是否满足要求
- *
- */
 inline bool isHierarchyInactiveFan(const vector<Contour_cptr> &contours, const vector<Vec4i> &hierarchy, size_t idx)
 {
-    if (hierarchy[idx][3] != -1) // 无父轮廓
-        return false;
-
-    return true;
+    return hierarchy[idx][3] == -1;
 }
 
-/**
- * @brief 计算小矩形在大矩形边上的投影比值
- */
 inline double calculateProjectionRatio(const RotatedRect &rect1, const RotatedRect &rect2)
 {
-    // 确定大矩形和小矩形
-    bool rect1Larger = rect1.size.area() > rect2.size.area();
-    const RotatedRect &largeRect = rect1Larger ? rect1 : rect2;
-    const RotatedRect &smallRect = rect1Larger ? rect2 : rect1;
+    const RotatedRect &largeRect = rect1.size.area() > rect2.size.area() ? rect1 : rect2;
+    const RotatedRect &smallRect = rect1.size.area() > rect2.size.area() ? rect2 : rect1;
 
-    vector<Point2f> largePoints(4);
-    largeRect.points(largePoints.data());
-    vector<Point2f> smallPoints(4);
-    smallRect.points(smallPoints.data());
+    Point2f largePoints[4], smallPoints[4];
+    largeRect.points(largePoints);
+    smallRect.points(smallPoints);
 
-    // 获取大矩形的两条边的方向
-    struct EdgeInfo
+    struct Edge
     {
-        Point2f start;
-        Point2f end;
-        Point2f direction;
-        double length;
+        Point2f start, end, dir;
+        double len;
     };
-    vector<EdgeInfo> largeEdges(2);
+    Edge edges[2];
     for (int i = 0; i < 2; ++i)
     {
-        largeEdges[i].start = largePoints[i];
-        largeEdges[i].end = largePoints[(i + 1) % 4];
-        largeEdges[i].direction = largeEdges[i].end - largeEdges[i].start;
-        largeEdges[i].length = norm(largeEdges[i].direction);
-        largeEdges[i].direction /= largeEdges[i].length; // 归一化
+        edges[i].start = largePoints[i];
+        edges[i].end = largePoints[(i + 1) % 4];
+        edges[i].dir = edges[i].end - edges[i].start;
+        edges[i].len = norm(edges[i].dir);
+        edges[i].dir /= edges[i].len;
     }
 
-    // 将小矩形的两条边分别投影到大矩形的两条边上
-    vector<double> projections_x{};
-    vector<double> projections_y{};
+    vector<double> proj_x, proj_y;
     for (int i = 0; i < 4; ++i)
     {
-        Point2f v_x = smallPoints[i] - largeEdges[0].start;
-        Point2f v_y = smallPoints[i] - largeEdges[1].start;
-        double projection_x = v_x.dot(largeEdges[0].direction);
-        double projection_y = v_y.dot(largeEdges[1].direction);
-
-        // double projection_x = (smallPoints[i] - largeEdges[0].start).dot(largeEdges[0].direction);
-        // double projection_y = (smallPoints[i] - largeEdges[1].start).dot(largeEdges[1].direction);
-        projections_x.push_back(projection_x);
-        projections_y.push_back(projection_y);
-        // projections_x.push_back((smallPoints[i] - largeEdges[0].start).dot(largeEdges[0].direction));
-        // projections_y.push_back((smallPoints[i] - largeEdges[1].start).dot(largeEdges[1].direction));
+        proj_x.push_back((smallPoints[i] - edges[0].start).dot(edges[0].dir));
+        proj_y.push_back((smallPoints[i] - edges[1].start).dot(edges[1].dir));
     }
-    struct RangeDouble
-    {
-        double min;
-        double max;
-        double size() const
-        {
-            return max - min;
-        }
-    };
-    RangeDouble x_range = {*min_element(projections_x.begin(), projections_x.end()), *max_element(projections_x.begin(), projections_x.end())};
-    RangeDouble y_range = {*min_element(projections_y.begin(), projections_y.end()), *max_element(projections_y.begin(), projections_y.end())};
-    RangeDouble x_raw_range = {0, largeEdges[0].length};
-    RangeDouble y_raw_range = {0, largeEdges[1].length};
-    // 取区间交集，并将交集最大的方向的交集比例作为投影比值
-    RangeDouble x_intersection = {max(x_range.min, x_raw_range.min), min(x_range.max, x_raw_range.max)};
-    RangeDouble y_intersection = {max(y_range.min, y_raw_range.min), min(y_range.max, y_raw_range.max)};
-    float x_intersection_ratio = x_intersection.size() / x_raw_range.size();
-    float y_intersection_ratio = y_intersection.size() / y_raw_range.size();
 
-    return x_intersection_ratio > y_intersection_ratio ? x_range.size() / x_raw_range.size() : y_intersection.size() / y_raw_range.size();
-
-    // Range x_range = Range(*min_element(projections_x.begin(), projections_x.end()), *max_element(projections_x.begin(), projections_x.end()));
-    // Range y_range = Range(*min_element(projections_y.begin(), projections_y.end()), *max_element(projections_y.begin(), projections_y.end()));
-    // Range x_raw_range = Range(0, largeEdges[0].length);
-    // Range y_raw_range = Range(0, largeEdges[1].length);
-
-    // // 取区间交集，并将交集最大的方向的交集比例作为投影比值
-    // Range x_intersection = x_range & x_raw_range;
-    // Range y_intersection = y_range & y_raw_range;
-    // return x_intersection.size() > y_intersection.size() ? x_intersection.size() / x_raw_range.size() : y_intersection.size() / y_raw_range.size();
+    auto range = [](const vector<double> &v)
+    { return make_pair(*min_element(v.begin(), v.end()), *max_element(v.begin(), v.end())); };
+    auto [x_min, x_max] = range(proj_x);
+    auto [y_min, y_max] = range(proj_y);
+    double x_len = edges[0].len, y_len = edges[1].len;
+    double x_int = max(0.0, min(x_max, x_len) - max(x_min, 0.0));
+    double y_int = max(0.0, min(y_max, y_len) - max(y_min, 0.0));
+    return x_int / x_len > y_int / y_len ? (x_max - x_min) / x_len : y_int / y_len;
 }
 
-// inline double calculateProjectionRatio(const RotatedRect &rect1, const RotatedRect &rect2)
-// {
-//     // 确定大矩形和小矩形
-//     bool rect1Larger = rect1.size.area() > rect2.size.area();
-//     const RotatedRect &largeRect = rect1Larger ? rect1 : rect2;
-//     const RotatedRect &smallRect = rect1Larger ? rect2 : rect1;
-
-//     // 边结构
-//     struct EdgeInfo
-//     {
-//         Point2f start;
-//         Point2f end;
-//         Point2f direction;
-//         double length;
-//     };
-
-//     // 获取大矩形的四条边
-//     vector<EdgeInfo> largeEdges(4);
-//     vector<Point2f> largePoints(4);
-//     largeRect.points(largePoints.data());
-//     for (int i = 0; i < 4; ++i)
-//     {
-//         largeEdges[i].start = largePoints[i];
-//         largeEdges[i].end = largePoints[(i + 1) % 4];
-//     }
-
-//     // 计算大矩形的边的方向和长度
-//     for (int i = 0; i < 4; ++i)
-//     {
-//         largeEdges[i].direction = largeEdges[i].end - largeEdges[i].start;
-//         largeEdges[i].length = norm(largeEdges[i].direction);
-//         largeEdges[i].direction /= largeEdges[i].length; // 归一化
-//     }
-
-//     // 找出面向小矩形的边
-//     vector<EdgeInfo> candidateEdges{};
-//     Point2f to_small = smallRect.center - largeRect.center;
-//     for (int i = 0; i < 4; i++)
-//     {
-//         Point2f last_direction = largeEdges[(i + 3) % 4].direction;
-//         Point2f current_direction = largeEdges[i].direction;
-//         if (last_direction.cross(to_small) * current_direction.cross(to_small) < 0)
-//         {
-//             candidateEdges.push_back(largeEdges[i]);
-//         }
-//     }
-// }
-
-/**
- * @brief 轮廓过滤
- *
- * @note 尝试删除远离未激活靶心那端的轮廓，防止神符中心轮廓被误识别成未激活靶心的一部分
- */
 inline void filterFanContours(const std::vector<Contour_cptr> &in_contours, std::vector<Contour_cptr> &out_contours, vector<FeatureNode_ptr> &inactive_targets)
 {
-    // 0. 判空
-    if (in_contours.size() < 2 || inactive_targets.empty()) // 当轮廓数量为1时，不进行过滤
+    if (in_contours.size() < 2 || inactive_targets.empty())
         return;
 
-    // 1. 用于参考的未激活靶心
     FeatureNode_ptr ref_target = nullptr;
     if (inactive_targets.size() > 1) // 多个靶心，选择最近的那个
     {
-        // 1. 设置所有轮廓的权重。
         unordered_map<Contour_cptr, double> contour_weights{};
         double area_sum = 0;
         for (auto &contour : in_contours)
@@ -189,12 +74,10 @@ inline void filterFanContours(const std::vector<Contour_cptr> &in_contours, std:
             contour_weights[contour] = contour->area() / area_sum;
         }
 
-        // 2. 计算所有轮廓的重心
         Point2f all_contours_center{0, 0};
         for (auto &contour : in_contours)
             all_contours_center += static_cast<Point2f>(contour->center()) * contour_weights[contour];
 
-        // 3. 获取距离重心最近的未激活靶心
         auto near_target = *min_element(inactive_targets.begin(), inactive_targets.end(), [&](const FeatureNode_ptr &a, const FeatureNode_ptr &b)
                                         { return norm(a->getImageCache().getCenter() - all_contours_center) < norm(b->getImageCache().getCenter() - all_contours_center); });
     }
@@ -203,11 +86,9 @@ inline void filterFanContours(const std::vector<Contour_cptr> &in_contours, std:
         ref_target = inactive_targets.front();
     }
 
-    // 2. 获取最远的轮廓
     auto far_contour = *max_element(in_contours.begin(), in_contours.end(), [&](const Contour_cptr &a, const Contour_cptr &b)
                                     { return norm(static_cast<Point2f>(a->center()) - ref_target->getImageCache().getCenter()) < norm(static_cast<Point2f>(b->center()) - ref_target->getImageCache().getCenter()); });
 
-    // 3. 删除远离靶心的轮廓
     out_contours = in_contours;
     out_contours.erase(remove_if(out_contours.begin(), out_contours.end(), [&](const Contour_cptr &contour)
                                  { return contour == far_contour; }),
@@ -221,7 +102,6 @@ void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
                  std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs,
                  const std::vector<FeatureNode_cptr> &inactive_targets)
 {
-    // SRVL_Error(SRVL_StsBadArg, "The number of 1 in \"order\" must be less than or equal to the number of nodes.");
     if (contours.empty() || hierarchy.empty())
     {
         VC_THROW_ERROR("The contours or hierarchy is empty. to find inactive fans.");
@@ -248,9 +128,6 @@ void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
     {
         contours_group.emplace_back(vector<size_t>(1, idx)); // 初始化每个轮廓为一个组
     }
-
-    // matchFanContours(contours, find_idxs, contours_group); // 获取匹配好的轮廓组
-
     for (auto &group : contours_group)
     {
         vector<Contour_cptr> temp_contours{};
@@ -266,13 +143,11 @@ void RuneFanInactive::find(std::vector<FeatureNode_ptr> &fans,
 }
 
 
-// ------------------------【未激活扇叶】------------------------
 RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_cptr> &contours)
 {
     if (contours.empty())
         return nullptr;
 
-    // 获取凸包轮廓
     vector<Point> temp_contour{};
     for (auto &contour : contours)
         temp_contour.insert(temp_contour.end(), contour->points().begin(), contour->points().end());
@@ -282,7 +157,6 @@ RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_cptr> &co
     double hull_area = hull_contour->area();
     RotatedRect rotated_rect = hull_contour->minAreaRect();
 
-    // 面积判断
     double rect_area = rotated_rect.size.area();
     if (hull_area < rune_fan_param.INACTIVE_MIN_AREA)
     {
@@ -293,14 +167,12 @@ RuneFanInactive_ptr RuneFanInactive::make_feature(const vector<Contour_cptr> &co
         return nullptr;
     }
 
-    // 矩形度判断
     double area_ratio = hull_area / rotated_rect.size.area();
     if (area_ratio < rune_fan_param.INACTIVE_MIN_AREA_RATIO)
     {
         return nullptr;
     }
 
-    // 边长比例判断
     double width = max(rotated_rect.size.width, rotated_rect.size.height);
     double height = min(rotated_rect.size.width, rotated_rect.size.height);
     double side_ratio = width / height;
@@ -328,7 +200,6 @@ RuneFanInactive_ptr RuneFanInactive::make_feature(const Point2f &top_left,
     return make_shared<RuneFanInactive>(top_left, top_right, bottom_right, bottom_left);
 }
 
-// ------------------------【构造函数】------------------------
 RuneFanInactive::RuneFanInactive(const Contour_cptr hull_contour, const vector<Contour_cptr> &arrow_contours, const RotatedRect &rotated_rect)
 {
     auto width = min(rotated_rect.size.width, rotated_rect.size.height);
@@ -336,6 +207,7 @@ RuneFanInactive::RuneFanInactive(const Contour_cptr hull_contour, const vector<C
     auto center = rotated_rect.center;
     vector<Point2f> corners(4);
     rotated_rect.points(corners.data());
+
     // 取最小外接矩形的长边作为方向
     Point2f direction_temp{};
     if (getDist(corners[0], corners[1]) > getDist(corners[0], corners[3]))
@@ -343,12 +215,10 @@ RuneFanInactive::RuneFanInactive(const Contour_cptr hull_contour, const vector<C
     else
         direction_temp = corners[0] - corners[3];
 
-    // 设置基本属性
     setArrowContours(arrow_contours);
     setActiveFlag(false);
     setRotatedRect(rotated_rect);
 
-    // 设置图像属性
     auto& image_info = getImageCache();
     image_info.setContours(vector<Contour_cptr>{hull_contour});
     image_info.setCorners(corners);
@@ -371,8 +241,6 @@ RuneFanInactive::RuneFanInactive(const Point2f &top_left,
     auto center = (top_center + bottom_center) / 2;
     auto contour = ContourWrapper<int>::make_contour({static_cast<Point>(top_left), static_cast<Point>(top_right), static_cast<Point>(bottom_right), static_cast<Point>(bottom_left)});
     auto corners = {top_left, top_right, bottom_right, bottom_left};
-    // __rotated_rect = getContour()->minAreaRect();
-    // __angle = __rotated_rect.angle;
     auto width = getDist(left_center, right_center);
     auto height = getDist(top_center, bottom_center);
 
@@ -387,7 +255,6 @@ RuneFanInactive::RuneFanInactive(const Point2f &top_left,
     image_info.setDirection(getUnitVector(bottom_center - top_center)); // 扇叶的方向指向神符中心
 }
 
-// ------------------------【未激活扇叶的方向矫正】------------------------
 bool RuneFanInactive::correctDirection(FeatureNode_ptr &fan, const cv::Point2f &correct_center)
 {
     auto rune_fan = RuneFanInactive::cast(fan);
@@ -416,7 +283,7 @@ bool RuneFanInactive::correctDirection(FeatureNode_ptr &fan, const cv::Point2f &
     return true;
 }
 
-// ------------------------【未激活扇叶的角点矫正】------------------------
+
 bool RuneFanInactive::correctCorners(FeatureNode_ptr &fan)
 {
     auto rune_fan = RuneFanInactive::cast(fan);
@@ -438,7 +305,6 @@ bool RuneFanInactive::correctCorners(FeatureNode_ptr &fan)
         Point2f v1 = p1 - center;
         Point2f v2 = p2 - center;
         return v1.dot(dirction) < v2.dot(dirction); });
-    // 根据叉积判断顺序
     Point2f v0 = temp_corners[0] - center;
     Point2f v1 = temp_corners[1] - center;
     Point2f v2 = temp_corners[2] - center;
@@ -463,7 +329,6 @@ Contour_cptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, 
     if (fan->getArrowContours().size() < 2) // 轮廓数量为1时，不进行过滤
         return nullptr;
 
-    // 1. 用于参考的未激活靶心
     FeatureNode_cptr ref_target = nullptr;
     vector<Contour_cptr> arrow_contours = fan->getArrowContours();
     if (inactive_targets.size() == 1)
@@ -472,7 +337,6 @@ Contour_cptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, 
     }
     else
     {
-        // 1. 设置所有轮廓的权重。
         unordered_map<Contour_cptr, double> contour_weights{};
         double area_sum = 0;
         for (auto &contour : arrow_contours)
@@ -482,43 +346,31 @@ Contour_cptr RuneFanInactive::getEndArrowContour(FeatureNode_ptr &inactive_fan, 
             return nullptr;
 
         for (auto &contour : arrow_contours)
-        {
             contour_weights[contour] = contour->area() / area_sum;
-        }
-
-        // 2. 计算所有轮廓的重心
+        
         Point2f all_contours_center{0, 0};
         for (auto &contour : arrow_contours)
             all_contours_center += static_cast<Point2f>(contour->center()) * contour_weights[contour];
 
-        // 3. 获取距离重心最近的未激活靶心
         auto near_target = *min_element(inactive_targets.begin(), inactive_targets.end(), [&](const FeatureNode_cptr &a, const FeatureNode_cptr &b)
                                         { return norm(a->getImageCache().getCenter() - all_contours_center) < norm(b->getImageCache().getCenter() - all_contours_center); });
         ref_target = near_target;
     }
 
-    // 2. 获取最远的轮廓
     auto far_contour = *max_element(arrow_contours.begin(), arrow_contours.end(), [&](const Contour_cptr &a, const Contour_cptr &b)
                                     { return norm(static_cast<Point2f>(a->center()) - ref_target->getImageCache().getCenter()) < norm(static_cast<Point2f>(b->center()) - ref_target->getImageCache().getCenter()); });
 
-    // 3. 获取剩余轮廓
     vector<Contour_cptr> rest_contours = arrow_contours;
     rest_contours.erase(remove_if(rest_contours.begin(), rest_contours.end(), [&](const Contour_cptr &contour)
                                   { return contour == far_contour; }),
                         rest_contours.end());
-
-    // 4. 判断剩余轮廓能否构造灯臂特征
     auto try_make_fan = RuneFanInactive::make_feature(rest_contours);
     if (try_make_fan == nullptr)
     {
         return nullptr;
     }
-
-    // 5. 替换
     fan = try_make_fan;
     inactive_fan = static_cast<FeatureNode_ptr>(fan);
-
-    // 6. 返回
     return far_contour;
 }
 
@@ -586,7 +438,6 @@ void RuneFanInactive::drawFeature(cv::Mat &image, const FeatureNode::DrawConfig_
         auto direction = getImageCache().getDirection();
         if (direction == Point2f(0, 0))
             break;
-        // 绘制箭头
         cv::arrowedLine(image, center, center + direction * arrow_length, arrow_color, arrow_thickness, LINE_AA, 0, 0.1);
     }while(0);
     

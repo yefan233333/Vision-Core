@@ -57,10 +57,8 @@ inline bool isHierarchyCenter(const vector<Contour_cptr> &contours, const vector
     // h[idx] 必须存在若干并列轮廓，并且无父轮廓
     if ((hierarchy[idx][0] == -1 && hierarchy[idx][1] == -1) || hierarchy[idx][3] != -1)
         return false;
-    // h[idx] 无子轮廓
     if (hierarchy[idx][2] == -1)
         return true;
-    // h[idx] 有子轮廓，记为 hs[idx] 轮廓，hs[idx] 无子轮廓
     else if (hierarchy[hierarchy[idx][2]][2] == -1)
     {
         RotatedRect outer = contours[idx]->fittedEllipse();

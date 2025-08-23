@@ -35,7 +35,7 @@ bool RuneDetector::match(const vector<FeatureNode_ptr> &combos, vector<FeatureNo
     {
         VC_ERROR_INFO("追踪器数量不为5");
     }
-
+    
     // 计算代价矩阵
     vector<vector<float>> cost_matrix(5, vector<float>(5, 0.f));
     for (size_t i = 0; i < 5; i++)
@@ -52,7 +52,6 @@ bool RuneDetector::match(const vector<FeatureNode_ptr> &combos, vector<FeatureNo
     vector<int> match(5, -1);
     vector<bool> combo_vis(5, false);
     float min_cost = numeric_limits<float>::max(); // 初始化最小代价
-    // 添加current_match记录路径
     vector<int> current_match(5);
 
     function<void(int, float)> dfs = [&](int u, float sum_cost)
@@ -62,7 +61,7 @@ bool RuneDetector::match(const vector<FeatureNode_ptr> &combos, vector<FeatureNo
             if (sum_cost < min_cost)
             {
                 min_cost = sum_cost;
-                match = current_match; // 直接复制路径
+                match = current_match;
             }
             return;
         }
@@ -79,8 +78,6 @@ bool RuneDetector::match(const vector<FeatureNode_ptr> &combos, vector<FeatureNo
     };
 
     dfs(0, 0.f);
-
-    // 计算所有追踪器中心的最大外接矩形
     vector<Point2f> tracker_centers(5);
     for (size_t i = 0; i < 5; i++)
     {
@@ -89,7 +86,6 @@ bool RuneDetector::match(const vector<FeatureNode_ptr> &combos, vector<FeatureNo
     RotatedRect rect = minAreaRect(tracker_centers);
     // 设置追踪器的最大匹配偏移
     float max_offset = min(rect.size.width, rect.size.height) * 0.3f;
-
     for (size_t i = 0; i < 5; i++)
     {
         RuneTracker::cast(trackers[i])->update(combos[match[i]], getTick(), getGyroData());

@@ -11,754 +11,391 @@
 using namespace std;
 using namespace cv;
 
-/**
- * @brief 异常值检测
- */
 inline bool errorValueProcess(const Matx61f &pos)
 {
-    // 检测是否为无效值
-    if (isnan(pos(0)) || isnan(pos(1)) || isnan(pos(2)) || isnan(pos(3)) || isnan(pos(4)) || isnan(pos(5)))
-    {
-        return false;
-    }
-
-    // 检测是否为无穷大
-    if (isinf(pos(0)) || isinf(pos(1)) || isinf(pos(2)) || isinf(pos(3)) || isinf(pos(4)) || isinf(pos(5)))
-    {
-        return false;
-    }
-
-    // 检测是否为过大值
-    if (abs(pos(0)) > 1e5 || abs(pos(1)) > 1e5 || abs(pos(2)) > 1e5 || abs(pos(3)) > 1e5 || abs(pos(4)) > 1e5 || abs(pos(5)) > 1e5)
-    {
-        return false;
-    }
-
+    for (int i = 0; i < 6; i++)
+        if (isnan(pos(i)) || isinf(pos(i)) || abs(pos(i)) > 1e5)
+            return false;
     return true;
 }
 
-/**
- * @brief 检验两帧之间的位姿是否差距过大
- *
- * @param pos1 第一帧位姿
- * @param pos2 第二帧位姿
- *
- * @return true 差距正常
- */
-inline bool checkPoseDiff(const Matx61f &pos1, const Matx61f &pos2)
+inline bool checkPoseDiff(const Matx61f &p1, const Matx61f &p2)
 {
-    float diff_x = pos1(0) - pos2(0);
-    float diff_y = pos1(1) - pos2(1);
-    float diff_z = pos1(2) - pos2(2);
-    float diff_yaw = pos1(3) - pos2(3);
-    float diff_pitch = pos1(4) - pos2(4);
-    float diff_roll = pos1(5) - pos2(5);
-
-    if (abs(diff_x) > rune_group_param.MAX_X_DEVIATION)
-    {
-        VC_WARNING_INFO("X deviation too large : %f", diff_x);
-        return false;
-    }
-
-    if (abs(diff_y) > rune_group_param.MAX_Y_DEVIATION)
-    {
-        VC_WARNING_INFO("Y deviation too large : %f", diff_y);
-        return false;
-    }
-
-    if (abs(diff_z) > rune_group_param.MAX_Z_DEVIATION)
-    {
-        VC_WARNING_INFO("Z deviation too large : %f", diff_z);
-        return false;
-    }
-
-    if (abs(diff_yaw) > rune_group_param.MAX_YAW_DEVIATION)
-    {
-        VC_WARNING_INFO("Yaw deviation too large : %f", diff_yaw);
-        return false;
-    }
-
-    if (abs(diff_pitch) > rune_group_param.MAX_PITCH_DEVIATION)
-    {
-        VC_WARNING_INFO("Pitch deviation too large : %f", diff_pitch);
-        return false;
-    }
-
-    if (abs(diff_roll) > rune_group_param.MAX_ROLL_DEVIATION)
-    {
-        VC_WARNING_INFO("Roll deviation too large : %f", diff_roll);
-        return false;
-    }
-
+    float diff[6];
+    for (int i = 0; i < 6; i++)
+        diff[i] = p1(i) - p2(i);
+    const double limits[6] = {rune_group_param.MAX_X_DEVIATION, rune_group_param.MAX_Y_DEVIATION,
+                             rune_group_param.MAX_Z_DEVIATION, rune_group_param.MAX_YAW_DEVIATION,
+                             rune_group_param.MAX_PITCH_DEVIATION, rune_group_param.MAX_ROLL_DEVIATION};
+    const char *names[6] = {"X", "Y", "Z", "Yaw", "Pitch", "Roll"};
+    for (int i = 0; i < 6; i++)
+        if (abs(diff[i]) > static_cast<float>(limits[i]))
+        {
+            VC_WARNING_INFO("%s deviation too large : %f", names[i], diff[i]);
+            return false;
+        }
     return true;
 }
 
-/**
- * @brief 检验位姿数据是否无效
- *
- * @param[in] pose 位姿数据
- *
- * @return true 检测通过
- */
 inline bool checkPoseValid(const PoseNode &pose)
 {
-    auto tvec = pose.tvec();
-    auto rvec = pose.rvec();
-    if (isnan(tvec(0)) || isnan(tvec(1)) || isnan(tvec(2)) ||
-        isnan(rvec(0)) || isnan(rvec(1)) || isnan(rvec(2)))
-    {
-        return false;
-    }
-    if (isinf(tvec(0)) || isinf(tvec(1)) || isinf(tvec(2)) ||
-        isinf(rvec(0)) || isinf(rvec(1)) || isinf(rvec(2)))
-    {
-        return false;
-    }
+    auto t = pose.tvec(), r = pose.rvec();
+    for (int i = 0; i < 3; i++)
+        if (isnan(t(i)) || isnan(r(i)) || isinf(t(i)) || isinf(r(i)))
+            return false;
     return true;
 }
 
-/**
- * @brief 通过陀螺仪坐标系下的目标位置信息，计算由坐标系原点指向目标的 yaw ptich 角
- *
- * @param[in] target_pos 陀螺仪坐标系下的目标位置
- *
- * @return std::pair [yaw, pitch]
- *
- * @note yaw 由左向右增大；pitch 由上向下增大
- */
-inline Point2d calculateTargetAngle(const Point3d &target_pos)
+inline Point2d calculateTargetAngle(const Point3d &p)
 {
-    // 1. 计算 yaw 和 pitch
-    float yaw = atan2(target_pos.x, target_pos.z);
-    float s = sqrt(target_pos.x * target_pos.x + target_pos.z * target_pos.z);
-    float pitch = atan2(target_pos.y, s);
-
-    // 2. 转换为角度
-    yaw = rad2deg(yaw);
-    pitch = rad2deg(pitch);
-
+    float yaw = rad2deg(atan2(p.x, p.z));
+    float pitch = rad2deg(atan2(p.y, sqrt(p.x * p.x + p.z * p.z)));
     return {yaw, pitch};
 }
 
-/**
- * @brief 检验位姿是否过于极端
- *
- * @param[in] rune_to_cam 神符在相机坐标系下的位姿数据
- * @param[in] rune_to_gyro 神符在陀螺仪坐标系下的位姿数据
- * @param[in] gyro_data 陀螺仪数据
- *
- * @return true 检测通过
- */
-bool RuneGroup::checkExtremePose(const PoseNode &rune_to_cam, const PoseNode &rune_to_gyro, const GyroData &gyro_data)
+bool RuneGroup::checkExtremePose(const PoseNode &r_cam, const PoseNode &r_gyro, const GyroData &gyro)
 {
     if (!rune_group_param.ENABLE_EXTREME_VALUE_FILTER)
-    {
         return true;
-    }
+    if (!checkPoseValid(r_cam) || !checkPoseValid(r_gyro))
+        return false;
 
-    if (!checkPoseValid(rune_to_cam) || !checkPoseValid(rune_to_gyro))
+    float dis = cv::norm(r_cam.tvec());
+    if (dis > rune_group_param.MAX_DISTANCE || dis < rune_group_param.MIN_DISTANCE)
     {
+        VC_WARNING_INFO("Camera distance out of range : %f", dis);
         return false;
     }
 
-    //----------------------【相机坐标系判断】---------------------
-    // 1. 判断距离
-    float dis_cam = cv::norm(rune_to_cam.tvec());
-    if (dis_cam > rune_group_param.MAX_DISTANCE || dis_cam < rune_group_param.MIN_DISTANCE)
-    {
-        VC_WARNING_INFO("Camera distance out of range : %f", dis_cam);
-        return false;
-    }
-    // 2. 判断位姿朝向是否触发万向锁
-    bool is_gimbal_lock = false;
-    Matx61f pos_cam = DataConverter::cvtPos(rune_to_cam.tvec(), rune_to_cam.rvec(), is_gimbal_lock);
-    if (is_gimbal_lock)
+    bool gimbal_lock = false;
+    Matx61f pos_cam = DataConverter::cvtPos(r_cam.tvec(), r_cam.rvec(), gimbal_lock);
+    if (gimbal_lock)
     {
         VC_WARNING_INFO("Camera pose triggers gimbal lock");
         return false;
     }
-    // 3. 判断yaw角朝向是否极端
-    float yaw_cam = pos_cam(3);
-    if (yaw_cam > rune_group_param.MAX_YAW_DEVIATION_ANGLE || yaw_cam < -rune_group_param.MAX_YAW_DEVIATION_ANGLE)
+
+    float yaw = pos_cam(3);
+    if (yaw > rune_group_param.MAX_YAW_DEVIATION_ANGLE || yaw < -rune_group_param.MAX_YAW_DEVIATION_ANGLE)
     {
-        VC_WARNING_INFO("Camera yaw angle out of range : %f", yaw_cam);
-        return false;
-    }
-    // 4. 判断神符的目标转角是否过于极端
-    auto [rotate_yaw, rotate_pitch] = calculateTargetAngle(rune_to_cam.tvec());
-    if (rotate_yaw > rune_group_param.MAX_ROTATE_YAW || rotate_yaw < -rune_group_param.MAX_ROTATE_YAW)
-    {
-        VC_WARNING_INFO("Camera rotate yaw out of range : %f", rotate_yaw);
-        return false;
-    }
-    if (rotate_pitch > rune_group_param.MAX_ROTATE_PITCH || rotate_pitch < -rune_group_param.MAX_ROTATE_PITCH)
-    {
-        VC_WARNING_INFO("Camera rotate pitch out of range : %f", rotate_pitch);
+        VC_WARNING_INFO("Camera yaw angle out of range : %f", yaw);
         return false;
     }
 
-    //------------------------【陀螺仪坐标系判断】---------------------
-    // 1. 判断位姿朝向是否触发了万向锁
-    Matx61f pos_gyro = DataConverter::cvtPos(rune_to_gyro.tvec(), rune_to_gyro.rvec(), is_gimbal_lock);
-    if (is_gimbal_lock)
+    auto [ry, rp] = calculateTargetAngle(r_cam.tvec());
+    if (ry > rune_group_param.MAX_ROTATE_YAW || ry < -rune_group_param.MAX_ROTATE_YAW)
+    {
+        VC_WARNING_INFO("Camera rotate yaw out of range : %f", ry);
+        return false;
+    }
+    if (rp > rune_group_param.MAX_ROTATE_PITCH || rp < -rune_group_param.MAX_ROTATE_PITCH)
+    {
+        VC_WARNING_INFO("Camera rotate pitch out of range : %f", rp);
+        return false;
+    }
+
+    Matx61f pos_gyro = DataConverter::cvtPos(r_gyro.tvec(), r_gyro.rvec(), gimbal_lock);
+    if (gimbal_lock)
     {
         VC_WARNING_INFO("Gyro pose triggers gimbal lock");
         return false;
     }
-    // 2. 判断神符的pitch角朝向是否过于极端
-    float pitch_gyro = pos_gyro(4);
-    if (pitch_gyro > rune_group_param.MAX_PITCH_DEVIATION_ANGLE || pitch_gyro < -rune_group_param.MAX_PITCH_DEVIATION_ANGLE)
+
+    float pitch = pos_gyro(4);
+    if (pitch > rune_group_param.MAX_PITCH_DEVIATION_ANGLE || pitch < -rune_group_param.MAX_PITCH_DEVIATION_ANGLE)
     {
-        VC_WARNING_INFO("Gyro pitch angle out of range : %f", pitch_gyro);
+        VC_WARNING_INFO("Gyro pitch angle out of range : %f", pitch);
         return false;
     }
 
     return true;
 }
 
-bool RuneGroup::update(const PoseNode &rune_to_cam_raw, const GyroData &gyro_data, int64_t tick)
+bool RuneGroup::update(const PoseNode &r_cam_raw, const GyroData &gyro, int64_t tick)
 {
-
-    // 清除上一帧的数据
     clearPreviousData();
-    // 滤波器判空
-    if (_filter == nullptr)
-    {
+    if (!_filter)
         _filter = RuneFilterFusion::make_filter();
-    }
-    // 是否在同一帧内发生了重复更新
-    bool is_same_frame = false;
-    if (!isSetLastUpdateTick())
-    {
-        is_same_frame = false;
-    }
-    else
-    {
-        is_same_frame = (tick == getLastUpdateTick());
-    }
-    setLastUpdateTick(tick); // 更新最后一次更新时间戳
 
-    // 矫正观测位姿数据 的 roll 角
-    PoseNode corrected_rune_to_cam_raw{};
-    correctRoll(rune_to_cam_raw, corrected_rune_to_cam_raw);
+    bool same_frame = isSetLastUpdateTick() && (tick == getLastUpdateTick());
+    setLastUpdateTick(tick);
 
-    // 计算相机坐标系到转轴坐标系的PNP数据
-    // auto cam_to_gyro = calcCamToGyroPnpData(gyro_data);
-    auto cam_to_gyro = this->isSetCamToGyro() ? getCamToGyro() : calcCamToGyroPnpData(gyro_data);
-    PoseNode rune_to_gyro_raw = corrected_rune_to_cam_raw + cam_to_gyro;
+    PoseNode corrected{};
+    correctRoll(r_cam_raw, corrected);
+    auto cam_to_gyro = isSetCamToGyro() ? getCamToGyro() : calcCamToGyroPnpData(gyro);
+    PoseNode r_gyro_raw = corrected + cam_to_gyro;
 
-    // 是否处于丢帧状态
-    bool is_vanish = false;
-    if (this->getVanishNum() <= 0)
-    {
-        is_vanish = false;
-        this->setLastValidPoseGyro(rune_to_gyro_raw); // 更新最后一次有效观测位姿位置
-    }
-    else
-    {
-        is_vanish = true;
-    }
+    bool vanish = getVanishNum() > 0;
+    if (!vanish)
+        setLastValidPoseGyro(r_gyro_raw);
 
-    bool _is_gimbal_lock = false;
-    // 转化为滤波数据
-    auto &data_converters = this->__data_converters;
-    if (data_converters.find("4") == data_converters.end())
-    {
-        data_converters["4"] = DataConverter::make_converter();
-    }
-    Matx61f raw_pos = data_converters["4"]->toFilterForm(rune_to_gyro_raw.tvec(), rune_to_gyro_raw.rvec(), _is_gimbal_lock);
-    // Matx61f raw_pos = cvtFilterPos(rune_to_gyro_raw.tvec(), rune_to_gyro_raw.rvec(), _is_gimbal_lock); // 转化为滤波数据
+    bool gimbal = false;
+    auto &converters = __data_converters;
+    if (converters.find("4") == converters.end())
+        converters["4"] = DataConverter::make_converter();
+    Matx61f raw_pos = converters["4"]->toFilterForm(r_gyro_raw.tvec(), r_gyro_raw.rvec(), gimbal);
 
-    // 检验两帧之间的位姿是否差距过大
-    if (_filter->isValid())
-    {
-        auto predict_pnp_data = _filter->getPredict();
-        if (!checkPoseDiff(predict_pnp_data, raw_pos))
-        {
-            return false;
-        }
-    }
-
-    // 极端位姿检验
-    if (!checkExtremePose(rune_to_cam_raw, rune_to_gyro_raw, gyro_data))
-    {
+    if (_filter->isValid() && !checkPoseDiff(_filter->getPredict(), raw_pos))
         return false;
-    }
-
-    // 异常值检测
+    if (!checkExtremePose(r_cam_raw, r_gyro_raw, gyro))
+        return false;
     if (!errorValueProcess(raw_pos))
-    {
         return false;
-    }
-    // 进行滤波处理
-    RuneFilterStrategy::FilterInput filter_input;
-    filter_input.raw_pos = raw_pos;
-    filter_input.tick = tick;
-    filter_input.cam_to_gyro = cam_to_gyro;
-    filter_input.is_observation = !is_vanish; // 是否为有效观测数据
-    // 执行滤波
-    auto filter_output = _filter->filter(filter_input);
-    // 获取滤波后的位置
-    Matx61f filter_pos = filter_output.filtered_pos;
-    // 转化为平移向量和旋转向量
+
+    RuneFilterStrategy::FilterInput input{raw_pos, tick, cam_to_gyro, !vanish};
+    auto out = _filter->filter(input);
+    Matx61f filter_pos = out.filtered_pos;
     auto [tvec, rvec] = DataConverter::toTvecAndRvec(filter_pos);
-    // 更新PNP数据
-    PoseNode rune_to_gyro(rvec, tvec);
-    this->updatePnpData(rune_to_gyro, gyro_data); // 更新PNP数据
-    if (!is_vanish)
-    {
-        this->updateCenterEstimation(); // 更新神符中心估计信息
-    }
-    // // 更新激活信息数据
-    // this->updateActivationInfo();
+    PoseNode r_gyro(rvec, tvec);
+
+    updatePnpData(r_gyro, gyro);
+    if (!vanish)
+        updateCenterEstimation();
     return true;
 }
 
-bool RuneGroup::getCamPnpDataFromFilter(PoseNode &runeGroup_to_cam) const
+bool RuneGroup::getCamPnpDataFromFilter(PoseNode &rune_to_cam) const
 {
-    if (_filter == nullptr)
-    {
+    if (!_filter || !_filter->isValid())
         return false;
-    }
-
-    // 判断滤波器是否有效
-    if (!_filter->isValid())
-    {
-        return false;
-    }
-
-    // 获取滤波后的数据
-    Matx61f filter_pos = _filter->getPredict();
-    // 转化为平移向量和旋转向量
-    auto [tvec, rvec] = DataConverter::toTvecAndRvec(filter_pos);
-    // auto [tvec, rvec] = cvtTvecRvec(filter_pos);
-    // 更新PNP数据
-    PoseNode rune_to_gyro(rvec, tvec);
-    // 获取陀螺仪坐标系到相机坐标系的PNP数据
-    runeGroup_to_cam = rune_to_gyro + calcCamToGyroPnpData(getPoseCache().getGyroData()).inv();
+    auto [tvec, rvec] = DataConverter::toTvecAndRvec(_filter->getPredict());
+    PoseNode r_gyro(rvec, tvec);
+    rune_to_cam = r_gyro + calcCamToGyroPnpData(getPoseCache().getGyroData()).inv();
     return true;
 }
 
-bool RuneGroup::getCamPnpDataFromPast(PoseNode &runeGroup_to_cam) const
+bool RuneGroup::getCamPnpDataFromPast(PoseNode &rune_to_cam) const
 {
-    // 1. 获取预测器的预测结果
-    PoseNode pos_to_cam_from_filter{};
-    if (!getCamPnpDataFromFilter(pos_to_cam_from_filter))
-    {
+    PoseNode pos_to_cam;
+    if (!getCamPnpDataFromFilter(pos_to_cam))
         return false;
+
+    float roll = 0;
+    if (isSetPredictFunc() && getPredictFunc())
+    {
+        auto &ticks = getHistoryTicks();
+        if (ticks.size() >= 2)
+        {
+            float angle = getPredictFunc()(ticks.front());
+            if (!std::isnan(angle) && !std::isinf(angle))
+                roll = angle;
+        }
     }
 
-    float roll_from_predict = 0;
-    // 2. 获取角度变化函数
-    if (!isSetPredictFunc() || !getPredictFunc())
-    {
-        runeGroup_to_cam = pos_to_cam_from_filter;
-        return true;
-    }
-    else
-    {
-        // 3. 计算不同帧之间的平均tick_delta
-        auto &tick_deque = getHistoryTicks();
-        if (tick_deque.size() < 2)
-        {
-            runeGroup_to_cam = pos_to_cam_from_filter;
-            return true;
-        }
-        // int64_t tick_delta = (tick_deque.front() - tick_deque.back()) / (tick_deque.size() - 1);
-        int64_t predict_tick = tick_deque.front();
-        // int64_t predict_tick = tick_deque.front();
-        // int64_t predict_tick = tick_deque.front() - tick_delta;
-        // 4. 计算预测的角度
-        float predict_angle = getPredictFunc()(predict_tick);
-        if (std::isnan(predict_angle) || std::isinf(predict_angle))
-        {
-            runeGroup_to_cam = pos_to_cam_from_filter;
-            return true;
-        }
-        roll_from_predict = predict_angle;
-    }
-
-    // 5. 将滤波器数据转化为陀螺仪坐标系下
     auto cam_to_gyro = calcCamToGyroPnpData(getPoseCache().getGyroData());
-    auto pos_to_gyro_from_filter = pos_to_cam_from_filter + cam_to_gyro;
-
-    // 6. 将滤波器数据转化为 xyz 和 yaw pitch roll
-    auto tvec = pos_to_gyro_from_filter.tvec();
-    auto rvec = pos_to_gyro_from_filter.rvec();
-    bool is_gimbal_lock = false;
-    auto pos_ = DataConverter::cvtPos(tvec, rvec, is_gimbal_lock);
-    // auto pos_ = RuneGroup::cvtPos(tvec, rvec, is_gimbal_lock);
-
-    // 7. 使用预测的 roll 角替换滤波器数据中的 roll 角
-    auto pos_to_gyro_from_predict = pos_;
-    pos_to_gyro_from_predict(5) = roll_from_predict;
-
-    // 8. 将预测的位姿数据转化为陀螺仪坐标系下
-    auto [tvec_to_gyro_from_predict, rvec_to_gyro_from_predict] = DataConverter::toTvecAndRvec(pos_to_gyro_from_predict);
-    // auto [tvec_to_gyro_from_predict, rvec_to_gyro_from_predict] = cvtTvecRvec(pos_to_gyro_from_predict);
-
-    // 7. 更新PNP数据
-    PoseNode predict_pos_to_gyro(rvec_to_gyro_from_predict, tvec_to_gyro_from_predict);
-
-    // 8. 转化为相机坐标系下
-    auto predict_pos_to_cam = predict_pos_to_gyro + cam_to_gyro.inv();
-
-    // 9. 更新PNP数据
-    runeGroup_to_cam = predict_pos_to_cam;
-
+    auto pos_to_gyro = pos_to_cam + cam_to_gyro;
+    bool gimbal = false;
+    auto pos_ = DataConverter::cvtPos(pos_to_gyro.tvec(), pos_to_gyro.rvec(), gimbal);
+    pos_(5) = roll;
+    auto [tvec, rvec] = DataConverter::toTvecAndRvec(pos_);
+    rune_to_cam = PoseNode(rvec, tvec) + cam_to_gyro.inv();
     return true;
 }
 
 std::vector<RuneFeatureComboConst> RuneGroup::getLastFrameFeatures() const
 {
-    std::vector<RuneFeatureComboConst> features{};
-    auto &_trackers = this->getTrackers();
-    for (auto &tracker : _trackers)
+    std::vector<RuneFeatureComboConst> features;
+    for (auto &tracker : getTrackers())
     {
-        // 获取最新帧
         auto combo = TrackingFeatureNode::cast(tracker)->getHistoryNodes().front();
-        if (combo == nullptr)
+        if (!combo)
             continue;
         auto rune = RuneCombo::cast(combo);
         if (rune->getRuneType() == RuneType::UNKNOWN || rune->getRuneType() == RuneType::UNSTRUCK)
             continue;
-
-        // 获取特征
-        auto RuneT_ptr = RuneTarget::cast(rune->getChildFeatures().at(ChildFeatureType::RUNE_TARGET));
-        auto RuneC_ptr = RuneCenter::cast(rune->getChildFeatures().at(ChildFeatureType::RUNE_CENTER));
-        auto RuneF_ptr = RuneFan::cast(rune->getChildFeatures().at(ChildFeatureType::RUNE_FAN));
-        features.emplace_back(std::make_tuple(RuneT_ptr, RuneC_ptr, RuneF_ptr));
+        features.emplace_back(std::make_tuple(
+            RuneTarget::cast(rune->getChildFeatures().at(ChildFeatureType::RUNE_TARGET)),
+            RuneCenter::cast(rune->getChildFeatures().at(ChildFeatureType::RUNE_CENTER)),
+            RuneFan::cast(rune->getChildFeatures().at(ChildFeatureType::RUNE_FAN))));
     }
     return features;
 }
 
-bool RuneGroup::visibilityProcess(bool is_observation)
+bool RuneGroup::visibilityProcess(bool obs)
 {
-    auto &_vanish_num = this->getVanishNum();
-    if (!is_observation)
+    auto &vn = getVanishNum();
+    if (!obs)
     {
-        _vanish_num++;
-        if (_vanish_num > rune_group_param.MAX_VANISH_NUMBER)
-        {
+        if (++vn > rune_group_param.MAX_VANISH_NUMBER)
             return false;
-        }
     }
     else
-    {
-        _vanish_num = 0;
-        return true;
-    }
+        vn = 0;
     return true;
 }
 
-void RuneGroup::clearPreviousData()
-{
-    // 清除上一帧的PNP解算数据，重置标志位
-    clearCamToGyro();
-}
+void RuneGroup::clearPreviousData() { clearCamToGyro(); }
 
-/**
- * @brief 判断滤波器中的数据是否有效
- */
 inline bool isFilterDataValid(const Matx61f &pos)
 {
-    // 检测是否为无效值
-    if (isnan(pos(0)) || isnan(pos(1)) || isnan(pos(2)) || isnan(pos(3)) || isnan(pos(4)) || isnan(pos(5)))
-    {
-        return false;
-    }
-
-    // 检测是否为无穷大
-    if (isinf(pos(0)) || isinf(pos(1)) || isinf(pos(2)) || isinf(pos(3)) || isinf(pos(4)) || isinf(pos(5)))
-    {
-        return false;
-    }
-
-    // 检测是否为过大值
-    if (abs(pos(0)) > 1e5 || abs(pos(1)) > 1e5 || abs(pos(2)) > 1e5 || abs(pos(3)) > 1e5 || abs(pos(4)) > 1e5 || abs(pos(5)) > 1e5)
-    {
-        return false;
-    }
-
+    for (int i = 0; i < 6; i++)
+        if (isnan(pos(i)) || isinf(pos(i)) || abs(pos(i)) > 1e5)
+            return false;
     return true;
 }
 
 bool RuneGroup::getCurrentRotateAngle(float &angle) const
 {
-    // 获取滤波器的最新数据
     Matx61f pos = _filter->getLatestValue();
-
-    float roll_angle = 0;
+    float roll = 0;
     if (isFilterDataValid(pos))
-    {
-        roll_angle = pos(5);
-    }
+        roll = pos(5);
     else
     {
-        auto &raw_datas = getRawDatas();
-        if (raw_datas.size() >= 2)
-        {
-            roll_angle = (raw_datas[0] - raw_datas[1]) + raw_datas[0];
-        }
-        else if (raw_datas.size() == 1)
-        {
-            roll_angle = raw_datas.front();
-        }
-        else
-        {
-            roll_angle = 0;
-        }
+        auto &raw = getRawDatas();
+        if (raw.size() >= 2)
+            roll = (raw[0] - raw[1]) + raw[0];
+        else if (raw.size() == 1)
+            roll = raw.front();
     }
-    angle = roll_angle;
+    angle = roll;
     return true;
 }
 
 void RuneGroup::sync(const GyroData &, int64_t)
 {
-    // 从滤波器中获取roll角作为当前的角度
     float roll;
     getCurrentRotateAngle(roll);
-    auto &raw_datas = getRawDatas();
-
-    raw_datas.push_front(roll);
-    if (raw_datas.size() > rune_group_param.RAW_DATAS_SIZE)
-        raw_datas.pop_back();
-
-    // 更新时间戳队列
-    auto &tick_deque = getHistoryTicks();
-    tick_deque.push_front(getTick());
-    if (tick_deque.size() > rune_group_param.RAW_DATAS_SIZE)
-        tick_deque.pop_back();
+    auto &raw = getRawDatas();
+    raw.push_front(roll);
+    if (raw.size() > rune_group_param.RAW_DATAS_SIZE)
+        raw.pop_back();
+    auto &ticks = getHistoryTicks();
+    ticks.push_front(getTick());
+    if (ticks.size() > rune_group_param.RAW_DATAS_SIZE)
+        ticks.pop_back();
 }
 
-/**
- * @brief 通过神符类型数据判断是否出现识别异常，并返回出现异常的帧数下标
- * @param[in] trackers
- * @param[in] range
- * @return 返回出现异常的帧数下标集合
- *
- * @note 用于判断的范围为前 N 帧数据，N 由 range 参数指定
- */
 inline unordered_set<size_t> getAbnormalFrames(const vector<TrackingFeatureNode_cptr> &trackers, size_t range)
 {
-    unordered_set<size_t> abnormal_frames{};
-    // 获取有效的下标范围
-    vector<size_t> lens(trackers.size(), 0);
-    for (size_t i = 0; i < trackers.size(); ++i)
+    unordered_set<size_t> abn;
+    vector<size_t> lens(trackers.size());
+    for (size_t i = 0; i < trackers.size(); i++)
         lens[i] = TrackingFeatureNode::cast(trackers[i])->getHistoryNodes().size();
-    auto min_len = *min_element(lens.begin(), lens.end());
-    range = min(range, min_len);
+    range = min(range, *min_element(lens.begin(), lens.end()));
 
-    // 获取所有神符组合体的类型信息
-    deque<vector<RuneType>> rune_types_array(range, vector<RuneType>(trackers.size(), RuneType::UNKNOWN));
-    for (size_t frame_id = 0; frame_id < range; ++frame_id)
+    deque<vector<RuneType>> types(range, vector<RuneType>(trackers.size(), RuneType::UNKNOWN));
+    for (size_t f = 0; f < range; f++)
+        for (size_t t = 0; t < trackers.size(); t++)
+        {
+            auto combo = RuneCombo::cast(TrackingFeatureNode::cast(trackers[t])->getHistoryNodes()[f]);
+            types[f][t] = (!combo || combo->getRuneType() == RuneType::UNKNOWN) ? RuneType::UNKNOWN : combo->getRuneType();
+        }
+
+    for (size_t f = 0; f < range; f++)
     {
-        for (size_t tracker_id = 0; tracker_id < trackers.size(); ++tracker_id)
-        {
-            const auto &combo = RuneCombo::cast(TrackingFeatureNode::cast(trackers[tracker_id])->getHistoryNodes()[frame_id]);
-            if (combo == nullptr || combo->getRuneType() == RuneType::UNKNOWN)
-            {
-                rune_types_array[frame_id][tracker_id] = RuneType::UNKNOWN;
-            }
-            else
-            {
-                rune_types_array[frame_id][tracker_id] = combo->getRuneType();
-            }
-        }
-    }
-    // 如果某一帧帧出现了多个 PENDING_STRUCK 类型的神符、或者没有 PENDING_STRUCK，则跳过该帧
-    for (size_t frame_id = 0; frame_id < range; ++frame_id)
-    {
-        int pending_struck_count = 0;
-        for (const auto &rune_type : rune_types_array[frame_id])
-        {
-            if (rune_type == RuneType::PENDING_STRUCK)
-            {
-                pending_struck_count++;
-            }
-        }
-        if (pending_struck_count > 1 || pending_struck_count == 0)
-        {
-            abnormal_frames.insert(frame_id);
-        }
+        int cnt = 0;
+        for (auto &r : types[f])
+            if (r == RuneType::PENDING_STRUCK)
+                cnt++;
+        if (cnt == 0 || cnt > 1)
+            abn.insert(f);
     }
 
-    // 如果前后相邻的两帧，新旧帧都存在 STRUCK 类型的神符，但旧帧 STRUCK 类型的神符数量大于新帧，则跳过该帧（因为已击打神符不可能越打越少）
-    for (size_t frame_id = 0; frame_id < range - 1; ++frame_id)
+    for (size_t f = 0; f < range - 1; f++)
     {
-        if (abnormal_frames.count(frame_id) || abnormal_frames.count(frame_id + 1))
+        if (abn.count(f) || abn.count(f + 1))
+            continue;
+        int old_cnt = 0, new_cnt = 0;
+        for (auto &r : types[f + 1])
+            if (r == RuneType::STRUCK)
+                old_cnt++;
+        for (auto &r : types[f])
+            if (r == RuneType::STRUCK)
+                new_cnt++;
+        if (old_cnt > 0 && new_cnt > 0 && new_cnt < old_cnt)
         {
-            continue; // 跳过已标记的帧
-        }
-
-        int struck_count_old = 0;
-        int struck_count_new = 0;
-        for (const auto &rune_type : rune_types_array[frame_id + 1])
-        {
-            if (rune_type == RuneType::STRUCK)
-            {
-                struck_count_old++;
-            }
-        }
-        for (const auto &rune_type : rune_types_array[frame_id])
-        {
-            if (rune_type == RuneType::STRUCK)
-            {
-                struck_count_new++;
-            }
-        }
-        if (struck_count_old > 0 && struck_count_new > 0 && struck_count_new < struck_count_old)
-        {
-            abnormal_frames.insert(frame_id);
-            abnormal_frames.insert(frame_id + 1);
+            abn.insert(f);
+            abn.insert(f + 1);
         }
     }
-
-    return abnormal_frames;
+    return abn;
 }
 
 bool RuneGroup::isTargetCenterChanged() const
 {
-    vector<TrackingFeatureNode_cptr> trackers{};
-    for (const auto &tracker : this->getTrackers())
-    {
-        trackers.push_back(TrackingFeatureNode::cast(tracker));
-    }
-    if (trackers.empty() || trackers.size() != 5)
-    {
+    vector<TrackingFeatureNode_cptr> trackers;
+    for (auto &t : getTrackers())
+        trackers.push_back(TrackingFeatureNode::cast(t));
+    if (trackers.size() != 5)
         return false;
-    }
-
-    // 保证每个神符组合体都至少有三个以上的历史数据
-    for (const auto &tracker : trackers)
-    {
-        if (tracker->getHistoryNodes().size() < 3)
-        {
+    for (auto &t : trackers)
+        if (t->getHistoryNodes().size() < 3)
             return false;
-        }
-    }
 
-    // 通过历史前 N 帧数据作为判断依据
     int history_size = 10;
-    vector<int> combo_len_array{};
-    for (const auto &tracker : trackers)
-    {
-        combo_len_array.push_back(static_cast<int>(tracker->getHistoryNodes().size()));
-    }
-    auto min_combo_len = *min_element(combo_len_array.begin(), combo_len_array.end());
-    history_size = min(history_size, min_combo_len);
+    vector<int> lens;
+    for (auto &t : trackers)
+        lens.push_back((int)t->getHistoryNodes().size());
+    history_size = min(history_size, *min_element(lens.begin(), lens.end()));
 
-    // 获取需要跳过的帧数下标
-    auto abnormal_frames = getAbnormalFrames(trackers, history_size);
+    auto abn = getAbnormalFrames(trackers, history_size);
+    vector<int> pending_count(trackers.size(), 0);
 
-    // 获取各个追踪器在有效帧数中，被标记为 PENDING_STRUCK 的次数
-    vector<int> pending_struck_count(trackers.size(), 0);
-    for (size_t frame_id = 0; frame_id < history_size; ++frame_id)
+    for (size_t f = 0; f < history_size; f++)
     {
-        if (abnormal_frames.count(frame_id))
+        if (abn.count(f))
+            continue;
+        for (size_t t = 0; t < trackers.size(); t++)
         {
-            continue; // 跳过已标记的帧
-        }
-        for (size_t tracker_id = 0; tracker_id < trackers.size(); ++tracker_id)
-        {
-            const auto &combo = RuneCombo::cast(trackers[tracker_id]->getHistoryNodes()[frame_id]);
-            if (combo == nullptr || combo->getRuneType() != RuneType::PENDING_STRUCK)
-            {
-                continue;
-            }
-            pending_struck_count[tracker_id]++;
+            auto combo = RuneCombo::cast(trackers[t]->getHistoryNodes()[f]);
+            if (combo && combo->getRuneType() == RuneType::PENDING_STRUCK)
+                pending_count[t]++;
         }
     }
-    // 统计出现了 threshold_count 以上次数的 PENDING_STRUCK 的追踪器的个数
-    constexpr int threshold_count = 2; // 设定阈值 X
-    int count = 0;
-    for (const auto &c : pending_struck_count)
-    {
+
+    int cnt = 0;
+    constexpr int threshold_count = 2;
+    for (auto &c : pending_count)
         if (c > threshold_count)
-        {
-            count++;
-        }
-    }
-
-    if (count > 1)
-    {
-        return true;
-    }
-
-    return false;
+            cnt++;
+    return cnt > 1;
 }
 
-/**
- * @brief 获取众数
- *
- * @param nums 输入的整数数组
- * @return 众数
- */
 int findMode(const vector<int> &nums)
 {
-    unordered_map<int, int> count_map;
-    int mode = nums.empty() ? -1 : nums[0];
-    int max_count = 0;
-    for (int num : nums)
+    unordered_map<int, int> m;
+    int mode = nums.empty() ? -1 : nums[0], max_count = 0;
+    for (int n : nums)
     {
-        count_map[num]++;
-        if (count_map[num] > max_count)
+        if (++m[n] > max_count)
         {
-            max_count = count_map[num];
-            mode = num;
+            max_count = m[n];
+            mode = n;
         }
     }
     return mode;
 }
 
-struct CenterEstimationOutput
-{
-    //! 是否有效
-    bool is_valid = false;
-    //! 神符中心陀螺仪坐标系位置
-    cv::Point3f pos_to_gyro;
-    //! 获取该估计位置的时间戳
-    int64_t tick;
-};
-
 bool RuneGroup::updateCenterEstimation()
 {
-    // 判空
-    if (this->getTrackers().empty())
+    if (getTrackers().empty())
         return false;
-    const auto &tracker = TrackingFeatureNode::cast(this->getTrackers().front());
+    const auto &tracker = TrackingFeatureNode::cast(getTrackers().front());
     if (tracker->getHistoryNodes().empty())
         return false;
     const auto &combo = tracker->getHistoryNodes().front();
     const auto &center = RuneCenter::cast(combo->getChildFeatures().at(ChildFeatureType::RUNE_CENTER));
-    // const auto &center_to_cam = center->getCamPnpData();
-    const auto &center_to_cam = center->getPoseCache().getPoseNodes()[CoordFrame::CAMERA];
-    const auto &cam_to_gyro = this->getCamToGyro();
-    auto center_to_gyro = center_to_cam + cam_to_gyro;
-    auto current_tick = this->getTick();
-    CenterEstimationInfo center_estimation_info;
-    center_estimation_info.is_valid = true;
-    center_estimation_info.pos_to_gyro = center_to_gyro.tvec();
-    center_estimation_info.tick = current_tick;
-    this->setCenterEstimationInfo(center_estimation_info);
-
+    auto center_to_gyro = center->getPoseCache().getPoseNodes()[CoordFrame::CAMERA] + getCamToGyro();
+    CenterEstimationInfo info{true, center_to_gyro.tvec(), getTick()};
+    setCenterEstimationInfo(info);
     return true;
 }
 
 std::vector<FeatureNode_ptr> RuneGroup::getTrackers()
 {
-    std::vector<FeatureNode_ptr> trackers;
-    for (const auto &[id, tracker] : this->getChildFeatures())
-        trackers.emplace_back(tracker);
-    return trackers;
+    std::vector<FeatureNode_ptr> t;
+    for (auto &[id, tr] : getChildFeatures())
+        t.emplace_back(tr);
+    return t;
 }
 
 const std::vector<FeatureNode_cptr> RuneGroup::getTrackers() const
 {
-    std::vector<FeatureNode_cptr> trackers;
-    for (const auto &[id, tracker] : this->getChildFeatures())
-        trackers.emplace_back(tracker);
-    return trackers;
+    std::vector<FeatureNode_cptr> t;
+    for (auto &[id, tr] : getChildFeatures())
+        t.emplace_back(tr);
+    return t;
 }
 
 template <class T>
@@ -766,83 +403,49 @@ std::string get_shared_id(const std::shared_ptr<T> &sp)
 {
     if (!sp)
         return {};
-
-    // 用控制块地址生成唯一 ID
-    auto cb_addr = std::shared_ptr<void>(sp).get(); // 同一控制块不同别名指针也一致
-    uintptr_t addr = reinterpret_cast<uintptr_t>(cb_addr);
-
+    uintptr_t addr = reinterpret_cast<uintptr_t>(std::shared_ptr<void>(sp).get());
     std::ostringstream oss;
-    oss << "obj-" << std::hex << std::setw(sizeof(uintptr_t) * 2)
-        << std::setfill('0') << addr;
+    oss << "obj-" << std::hex << std::setw(sizeof(uintptr_t) * 2) << std::setfill('0') << addr;
     return oss.str();
 }
 
 void RuneGroup::setTrackers(const std::vector<FeatureNode_ptr> &trackers)
 {
-    this->getChildFeatures().clear();
-    for (const auto &tracker : trackers)
+    getChildFeatures().clear();
+    for (auto &tr : trackers)
     {
-        if (tracker == nullptr)
+        if (!tr)
             continue;
-        auto id = get_shared_id(tracker);
+        auto id = get_shared_id(tr);
         if (id.empty())
             continue;
-        this->getChildFeatures()[id] = tracker;
+        getChildFeatures()[id] = tr;
     }
 }
 
-inline void drawCube(cv::Mat &img, const PoseNode &pnp_data, float x_len, float y_len, float z_len, cv::Scalar color)
+inline void drawCube(cv::Mat &img, const PoseNode &p, float x_len, float y_len, float z_len, cv::Scalar c)
 {
-    float half_x = x_len / 2;
-    float half_y = y_len / 2;
-    float half_z = z_len / 2;
-    // 获取立方体的 3D 点
-    vector<Point3f> cube_points_3d = {
-        // z < 0 的正方形
-        Point3f(-half_x, -half_y, -half_z),
-        Point3f(half_x, -half_y, -half_z),
-        Point3f(half_x, half_y, -half_z),
-        Point3f(-half_x, half_y, -half_z),
-        // z > 0 的正方形
-        Point3f(-half_x, -half_y, half_z),
-        Point3f(half_x, -half_y, half_z),
-        Point3f(half_x, half_y, half_z),
-        Point3f(-half_x, half_y, half_z)};
-
-    // 获取立方体的 2D 点
-    vector<Point2f> cube_points_2d{};
-    projectPoints(cube_points_3d, pnp_data.rvec(), pnp_data.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, cube_points_2d);
-
-    // 线宽
-    constexpr int line_width = 1;
-    // 绘制立方体
-    for (size_t i = 0; i < 4; i++)
+    float hx = x_len / 2, hy = y_len / 2, hz = z_len / 2;
+    vector<Point3f> pts3d = {{-hx, -hy, -hz}, {hx, -hy, -hz}, {hx, hy, -hz}, {-hx, hy, -hz}, {-hx, -hy, hz}, {hx, -hy, hz}, {hx, hy, hz}, {-hx, hy, hz}};
+    vector<Point2f> pts2d;
+    projectPoints(pts3d, p.rvec(), p.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, pts2d);
+    for (int i = 0; i < 4; i++)
     {
-        auto p1 = cube_points_2d[i], p2 = cube_points_2d[(i + 1) % 4];
-        line(img, p1, p2, color, line_width);
-
-        p1 = cube_points_2d[i + 4], p2 = cube_points_2d[(i + 1) % 4 + 4];
-        line(img, p1, p2, color, line_width);
-
-        p1 = cube_points_2d[i], p2 = cube_points_2d[i + 4];
-        line(img, p1, p2, color, line_width);
+        line(img, pts2d[i], pts2d[(i + 1) % 4], c, 1);
+        line(img, pts2d[i + 4], pts2d[(i + 1) % 4 + 4], c, 1);
+        line(img, pts2d[i], pts2d[i + 4], c, 1);
     }
 }
-void RuneGroup::drawFeature(cv::Mat &image, const DrawConfig_cptr &config) const
+
+void RuneGroup::drawFeature(cv::Mat &img, const DrawConfig_cptr &config) const
 {
-    if (image.empty())
+    if (img.empty())
         return;
-    auto& pose_info = getPoseCache();
-    do
-    {
-        //! 安全检查
-        if (pose_info.getPoseNodes().find(CoordFrame::CAMERA) == pose_info.getPoseNodes().end())
-            break;
-        if (this->getTrackers().size() < 2)
-            break;
-        auto& rune_to_camera = pose_info.getPoseNodes().at(CoordFrame::CAMERA);
-        drawCube(image, rune_to_camera, 2000, 2000, 500, cv::Scalar(0, 255, 0));
-
-        
-    }while(0);
+    auto &pose_info = getPoseCache();
+    if (pose_info.getPoseNodes().find(CoordFrame::CAMERA) == pose_info.getPoseNodes().end())
+        return;
+    if (getTrackers().size() < 2)
+        return;
+    auto &p = pose_info.getPoseNodes().at(CoordFrame::CAMERA);
+    drawCube(img, p, 2000, 2000, 500, cv::Scalar(0, 255, 0));
 }

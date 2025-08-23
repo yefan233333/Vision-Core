@@ -9,16 +9,13 @@ using namespace cv;
 
 void RuneGroup::updatePnpData(const PoseNode &rune_to_gyro, const GyroData &gyro_data)
 {
-    // 获取陀螺仪坐标系到转轴坐标系的PNP数据
     cv::Matx33f joint_to_gyro_R = gyroEuler2RotMat(gyro_data.rotation.yaw, gyro_data.rotation.pitch);
     PoseNode joint_to_gyro(joint_to_gyro_R, Vec3f{0, 0, 0});
     PoseNode gyro_to_joint = joint_to_gyro.inv();
 
-    // 获取转轴坐标系到相机坐标系的PNP数据
     PoseNode cam_to_joint(camera_param.cam2joint_rmat, camera_param.cam2joint_tvec);
     PoseNode joint_to_cam = cam_to_joint.inv();
 
-    // 设置PNP数据
     auto rune_to_joint = rune_to_gyro + gyro_to_joint;
     auto rune_to_cam = rune_to_joint + joint_to_cam;
 

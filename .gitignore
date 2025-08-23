@@ -42,3 +42,5 @@ config_path.h
 .cache
 arms/Hero/ov_models
 gyro.txt
+Doxyfile
+docs/*

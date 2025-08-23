@@ -10,13 +10,6 @@
 using namespace std;
 using namespace cv;
 
-/**
- * @brief 获取参考PnP数据
- */
-inline void getReferencePnpData()
-{
-}
-
 inline Point2f getCenter(const FeatureNode_cptr &feature)
 {
     if (!feature)
@@ -68,8 +61,6 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
         // 将角度限定在 0 ~ 360 之间
         angle_map[feature_group] = normalizeAngle(angle);
     }
-
-    // 如果获取到未激活神符，则将未激活神符的角度设置为 0 ,并更新其它神符的相对角度
     bool has_inactive_rune = false;
     float inactive_angle = 0;
     for (auto &[target, center, fan] : temp_runes)
@@ -88,8 +79,6 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
     if (has_inactive_rune) // 如果存在未激活神符
         for (auto &features : temp_runes)
             angle_map[features] -= inactive_angle; // 更新相对角度
-
-    // 角度归一化处理,将角度限定在 0 ~ 360 之间
     for (auto &[features, angle] : angle_map)
         angle = normalizeAngle(angle);
 
@@ -104,9 +93,7 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
     vector<float> reference_angles{};
     for (size_t i = 0; i < 5; i++)
         reference_angles.push_back(72 * static_cast<int>(i));
-
-    // 为每个神符设置对应的3D角度
-    unordered_map<float, float> rotate_deltas{}; // 记录各个 旋转角度 对应的误差量
+    unordered_map<float, float> rotate_deltas{};
     for (int rotate_angle = -180; rotate_angle < 180; rotate_angle++)
     {
         float delta = 0;
@@ -123,17 +110,12 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
         }
         rotate_deltas[rotate_angle] = delta;
     }
-
-    // 获取误差最小的旋转角度
     auto [rotate_angle, min_delta] = *min_element(rotate_deltas.begin(), rotate_deltas.end(), [](const auto &lhs, const auto &rhs)
                                                   { return lhs.second < rhs.second; });
-
-    // 更新标准角度
     for (auto &angle : reference_angles)
     {
         angle -= rotate_angle;
     }
-
     // 为各个特征组设置其对应神符的编号 （0~4）
     map<tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>, int> rune_idx{};
     unordered_set<int> pending_num{0, 1, 2, 3, 4}; // 待匹配的编号
@@ -155,14 +137,11 @@ inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &
                 min_delta_idx = static_cast<int>(i);
             }
         }
-        cout << "pending_num.szie() = " << pending_num.size() << endl;
         if (min_delta_idx == -1)
         {
             VC_THROW_ERROR("The min_delta_idx is -1");
         }
-        // 设置编号
         rune_idx[feature_group] = min_delta_idx;
-        // 从待匹配的编号中移除
         pending_num.erase(min_delta_idx);
     }
 
@@ -209,20 +188,6 @@ inline void rotatePoints(const vector<Point3f> &raw_points, float angle, vector<
         Matx31f rotated_point_3d = rotate_mat * point_3d;
         rotated_points.emplace_back(rotated_point_3d(0), rotated_point_3d(1), rotated_point_3d(2));
     }
-
-    // 对获取的3D点进行旋转
-    // vector<Point3f> rotated_points_3d(rune_points_3d.size());
-    // float deviation_angle = rune_deviation_angle[feature_group];
-    // // 顺时针旋转
-    // Matx33f rotate_mat = {cos(deg2rad(deviation_angle)), -sin(deg2rad(deviation_angle)), 0,
-    //                       sin(deg2rad(deviation_angle)), cos(deg2rad(deviation_angle)), 0,
-    //                       0, 0, 1};
-    // for (size_t i = 0; i < rune_points_3d.size(); i++)
-    // {
-    //     Matx31f point_3d{rune_points_3d[i].x, rune_points_3d[i].y, rune_points_3d[i].z};
-    //     Matx31f rotated_point_3d = rotate_mat * point_3d;
-    //     rotated_points_3d[i] = Point3f(rotated_point_3d(0), rotated_point_3d(1), rotated_point_3d(2));
-    // }
 }
 
 /**
@@ -250,11 +215,8 @@ inline bool getPnpPoints(const FeatureNode_ptr &group,
         rune_deviation_angle[runes[i]] = deviation_angles[i];
     }
 
-    // 设置神符组的2D点
     vector<Point2f> group_points_2d{};
-    // 设置神符组的3D点
     vector<Point3f> group_points_3d{};
-    // 设置各个点在解算时的权重
     vector<float> group_points_weight{};
     bool rune_center_flag = false; // 是否已经存放了神符中心的角点
     // 设置PNP点集
@@ -315,11 +277,8 @@ inline bool getPnpPoints(const FeatureNode_ptr &group,
             }
         }
 
-        // 对获取的3D点进行旋转
         vector<Point3f> rotated_points_3d(rune_points_3d.size());
-        // 获取当前特征组的偏移角度
         float deviation_angle = rune_deviation_angle[feature_group];
-        // 靶心坐标系相对于旋转中心坐标系的偏移量
         Point3f rotCenter_to_target(rune_center_param.TRANSLATION(0), rune_center_param.TRANSLATION(1), 0);
         // 顺时针旋转
         Matx33f rotate_mat = {cos(deg2rad(deviation_angle)), -sin(deg2rad(deviation_angle)), 0,
@@ -351,174 +310,72 @@ inline bool getPnpPoints(const FeatureNode_ptr &group,
     return true;
 }
 
-/**
- * @brief 修正PNP解算的数据
- *
- * @param group 神符组
- * @param src 源PNP数据
- * @param dst 目标PNP数据
- */
+
 inline bool correctPnpData(const FeatureNode_ptr &group, const PoseNode &src, PoseNode &dst)
 {
     dst = src;
     return true;
 }
 
-/**
- * @brief PNP异常检查
- *
- * @param pnp_data
- */
 inline bool checkPnpData(const PoseNode &pnp_data)
 {
-    // 检查旋转向量的大小
-    if (norm(pnp_data.rvec()) > 1e5)
-    {
-        return false;
-    }
-    // 检查平移向量的大小
-    if (norm(pnp_data.tvec()) > 1e5)
-    {
-        return false;
-    }
-    return true;
+    return norm(pnp_data.rvec()) <= 1e5 && norm(pnp_data.tvec()) <= 1e5;
 }
 
-/**
- * @brief 输出有效点的数量
- *
- * @note 筛去重合点后剩余的点的数量（只检测point2f）
- */
-inline int getValidPointCount(const vector<Point2f> &points_2d, const vector<Point3f> &points_3d, const vector<float> &point_weights)
+inline int getValidPointCount(const vector<Point2f> &points_2d)
 {
-    if (points_2d.size() != points_3d.size())
+    vector<Point2f> unique_points;
+    for (auto &pt : points_2d)
     {
-        VC_THROW_ERROR("The 2D points and 3D points size is not equal");
-    }
-    vector<Point2f> vaild_points_2d{};
-    for (size_t i = 0; i < points_2d.size(); i++)
-    {
-        Point2f point_2d = points_2d[i];
-        // 检查点是否已经存在
-        bool is_exist = false;
-        for (const auto &point : vaild_points_2d)
+        if (std::none_of(unique_points.begin(), unique_points.end(),
+                         [&](const Point2f &p)
+                         { return norm(p - pt) < 1e-5; }))
         {
-            if (norm(point - point_2d) < 1e-5)
-            {
-                is_exist = true;
-                break;
-            }
-        }
-        // 如果点不存在，则添加到有效点集中
-        if (!is_exist)
-        {
-            vaild_points_2d.push_back(point_2d);
+            unique_points.push_back(pt);
         }
     }
-    return vaild_points_2d.size();
+    return static_cast<int>(unique_points.size());
 }
 
-/**
- * @brief 判断能否进行PnP解算
- */
-inline bool canSolvePnP(const FeatureNode_ptr &group, const vector<Point2f> &points_2d, const vector<Point3f> &points_3d, const vector<float> &point_weights)
+inline bool canSolvePnP(const FeatureNode_ptr &group, const vector<Point2f> &points_2d,
+                        const vector<Point3f> &points_3d, const vector<float> &point_weights)
 {
-    if (group == nullptr)
-    {
-        VC_THROW_ERROR("The group is nullptr");
-    }
-    if (points_2d.empty() || points_3d.empty() || point_weights.empty())
-    {
+    if (!group || points_2d.size() < 4 || points_3d.size() != points_2d.size() || points_2d.size() != point_weights.size())
         return false;
-    }
-    if (points_2d.size() != points_3d.size() || points_2d.size() != point_weights.size())
-    {
-        VC_THROW_ERROR("The 2D points and 3D points size is not equal");
-    }
-    if (points_2d.size() < 4)
-    {
-        return false;
-    }
-
-    // 检查点的数量
-    int valid_point_count = getValidPointCount(points_2d, points_3d, point_weights);
-    if (valid_point_count < 4)
-        return false;
-
-    return true;
+    return getValidPointCount(points_2d) >= 4;
 }
 
-bool RuneDetector::getCameraPnpData(const FeatureNode_ptr &group, const vector<Point2f> &points_2d, const vector<Point3f> &points_3d, const vector<float> &point_weights, PoseNode &pnp_data) const
+bool RuneDetector::getCameraPnpData(const FeatureNode_ptr &group, const vector<Point2f> &points_2d,
+                                    const vector<Point3f> &points_3d, const vector<float> &point_weights,
+                                    PoseNode &pnp_data) const
 {
-    auto rune_group = std::dynamic_pointer_cast<RuneGroup>(group);
-
-    if (group == nullptr)
-    {
-        VC_ERROR_INFO("The group is nullptr");
-    }
-    if (points_2d.empty() || points_3d.empty() || point_weights.empty())
-    {
+    if (!group || points_2d.empty() || points_3d.empty() || point_weights.empty() ||
+        points_2d.size() != points_3d.size() || points_2d.size() != point_weights.size() ||
+        !canSolvePnP(group, points_2d, points_3d, point_weights))
         return false;
-    }
-    if (points_2d.size() != points_3d.size() || points_2d.size() != point_weights.size())
-    {
-        VC_ERROR_INFO("The 2D points and 3D points size is not equal");
-    }
 
-    if (!canSolvePnP(group, points_2d, points_3d, point_weights))
-    {
-        return false;
-    }
-    // 设置PnP解算的数据
     Matx31f rvec, tvec;
-    Matx31f rvec_temp, tvec_temp;
-    solvePnP(points_3d, points_2d, camera_param.cameraMatrix, camera_param.distCoeff, rvec_temp, tvec_temp, false, SOLVEPNP_SQPNP);
-    tvec = tvec_temp;
-    rvec = rvec_temp;
+    solvePnP(points_3d, points_2d, camera_param.cameraMatrix, camera_param.distCoeff, rvec, tvec, false, SOLVEPNP_SQPNP);
 
     PoseNode original_pnp_data;
     original_pnp_data.tvec(tvec);
     original_pnp_data.rvec(rvec);
 
-    PoseNode corrected_pnp_data;
-    if (correctPnpData(group, original_pnp_data, corrected_pnp_data) == false)
-    {
-        return false;
-    }
-    pnp_data = corrected_pnp_data;
-    return true;
+    return correctPnpData(group, original_pnp_data, pnp_data);
 }
 
 bool RuneDetector::getPnpData(PoseNode &camera_pnp_data,
                               const FeatureNode_ptr &group,
-                              const std::vector<RuneFeatureComboConst> &matched_features) const
+                              const vector<RuneFeatureComboConst> &matched_features) const
 {
-    if (group == nullptr)
-    {
-        VC_ERROR_INFO("The group is nullptr");
-    }
-    if (matched_features.empty())
-    {
+    if (!group || matched_features.empty())
         return false;
-    }
-    // 获取参考PnP数据
-    vector<Point2f> points_2d{};
-    vector<Point3f> points_3d{};
-    vector<float> point_weights{};
-    if (getPnpPoints(group, matched_features, points_2d, points_3d, point_weights) == false) // 获取PNP解算的点集
-    {
-        return false;
-    }
 
-    if (points_2d.size() < 4)
-    {
+    vector<Point2f> points_2d;
+    vector<Point3f> points_3d;
+    vector<float> point_weights;
+    if (!getPnpPoints(group, matched_features, points_2d, points_3d, point_weights) || points_2d.size() < 4)
         return false;
-    }
 
-    if (getCameraPnpData(group, points_2d, points_3d, point_weights, camera_pnp_data) == false) // 获取神符在相机坐标系下的PNP数据
-    {
-        return false;
-    }
-
-    return true;
+    return getCameraPnpData(group, points_2d, points_3d, point_weights, camera_pnp_data);
 }

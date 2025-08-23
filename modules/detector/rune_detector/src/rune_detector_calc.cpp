@@ -143,14 +143,11 @@ inline bool filterInactiveFanImpl(vector<FeatureNode_ptr> &inactive_fans,
         Point2f center;
         float radius;
         minEnclosingCircle(target_centers, center, radius);
-        // 设置靶心的正确率
         double target_accuracy = 1.0;
         for (auto &inactive_target : inactive_targets)
             target_accuracy *= rune_detector_param.INACTIVE_TARGET_ACCURACY;
         for (auto &active_target : active_targets)
             target_accuracy *= rune_detector_param.ACTIVE_TARGET_ACCURACY;
-
-        // 更新所有灯臂的正确率
         for (auto &inactive_fan : inactive_fans)
         {
             double distance = getDist(inactive_fan->getImageCache().getCenter(), center);
@@ -163,7 +160,6 @@ inline bool filterInactiveFanImpl(vector<FeatureNode_ptr> &inactive_fans,
     if (!inactive_targets.empty())
     {
         auto best_target = inactive_targets[0];
-        // 判断未激活扇叶的反向是否存在未激活神符靶心。
         for (auto &fan : inactive_fans)
         {
             Point2f direction = fan->getImageCache().getDirection(); // 扇叶的方向
@@ -346,14 +342,10 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
                                        { return c1->getImageCache().getContours().front()->area() < c2->getImageCache().getContours().front()->area(); });
         return false;
     }
-
-    // 如果检测到神符中心数目过多（大于N），则按面积排序、取面积前 30 的神符中心
     if (centers.size() > 30)
     {
-        //  按面积排序
         sort(centers.begin(), centers.end(), [](const FeatureNode_ptr &c1, const FeatureNode_ptr &c2)
              { return getArea(c1) > getArea(c2); });
-        // 取前 30 个神符中心
         centers.erase(centers.begin() + 30, centers.end());
     }
 
@@ -366,18 +358,12 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
     if (inactive_targets.size() == 1 &&
         inactive_fans.size() == 1)
     {
-        // 获取两者的矩形
         auto target_rect = inactive_targets.front()->getImageCache().getContours().front()->minAreaRect();
         auto fan_rect = inactive_fans.front()->getImageCache().getContours().front()->minAreaRect();
-
-        // 以扇叶中心为对称点，绘制对称处理后的靶心中心
         Point2f fan_center = fan_rect.center;
         Point2f target_center = target_rect.center;
         Point2f sym_target_center = fan_center + (fan_center - target_center);
-
-        // 绘制对称处理后的靶心中心
         float radius = sqrt(target_rect.size.area() / CV_PI);
-        // 对半径进行缩放
         constexpr float SCALE_FACTOR = 1.6f;
         radius *= SCALE_FACTOR;
 
@@ -387,12 +373,12 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
             float distance = getDist(sym_target_center, getCenter(*it));
             if (distance > radius)
             {
-                center_accuracy[*it] *= 0; // 设置正确率为 0
-                it = centers.erase(it);    // 删除该中心
+                center_accuracy[*it] *= 0; 
+                it = centers.erase(it);
             }
             else
             {
-                ++it; // 保留该中心
+                ++it; 
             }
         }
     }
@@ -411,18 +397,13 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
         {
             const Point2f &p1 = getCenter(all_targets[i]);
             const Point2f &p2 = getCenter(all_targets[j]);
-            // 求两点连线的垂线
             Vec2f direction = p2 - p1;
             Vec2f vertical_direction = {direction[1], -1 * direction[0]};
-            // 求两点连线的中点
             Point2f mid_point = (p1 + p2) / 2;
-            // 求两点连线的中垂线
             Vec4f mid_line = {vertical_direction[0], vertical_direction[1], mid_point.x, mid_point.y};
-            // 设置神符靶心的正确率
             double target_accuracy = 1.0;
             target_accuracy *= all_targets[i]->getActiveFlag() ? rune_detector_param.ACTIVE_TARGET_ACCURACY : rune_detector_param.INACTIVE_TARGET_ACCURACY;
             target_accuracy *= all_targets[j]->getActiveFlag() ? rune_detector_param.ACTIVE_TARGET_ACCURACY : rune_detector_param.INACTIVE_TARGET_ACCURACY;
-            // 设置神符中心的正确率，若中心点距离中垂线的距离大于最大边长的 5 倍，则正确率降低
             for (auto &center : centers)
             {
                 float distance = getDist(mid_line, getCenter(center));
@@ -467,9 +448,6 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
             float angle = getVectorMinAngle(fan_direction, fan_to_center, DEG);
             if (angle > 90)
                 angle = 180 - angle;
-#ifdef rune_detector_debug
-            std::cout << "角度偏差为:" << angle << std::endl;
-#endif
             if (angle > rune_detector_filter_center_param.MAX_FAN_ANGLE)
             {
                 center_accuracy[center] *= (1 - rune_detector_param.INACTIVE_FAN_ACCURACY);
@@ -479,18 +457,10 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
         // 利用 神符中心到扇叶中轴线的距离来筛选
         for (auto &center : centers)
         {
-            //-----------------------利用距离来筛选-----------------------
-            // 若中心点距离扇叶的距离大于扇叶边长的 1.5 倍，则正确率降低
-            // float distance = getDistance(fan->getCenter(),center->getCenter());
-            // if(distance > max(fan->getWidth(),fan->getHeight()) * 1.5)
-            // {
-            //     center_accuracy[center] *= (1 - rune_detector_param.INACTIVE_FAN_ACCURACY);
-            // }
             float distance = getDist(fan_line, getCenter(center));
             float distance_ratio = distance / max(fan->getImageCache().getWidth(), fan->getImageCache().getHeight());
             if (distance_ratio > rune_detector_filter_center_param.MAX_FAN_LINE_DISTANCE_RATIO)
             {
-                // 弹出警告，显示 distance_ratio
                 center_accuracy[center] *= (1 - rune_detector_param.INACTIVE_FAN_ACCURACY);
             }
         }
@@ -512,7 +482,6 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
         Point2f fan_center = getCenter(fan);
         Point2f fan_direction = fan->getImageCache().getDirection();
         Vec4f fan_line{fan_direction.x, fan_direction.y, fan_center.x, fan_center.y};
-        // 利用神符中心与扇叶所成直线与扇叶方向的最大夹角来筛选
         for (auto &center : centers)
         {
             Point2f fan_to_center = getCenter(center) - fan_center;
@@ -524,7 +493,6 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
                 center_accuracy[center] *= (1 - rune_detector_param.ACTIVE_FAN_ACCURACY);
             }
         }
-        // 利用神符中心与扇叶所成直线与扇叶方向的的最大夹角来筛选
         for (auto &center : centers)
         {
             Point2f fan_to_center = getCenter(center) - fan_center;
@@ -536,17 +504,14 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
                 center_accuracy[center] *= (1 - rune_detector_param.ACTIVE_FAN_ACCURACY);
             }
         }
-        // 利用 神符中心必须位于扇叶正面来筛选
         for (auto &center : centers)
         {
             Point2f fan_to_center = getCenter(center) - fan_center;
             if ((fan_to_center.x * fan_direction.x + fan_to_center.y * fan_direction.y) < 0)
             {
-                // 扇叶到中心的向量与扇叶方向相反
                 center_accuracy[center] *= (1 - rune_detector_param.ACTIVE_FAN_ACCURACY);
             }
         }
-        // 利用神符中心到扇叶中心的距离比例来筛选
         for (auto &center : centers)
         {
             float distance = getDist(getCenter(fan), getCenter(center));
@@ -557,8 +522,6 @@ bool RuneDetector::filterCenter(std::vector<FeatureNode_ptr> &centers,
             }
         }
     }
-
-    // 删除与其它特征重合的神符中心
     vector<tuple<vector<Point2f>, double>> contour_accuracy; // [轮廓 : 该轮廓对应的正确率]
     for (auto &target : inactive_targets)
     {
@@ -769,8 +732,6 @@ bool RuneDetector::getRotateCenter(const std::vector<FeatureNode_ptr> &targets, 
             direction_lines.push_back(line);
         }
     }
-
-    // 获取所有特征的方向射线的交点
     std::vector<cv::Point2f> cross_points;
     for (size_t i = 0; i < direction_lines.size(); ++i)
     {
@@ -797,10 +758,7 @@ RuneDetector::getMatchedFeature(
     const FeatureNode_ptr &p_center,
     const std::vector<FeatureNode_ptr> &p_fans)
 {
-    // 设置返回的匹配特征
     vector<tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> matched_feature{};
-
-    // 获取待匹配的靶心和扇叶的下标
     unordered_set<FeatureNode_ptr> pending_targets(p_targets.begin(), p_targets.end());
     unordered_set<FeatureNode_ptr> pending_fans(p_fans.begin(), p_fans.end());
 
@@ -809,7 +767,6 @@ RuneDetector::getMatchedFeature(
     {
         if (pending_targets.empty()) // 如果靶心为空，退出
             break;
-        // 找到与扇叶方向最接近的靶心
         map<FeatureNode_ptr, float> delta_angles{};
         for (auto target : pending_targets)
         {
@@ -821,7 +778,6 @@ RuneDetector::getMatchedFeature(
         // 如果角度差小于阈值，则认为匹配成功
         if (min_angle < 20)
         {
-            // 将匹配的特征加入到匹配特征集合中
             if (target == nullptr || fan == nullptr)
                 VC_THROW_ERROR("target or fan is nullptr");
             matched_feature.push_back({target, p_center, fan});
@@ -830,13 +786,10 @@ RuneDetector::getMatchedFeature(
             pending_fans.erase(fan);
         }
     }
-    // 尝试使用剩余的靶心强制构造神符
-    // 尝试使用剩余的靶心强制构造神符
     for (auto &match_target : p_targets)
     {
         if (pending_targets.find(match_target) == pending_targets.end())
             continue;
-        // 保证新构建的神符距离其它神符的角度大于一定阈值
         Point2f direction_1 = getCenter(match_target) - getCenter(p_center);
         float min_delta_angle = 180.f;
         for (auto &[target, center, fan] : matched_feature)
@@ -858,7 +811,6 @@ RuneDetector::getMatchedFeature(
             pending_targets.erase(match_target);
         }
     }
-    // 尝试使用剩余的扇叶强制构造神符
     for (auto &match_fan : p_fans)
     {
         if (pending_fans.find(match_fan) == pending_fans.end())

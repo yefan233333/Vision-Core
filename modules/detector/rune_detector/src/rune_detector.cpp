@@ -51,10 +51,6 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
 
     if (groups.size() > 1)
         VC_THROW_ERROR("Size of the argument \"groups\" is greater than 1");
-#if FEATURE_NODE_DEBUG
-    // 开始计时
-    auto start_time = chrono::steady_clock::now();
-#endif
     setInputImage(input_image);
     setTick(tick);
     setGyroData(gyro_data);
@@ -134,7 +130,6 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
         return true;
     };
 
-    // 尝试更新神符序列组
     // 是否为掉帧更新
     bool is_vanish_update = false;
     if (!updateRuneGroup())
@@ -161,8 +156,6 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
     if(matched_features.size() > 1)
         rune_group->drawFeature(img_show);
 
-    // cout << "更新神符序列组成功" << endl;
-
     if (current_combos.empty())
     {
         VC_THROW_ERROR("组合体为空");
@@ -181,11 +174,4 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
     
     output.setValid(true);
     output.setFeatureNodes(groups);
-
-#if FEATURE_NODE_DEBUG
-    // 计算帧处理时间
-    auto end_time = chrono::steady_clock::now();
-    chrono::duration<double, milli> processing_time = end_time - start_time;
-    cout << "帧处理时间: " << processing_time.count() << " ms" << endl;
-#endif
 }

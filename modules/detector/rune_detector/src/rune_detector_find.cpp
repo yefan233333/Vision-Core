@@ -60,8 +60,6 @@ FeatureNode_ptr forceMakeCenterByInactiveFan(vector<FeatureNode_ptr> &inactive_f
         auto end_arrow_contour = RuneFanInactive::getEndArrowContour(fan, to_const(in_targets));
         if (end_arrow_contour == nullptr)
             continue;
-        // 尝试构造神符中心
-
         auto rune_center = RuneCenter::make_feature(end_arrow_contour, {});
         if (rune_center == nullptr)
             continue;
@@ -173,6 +171,7 @@ FeatureNode_ptr forceMakeCenter(const vector<FeatureNode_ptr> &inactive_targets,
     // 创建神符中心
     return RuneCenter::make_feature(center);
 }
+
 bool RuneDetector::findFeatures(Mat src, vector<FeatureNode_cptr> &features, std::vector<RuneFeatureCombo> &matched_features)
 {
 

@@ -9,15 +9,6 @@
 using namespace std;
 using namespace cv;
 
-/**
- * @brief 找到所有未激活扇叶
- *
- * @param[out] fans 返回找到的未激活扇叶
- * @param[in] contours 输入的轮廓点集
- * @param[in] hierarchy 输入的层级结构
- * @param[in] mask 可以跳过构造的轮廓下标集合
- * @param[out] used_contour_idxs 使用了的轮廓下标集合
- */
 void RuneFan::find_active_fans(std::vector<FeatureNode_ptr> &fans,
                                const std::vector<Contour_cptr> &contours,
                                const std::vector<cv::Vec4i> &hierarchy,
@@ -27,16 +18,6 @@ void RuneFan::find_active_fans(std::vector<FeatureNode_ptr> &fans,
     RuneFanActive::find(fans, contours, hierarchy, mask, used_contour_idxs);
 }
 
-/**
- * @brief 找到所有激活扇叶
- *
- * @param[out] fans 返回找到的激活扇叶
- * @param[in] contours 输入的轮廓点集
- * @param[in] hierarchy 输入的层级结构
- * @param[in] mask 可以跳过构造的轮廓下标集合
- * @param[out] used_contour_idxs 使用了的轮廓下标集合
- * @param[in] inactive_targets 未激活的靶心特征
- */
 void RuneFan::find_inactive_fans(std::vector<FeatureNode_ptr> &fans,
                                  const std::vector<Contour_cptr> &contours,
                                  const std::vector<cv::Vec4i> &hierarchy,
@@ -47,16 +28,6 @@ void RuneFan::find_inactive_fans(std::vector<FeatureNode_ptr> &fans,
     RuneFanInactive::find(fans, contours, hierarchy, mask, used_contour_idxs, inactive_targets);
 }
 
-/**
- * @brief 找到所有残缺的已激活扇叶
- *
- * @param[out] fans 返回找到的残缺的已激活扇叶
- * @param[in] contours 输入的轮廓点集
- * @param[in] hierarchy 输入的层级结构
- * @param[in] mask 可以跳过构造的轮廓下标集合
- * @param[in] rotate_center 旋转中心
- * @param[out] used_contour_idxs 使用了的轮廓下标集合
- */
 void RuneFan::find_incomplete_active_fans(std::vector<FeatureNode_ptr> &fans,
                                           const std::vector<Contour_cptr> &contours,
                                           const std::vector<cv::Vec4i> &hierarchy,
@@ -71,7 +42,6 @@ auto RuneFan::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::
 {
     // 空实现,不允许被调用
     VC_THROW_ERROR("getPnpPoints() is not implemented in RuneFan class. Please override this method in derived classes.");
-    // 返回空的点集和权重
     vector<Point2f> points_2d{};
     vector<Point3f> points_3d{};
     vector<float> weights{};
@@ -99,12 +69,6 @@ auto RuneFan::getRelativePnpPoints() const -> std::tuple<std::vector<cv::Point2f
     return make_tuple(points_2d, relative_points_3d, weights);
 }
 
-/**
- * @brief 检查坐标的范围是否正常
- *
- * @param points 待检查的坐标
- * @return true 坐标范围正常
- */
 bool checkPoints(const vector<Point2d> &points)
 {
     static const float MAX_X = 5000;
@@ -135,7 +99,6 @@ std::shared_ptr<RuneFan> RuneFan::make_feature(const PoseNode &fan_to_cam, bool 
         side_hump_corners = rune_fan_param.ACTIVE_SIDE_3D;
         bottom_side_hump_corners = rune_fan_param.ACTIVE_BOTTOM_SIDE_3D;
 
-        // 重投影
         vector<Point2d> top_hump_corners_2d{};
         vector<Point2d> bottom_center_hump_corners_2d{};
         vector<Point2d> side_hump_corners_2d{};
@@ -146,7 +109,6 @@ std::shared_ptr<RuneFan> RuneFan::make_feature(const PoseNode &fan_to_cam, bool 
         projectPoints(side_hump_corners, fan_to_cam.rvec(), fan_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, side_hump_corners_2d);
         projectPoints(bottom_side_hump_corners, fan_to_cam.rvec(), fan_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, bottom_side_hump_corners_2d);
 
-        // 检查坐标范围
         if (checkPoints(top_hump_corners_2d) == false || checkPoints(bottom_center_hump_corners_2d) == false || checkPoints(side_hump_corners_2d) == false || checkPoints(bottom_side_hump_corners_2d) == false)
         {
             return nullptr;
@@ -158,10 +120,8 @@ std::shared_ptr<RuneFan> RuneFan::make_feature(const PoseNode &fan_to_cam, bool 
     {
         vector<Point3d> corners = rune_fan_param.INACTIVE_3D;
         vector<Point2d> corners_2d{};
-        // 重投影
         projectPoints(corners, fan_to_cam.rvec(), fan_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, corners_2d);
 
-        // 检查坐标范围
         if (checkPoints(corners_2d) == false)
         {
             return nullptr;
