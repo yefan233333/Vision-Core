@@ -1,6 +1,7 @@
 #include "vc/detector/rune_detector.h"
 #include "vc/detector/rune_detector_param.h"
 #include "vc/feature/rune_group.h"
+#include "vc/core/debug_tools.h"
 
 using namespace std;
 using namespace cv;
@@ -156,6 +157,9 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
         // 若更新成功，清空掉帧数量
         rune_group->visibilityProcess(true);
     }
+    Mat img_show = DebugTools::get()->getImage();
+    if(matched_features.size() > 1)
+        rune_group->drawFeature(img_show);
 
     // cout << "更新神符序列组成功" << endl;
 

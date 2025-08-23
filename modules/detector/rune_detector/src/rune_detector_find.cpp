@@ -344,7 +344,7 @@ bool RuneDetector::findFeatures(Mat src, vector<FeatureNode_cptr> &features, std
     // 绘制所有特征
     do
     {
-        Mat img_show = DebugTools::get().getImage();
+        Mat img_show = DebugTools::get()->getImage();
         if (img_show.empty())
             break;
         for (const auto &target : rune_targets)

@@ -119,6 +119,15 @@ public:
         int64_t last_switch_tick = 0;
     };
 
+    /**
+     * @brief 获取相机坐标系到陀螺仪坐标系的PNP数据
+     *
+     * @param[in] gyro_data 陀螺仪数据
+     */
+    static PoseNode calcCamToGyroPnpData(const GyroData &gyro_data);
+
+    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
+
     struct CenterEstimationInfo
     {
         //! 是否有效
@@ -130,15 +139,6 @@ public:
     };
     //! 神符中心的估计信息
     DEFINE_PROPERTY(CenterEstimationInfo,public,protected,(CenterEstimationInfo));
-
-    /**
-     * @brief 获取相机坐标系到陀螺仪坐标系的PNP数据
-     *
-     * @param[in] gyro_data 陀螺仪数据
-     */
-    static PoseNode calcCamToGyroPnpData(const GyroData &gyro_data);
-
-    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
 
 private:
     //! 转化器映射
@@ -378,8 +378,6 @@ public:
         // return cv::Matx61f{tvec(0), tvec(1), tvec(2), pitch, yaw, roll};
         return cv::Matx61f{tvec(0), tvec(1), tvec(2), yaw, pitch, roll};
     }
-
-private:
 private:
     float _last_yaw = 0;
     float _last_roll = 0;

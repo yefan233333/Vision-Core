@@ -94,7 +94,7 @@ int main(int argc, char **argv)
             break;
         }
 
-        DebugTools::get().setImage(frame);
+        DebugTools::get()->setImage(frame);
 
         DetectorInput input;
         DetectorOutput output;
@@ -110,13 +110,11 @@ int main(int argc, char **argv)
         rune_groups = output.getFeatureNodes();
 
 
-        auto img_show = DebugTools::get().getImage();
-        if(rune_groups.size() > 0 && rune_groups.front() != nullptr)
-            rune_groups.front()->drawFeature(img_show);
+        auto img_show = DebugTools::get()->getImage();
 
         imshow(trackbar_window, img_show);
 
-        DebugTools::get().show();
+        DebugTools::get()->show();
         int key = waitKey(1);
         if (key == 27) // 按 'ESC' 键退出
         {

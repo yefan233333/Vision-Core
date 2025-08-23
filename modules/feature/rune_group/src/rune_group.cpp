@@ -838,6 +838,8 @@ void RuneGroup::drawFeature(cv::Mat &image, const DrawConfig_cptr &config) const
         //! 安全检查
         if (pose_info.getPoseNodes().find(CoordFrame::CAMERA) == pose_info.getPoseNodes().end())
             break;
+        if (this->getTrackers().size() < 2)
+            break;
         auto& rune_to_camera = pose_info.getPoseNodes().at(CoordFrame::CAMERA);
         drawCube(image, rune_to_camera, 2000, 2000, 500, cv::Scalar(0, 255, 0));
 

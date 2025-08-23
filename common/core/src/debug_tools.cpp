@@ -4,9 +4,9 @@ using namespace std;
 using namespace cv;
 
 // 单例模式，方便全局调用
-DebugTools &DebugTools::get()
+DebugTools_ptr DebugTools::get()
 {
-    static DebugTools instance;
+    static DebugTools_ptr instance = std::make_shared<DebugTools>();
     return instance;
 }
 

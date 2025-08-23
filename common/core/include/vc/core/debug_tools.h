@@ -9,9 +9,12 @@
 
 class DebugTools
 {
+    using Ptr = std::shared_ptr<DebugTools>;
 public:
+    DebugTools() = default;
+    
     // 单例模式，方便全局调用
-    static DebugTools &get();
+    static Ptr get();
 
     // 设置缓存图像（通常在处理开始时调用）
     void setImage(const cv::Mat &img);
@@ -27,14 +30,12 @@ public:
     DebugTools &operator=(const DebugTools &) = delete;
 
 private:
-    DebugTools() = default;
 
     // 初始化窗口
     void initWindow(const std::string &winName = "Debug");
-
-
 
     cv::Mat cache_;
     std::mutex mtx_;
     bool window_initialized_ = false;
 };
+using DebugTools_ptr = std::shared_ptr<DebugTools>;
