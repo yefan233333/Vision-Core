@@ -1,3 +1,10 @@
+/**
+ * @file geom_line.hpp
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 二维平面直线类定义与实现
+ * @date 2025-XX-XX
+ */
+
 #pragma once
 
 #include <opencv2/core.hpp>
@@ -7,36 +14,42 @@
 #include <stdexcept>
 
 /**
- * @brief 平面直线类
+ * @brief 二维平面直线类模板
+ *
+ * 该类提供二维直线的构造、几何计算和分析功能，
+ * 包括基于角度、两点生成直线、点到直线的距离计算、
+ * 投影点、交点求解及一般式方程获取等。
+ *
+ * @tparam _Tp 数值类型，默认 double
  */
 template <typename _Tp = double>
 class Line2_
 {
 public:
-    using value_type = _Tp; //!< 直线的数值类型
-    using point_type = cv::Point_<value_type>; //!< 直线上的点类型
+    using value_type = _Tp;                    //!< 数值类型
+    using point_type = cv::Point_<value_type>; //!< 二维点类型
 
     /**
-     * @brief 默认构造函数，创建一条水平直线
-     * @note 默认直线方程为 y = 0
+     * @brief 默认构造函数
+     * @note 默认生成水平直线：y = 0
      */
     Line2_();
 
     /**
-     * @brief 构造函数，使用角度和点创建直线
-     * 
-     * @param[in] angle 直线的角度（弧度）
-     * @param[in] point 直线上的一个点
-     * @note 角度为0时，直线方向为水平方向，角度增大时，直线逆时针旋转
+     * @brief 通过角度和直线上一点构造直线
+     *
+     * @param[in] angle 直线角度（单位：弧度）
+     * @param[in] point 直线上的一点
+     * @note 当 angle = 0 时，直线方向水平，角度增加时直线逆时针旋转
      */
     Line2_(value_type angle, const point_type &point);
 
     /**
-     * @brief 构造函数，使用两个点创建直线
-     * 
-     * @param[in] p1 直线上的第一个点
-     * @param[in] p2 直线上的第二个点
-     * @note 如果两个点相同，将抛出异常
+     * @brief 通过两点构造直线
+     *
+     * @param[in] p1 第一个点
+     * @param[in] p2 第二个点
+     * @throws std::invalid_argument 如果 p1 和 p2 重合
      */
     Line2_(const point_type &p1, const point_type &p2);
 
@@ -51,98 +64,124 @@ public:
     Line2_(Line2_ &&other) noexcept;
 
     /**
-     * @brief 赋值运算符重载
+     * @brief 拷贝赋值运算符
      */
     Line2_ &operator=(const Line2_ &other);
 
     /**
-     * @brief 移动赋值运算符重载
+     * @brief 移动赋值运算符
      */
     Line2_ &operator=(Line2_ &&other) noexcept;
 
     /**
-     * @brief 获取直线的角度（弧度）
+     * @brief 获取直线角度（弧度）
+     * @return 直线角度，单位：弧度
      */
     value_type angle() const;
 
     /**
-     * @brief 获取直线的角度（角度）
+     * @brief 获取直线角度（角度制）
+     * @return 直线角度，单位：度
      */
     value_type angleDegrees() const;
 
     /**
-     * @brief 获取直线上的顶点
+     * @brief 获取直线上的基准点
+     * @return 基准点坐标
      */
     point_type point() const;
 
     /**
      * @brief 获取直线的方向向量
+     * @return 单位方向向量
      */
     point_type direction() const;
 
     /**
      * @brief 获取直线的法向量
+     * @return 法向量
      */
     point_type normal() const;
 
     /**
      * @brief 计算点到直线的距离
+     * @param[in] p 任意二维点
+     * @return 点到直线的距离
      */
     value_type distanceTo(const point_type &p) const;
 
     /**
-     * @brief 检查点是否在直线上
-     * 
-     * @param p 要检查的点
-     * @param tolerance 容差值，默认值为1e-5
-     * @return true 如果点在直线上（在容差范围内）
+     * @brief 判断点是否位于直线上
+     *
+     * @param[in] p 待检测的点
+     * @param[in] tolerance 容差，默认 1e-5
+     * @return true 点在直线上（容差范围内）
      */
     bool contains(const point_type &p, value_type tolerance = 1e-5) const;
 
     /**
      * @brief 计算两条直线的交点
-     * 
-     * @param other 另一条直线
-     * @return std::vector<point_type> 交点的集合
+     *
+     * @param[in] other 另一条直线
+     * @return 交点集合（无交点返回空）
      */
     std::vector<point_type> intersect(const Line2_ &other) const;
 
-
     /**
      * @brief 计算点在直线上的投影点
-     * 
-     * @param p 要投影的点
-     * @return point_type 投影点
+     *
+     * @param[in] p 需要投影的点
+     * @return 投影点坐标
      */
     point_type project(const point_type &p) const;
 
-    
-
     /**
-     * @brief 获取直线的一般方程
-     * 
-     * @param A 一般方程的系数 A
-     * @param B 一般方程的系数 B
-     * @param C 一般方程的系数 C
+     * @brief 获取直线的一般式方程
+     *
+     * @param[out] A 一般式方程 Ax + By + C = 0 中的 A
+     * @param[out] B 一般式方程中的 B
+     * @param[out] C 一般式方程中的 C
      */
     void getGeneralEquation(value_type &A, value_type &B, value_type &C) const;
 
 private:
-
     /**
-     * @brief 规范化角度，使其在 [0, 2π) 范围内
+     * @brief 规范化角度，使其范围在 [0, 2π)
      */
     void normalizeAngle();
 
     /**
-     * @brief 根据参数 t 计算直线上对应的点
+     * @brief 根据参数 t 计算直线上对应点
+     *
+     * @param[in] t 参数
+     * @return 直线上的点坐标
      */
     point_type pointAt(value_type t) const;
 
-    value_type __angle;
-    point_type __point;
-    point_type __direction;
+    value_type __angle;     //!< 直线角度（弧度）
+    point_type __point;     //!< 直线上一点
+    point_type __direction; //!< 单位方向向量
 };
+
+/** @typedef Line2i
+ * @brief 使用 int 类型的二维直线
+ */
+using Line2i = Line2_<int>;
+
+/** @typedef Line2f
+ * @brief 使用 float 类型的二维直线
+ */
+using Line2f = Line2_<float>;
+
+/** @typedef Line2d
+ * @brief 使用 double 类型的二维直线
+ */
+using Line2d = Line2_<double>;
+
+/** @typedef Line
+ * @brief 默认二维直线类型（float）
+ */
+using Line = Line2f;
 
 // 类外成员函数实现
 template <typename _Tp>
@@ -294,9 +333,3 @@ void Line2_<_Tp>::getGeneralEquation(value_type &A, value_type &B, value_type &C
     B = __direction.x;
     C = __direction.y * __point.x - __direction.x * __point.y;
 }
-
-using Line2i = Line2_<int>; //!< 整型直线类
-using Line2f = Line2_<float>; //!< 单精度浮点数直线类
-using Line2d = Line2_<double>; //!< 双精度浮点数直线类
-
-using Line = Line2f;    //!< 默认直线类型，使用单精度浮点数

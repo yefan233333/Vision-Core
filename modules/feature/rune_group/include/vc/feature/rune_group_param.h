@@ -2,7 +2,6 @@
  * @file rune_group_para.h
  * @author SCUT RobotLab Vision Group
  * @brief RuneGroupParam module header file
- * @version 1.0
  * @date 2023-10-03
  *
  * @copyright Copyright 2023 (c), SCUT RobotLab Vision Group

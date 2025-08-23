@@ -2,11 +2,7 @@
  * @file contour_wrapper.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 轮廓分析器头文件
- * @version 1.0
  * @date 2025-4-12
- *
- * @copyright Copyright (c) 2025
- *
  */
 
 #pragma once
@@ -99,23 +95,14 @@ public:
      *
      * @param contour 轮廓点集
      */
-    ContourWrapper(const std::vector<PointType> &contour)
-        : __points(contour)
-    {
-        // 初始化标志位
-        cache_flags.reset();
-    }
+    ContourWrapper(const std::vector<PointType> &contour);
+
     /**
      * @brief 移动构造函数
      *
      * @param contour 轮廓点集
      */
-    ContourWrapper(std::vector<PointType> &&contour)
-        : __points(std::move(contour))
-    {
-        // 初始化标志位
-        cache_flags.reset();
-    }
+    ContourWrapper(std::vector<PointType> &&contour);
 
 public:
     // 禁用拷贝构造函数
@@ -130,362 +117,112 @@ public:
      *
      * @param contour 轮廓点集
      */
-    inline static std::shared_ptr<ContourWrapper<ValueType>> make_contour(const std::vector<PointType> &contour)
-    {
-        return std::make_shared<ContourWrapper<ValueType>>(contour);
-    }
+    inline static std::shared_ptr<ContourWrapper<ValueType>> make_contour(const std::vector<PointType> &contour);
+
     /**
      * @brief 创建轮廓对象
      *
      * @param contour 轮廓点集
      */
-    inline static std::shared_ptr<ContourWrapper<ValueType>> make_contour(std::vector<PointType> &&contour)
-    {
-        return std::make_shared<ContourWrapper<ValueType>>(std::move(contour));
-    }
+    inline static std::shared_ptr<ContourWrapper<ValueType>> make_contour(std::vector<PointType> &&contour);
 
     /**
      * @brief 获取轮廓点集
      */
-    const std::vector<PointType> &points() const
-    {
-        return __points;
-    }
+    const std::vector<PointType> &points() const;
 
     /**
      * @brief 获取轮廓面积
      */
-    double area() const
-    {
-        if (!cache_flags.test(AREA_CALC))
-        {
-            __area = std::abs(cv::contourArea(__points));
-            cache_flags.set(AREA_CALC);
-        }
-        return __area;
-    }
+    double area() const;
 
     /**
      * @brief 获取轮廓周长
      */
-    double perimeter(bool close = true) const
-    {
-        if (close)
-        {
-            if (!cache_flags.test(PERIMETER_CLOSE_CALC))
-            {
-                // 自动应用平滑处理
-                // const auto &smooth_contour = smoothedContour();
-                const auto &contour = this->points();
-                __perimeter_close = cv::arcLength(contour, true);
-                cache_flags.set(PERIMETER_CLOSE_CALC);
-            }
-            return __perimeter_close;
-        }
-        else
-        {
-            if (!cache_flags.test(PERIMETER_OPEN_CALC))
-            {
-                // 自动应用平滑处理
-                // const auto &smooth_contour = smoothedContour();
-                const auto &contour = this->points();
-                __perimeter_open = cv::arcLength(contour, false);
-                cache_flags.set(PERIMETER_OPEN_CALC);
-            }
-            return __perimeter_open;
-        }
-    }
+    double perimeter(bool close = true) const;
 
     /**
      * @brief 获取轮廓中心点
      */
-    KeyPointType center() const
-    {
-        if (!cache_flags.test(CENTER_CALC))
-        {
-            // 自动应用平滑处理
-            // const auto &smooth_contour = smoothedContour();
-            const auto &contour = this->points();
-            cv::Scalar mean_val = cv::mean(contour);
-            __center = KeyPointType(mean_val[0], mean_val[1]);
-            cache_flags.set(CENTER_CALC);
-        }
-        return __center;
-    }
+    KeyPointType center() const;
 
     /**
      * @brief 获取轮廓的正外接矩形
      */
-    cv::Rect boundingRect() const
-    {
-        if (!cache_flags.test(BOUNDING_RECT_CALC))
-        {
-            // const auto &smooth_contour = smoothedContour();
-            const auto &contour = this->points();
-            __bounding_rect = std::make_unique<cv::Rect>(
-                cv::boundingRect(contour));
-            cache_flags.set(BOUNDING_RECT_CALC);
-        }
-        return *__bounding_rect;
-    }
+    cv::Rect boundingRect() const;
 
     /**
      * @brief 获取轮廓的最小外接矩形
      */
-    cv::RotatedRect minAreaRect() const
-    {
-        if (!cache_flags.test(MIN_AREA_RECT_CALC))
-        {
-            // const auto &smooth_contour = smoothedContour();
-            const auto &contour = this->points();
-            __min_area_rect = std::make_unique<cv::RotatedRect>(
-                cv::minAreaRect(contour));
-            cache_flags.set(MIN_AREA_RECT_CALC);
-        }
-        return *__min_area_rect;
-    }
+    cv::RotatedRect minAreaRect() const;
 
     /**
      * @brief 获取轮廓的拟合圆
      */
-    std::tuple<cv::Point2f, float> fittedCircle() const
-    {
-        if (!cache_flags.test(FITTED_CIRCLE_CALC))
-        {
-            // const auto &smooth_contour = smoothedContour();
-            const auto &contour = this->points();
-            if (contour.size() >= 3)
-            {
-                cv::Point2f center_temp;
-                float radius_temp = 0;
-                cv::minEnclosingCircle(contour, center_temp, radius_temp);
-                __fitted_circle = std::make_unique<std::tuple<cv::Point2f, float>>(center_temp, radius_temp);
-                cache_flags.set(FITTED_CIRCLE_CALC);
-            }
-            else
-            {
-                // 点数不足时触发异常
-                VC_THROW_ERROR("Insufficient points for circle fitting");
-            }
-        }
-        return *__fitted_circle;
-    }
+    std::tuple<cv::Point2f, float> fittedCircle() const;
 
     /**
      * @brief 获取轮廓的拟合椭圆
      */
-    cv::RotatedRect fittedEllipse() const
-    {
-        if (!cache_flags.test(FITTED_ELLIPSE_CALC))
-        {
-            // const auto &smooth_contour = smoothedContour();
-            const auto &contour = this->points();
-            if (contour.size() >= 5)
-            {
-                __fitted_ellipse = std::make_unique<cv::RotatedRect>(cv::fitEllipse(contour));
-                cache_flags.set(FITTED_ELLIPSE_CALC);
-            }
-            else
-            {
-                // 点数不足时触发异常
-                VC_THROW_ERROR("Insufficient points for ellipse fitting");
-            }
-        }
-        return *__fitted_ellipse;
-    }
+    cv::RotatedRect fittedEllipse() const;
 
     /**
      * @brief 获取轮廓的凸包
      */
-    const std::vector<PointType> &convexHull() const
-    {
-        if (!cache_flags.test(CONVEX_HULL_CALC))
-        {
-            // const auto &smooth_contour = smoothedContour();
-            const auto &contour = this->points();
-            __convex_hull = std::make_unique<std::vector<PointType>>();
-            cv::convexHull(contour, *__convex_hull);
-            cache_flags.set(CONVEX_HULL_CALC);
-        }
-        return *__convex_hull;
-    }
+    const std::vector<PointType> &convexHull() const;
 
     /**
      * @brief 获取凸包的索引
      */
-    const std::vector<int> &convexHullIdx() const
-    {
-        if (!cache_flags.test(CONVEX_HULL_IDX_CALC))
-        {
-            // const auto &smooth_contour = smoothedContour();
-            const auto &contour = this->points();
-            __convex_hull_idx = std::make_unique<std::vector<int>>();
-            cv::convexHull(contour, *__convex_hull_idx);
-            cache_flags.set(CONVEX_HULL_IDX_CALC);
-        }
-        return *__convex_hull_idx;
-    }
+    const std::vector<int> &convexHullIdx() const;
 
     /**
      * @brief 获取凸包的面积
      */
-    float convexArea() const
-    {
-        if (!cache_flags.test(CONVEX_HULL_AREA_CALC))
-        {
-            const auto &convex_contour = this->convexHull();
-            __convex_area = std::abs(cv::contourArea(convex_contour));
-            cache_flags.set(CONVEX_HULL_AREA_CALC);
-        }
-        return __convex_area;
-    }
+    float convexArea() const;
 
     /**
      * @brief 生成信息字符串
      */
-    std::string infoString() const
-    {
-        std::ostringstream oss;
-        oss << "  Area: " << area() << "\n";
-        oss << "  Perimeter (Closed): " << perimeter(true) << "\n";
-        oss << "  Center: (" << center().x << ", " << center().y << ")\n";
-        return oss.str();
-    }
+    std::string infoString() const;
 
     /**
      * @brief 隐式转换
      */
-    operator const std::vector<PointType> &() const
-    {
-        return __points;
-    }
+    operator const std::vector<PointType> &() const;
 
     /**
      * @brief 获取轮廓的凸包轮廓——接口
      */
-    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHull(const std::vector<std::shared_ptr<const ContourWrapper<ValueType>>> &contours)
-    {
-        // 检查所有轮廓是否有效
-        for (const auto &contour : contours)
-        {
-            if (contour == nullptr || contour->points().empty())
-            {
-                VC_THROW_ERROR("Invalid contour");
-            }
-        }
-        return getConvexHullImpl(contours);
-    }
-
-
-    // /**
-    //  * @brief 加入调试信息码
-    //  */
-    // void addMsgCode(const MsgCode_ptr &msg_code)
-    // {
-    //     // 若调试信息码为空，则不进行处理
-    //     if (msg_code == nullptr)
-    //     {
-    //         return;
-    //     }
-    //     // 若调试信息码节点为空，则创建一个新的节点
-    //     if(isSetMsgCodeNodePtr() == false)
-    //     {
-    //         setMsgCodeNodePtr(MsgCodeNode::make_node());
-    //     }
-    //     // 将调试信息码添加到节点中
-    //     getMsgCodeNodePtr()->addMsgCode(msg_code);
-    // }
-
-    // /**
-    //  * @brief 获取调试信息节点
-    //  */
-    // MsgCodeNode_ptr getMsgCodeNode()
-    // {
-    //     if (isSetMsgCodeNodePtr() == false)
-    //     {
-    //         setMsgCodeNodePtr(MsgCodeNode::make_node());
-    //     }
-    //     return getMsgCodeNodePtr();
-    // }
+    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHull(const std::vector<std::shared_ptr<const ContourWrapper<ValueType>>> &contours);
 
 public:
     //--------------------【迭代器访问----------------------】
     using const_iterator = typename std::vector<PointType>::const_iterator;                 // 常量迭代器
     using const_reverse_iterator = typename std::vector<PointType>::const_reverse_iterator; // 常量反向迭代器
 
-    const_iterator begin() const noexcept { return __points.begin(); }
-    const_iterator end() const noexcept { return __points.end(); }
-    const_iterator cbegin() const noexcept { return __points.cbegin(); }
-    const_iterator cend() const noexcept { return __points.cend(); }
-    const_reverse_iterator rbegin() const noexcept { return __points.rbegin(); }
-    const_reverse_iterator rend() const noexcept { return __points.rend(); }
-    const_reverse_iterator crbegin() const noexcept { return __points.crbegin(); }
-    const_reverse_iterator crend() const noexcept { return __points.crend(); }
+    const_iterator begin() const noexcept;
+    const_iterator end() const noexcept;
+    const_iterator cbegin() const noexcept;
+    const_iterator cend() const noexcept;
+    const_reverse_iterator rbegin() const noexcept;
+    const_reverse_iterator rend() const noexcept;
+    const_reverse_iterator crbegin() const noexcept;
+    const_reverse_iterator crend() const noexcept;
 
     // 常用stl接口
-    size_t size() const noexcept { return __points.size(); }
-    bool empty() const noexcept { return __points.empty(); }
-    const PointType &operator[](size_t idx) const noexcept { return __points[idx]; }
-    const PointType &at(size_t idx) const noexcept
-    {
-        if (idx >= __points.size())
-        {
-            VC_THROW_ERROR("Index out of range");
-        }
-        return __points.at(idx);
-    }
-    const PointType &front() const noexcept { return __points.front(); }
-    const PointType &back() const noexcept { return __points.back(); }
+    size_t size() const noexcept;
+    bool empty() const noexcept;
+    const PointType &operator[](size_t idx) const noexcept;
+    const PointType &at(size_t idx) const;
+    const PointType &front() const noexcept;
+    const PointType &back() const noexcept;
 
 private:
-    //     /**
-    //      * @brief 获取平滑轮廓
-    //      */
-    //     const std::vector<PointType> &smoothedContour() const
-    //     {
-    // #if ENABLE_SMOOTH_CONTOUR_CALC
-    //         if (!cache_flags.test(SMOOTH_CONTOUR_CALC))
-    //         {
-    //             __smoothed_contour = std::make_unique<std::vector<cv::Point>>();
-
-    //             // 抗锯齿处理流程
-    //             if (__points.size() >= 4)
-    //             {
-    //                 const double epsilon = 0.01 * cv::arcLength(__points, true);
-    //                 cv::approxPolyDP(__points, *__smoothed_contour, epsilon, true);
-    //             }
-    //             else
-    //             {
-    //                 *__smoothed_contour = __points;
-    //             }
-
-    //             cache_flags.set(SMOOTH_CONTOUR_CALC);
-    //         }
-    //         return *__smoothed_contour;
-    // #else
-    //         return __points;
-    // #endif
-    //     }
-
     /**
      * @brief 获取多轮廓的凸包轮廓
      */
-    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHullImpl(const std::vector<std::shared_ptr<const ContourWrapper<ValueType>>> &contours)
-    {
-        size_t total_point_size = 0;
-        for (const auto &contour : contours)
-            total_point_size += contour->points().size();
-        std::vector<PointType> all_points;
-        all_points.reserve(total_point_size);
-        for (const auto &contour : contours)
-        {
-            const auto &points = contour->points();
-            all_points.insert(all_points.end(), points.begin(), points.end());
-        }
-        std::vector<PointType> convex_hull;
-        cv::convexHull(all_points, convex_hull);
-        return ContourWrapper<ValueType>::make_contour(std::move(convex_hull));
-    }
+    static std::shared_ptr<ContourWrapper<ValueType>> getConvexHullImpl(const std::vector<std::shared_ptr<const ContourWrapper<ValueType>>> &contours);
 };
 
 using Contour_ptr = std::shared_ptr<ContourWrapper<int>>;
@@ -510,15 +247,6 @@ struct is_contour_wrapper<ContourWrapper<T>> : std::true_type
 template <typename T>
 concept ContourWrapperType = is_contour_wrapper<std::remove_cvref_t<T>>::value;
 
-// template <typename T>
-// concept ContourWrapperType = requires {
-//     typename T::value_type; // SFINAE 触发点
-//     requires std::is_base_of_v<
-//         ContourWrapper<std::remove_cvref_t<typename T::value_type>>,
-//         std::remove_cvref_t<T>>;
-//     requires ContourWrapperBaseType<typename T::value_type>;
-// };
-
 /**
  * @brief 类型检验，检验是否为 std::shared_ptr<ContourWrapper<T>>，T符合ContourWrapperBaseType
  */
@@ -529,53 +257,6 @@ concept ContourWrapperPtrType = requires {
         std::remove_cvref_t<T>>;
     requires ContourWrapperType<typename std::remove_cvref_t<T>::element_type>;
 };
-
-// namespace ContourWrapper
-// {
-//     // /**
-//     //  * @brief 精度转换
-//     //  */
-//     // template <ContourWrapperBaseType OutPutType, ContourWrapperBaseType InputType>
-//     // static std::shared_ptr<ContourWrapper<OutPutType>> getConvert(const std::shared_ptr<ContourWrapper<InputType>> &contour)
-//     // {
-//     //     // 若类型相同，则直接返回
-//     //     if constexpr (std::is_same_v<OutPutType, ValueType>)
-//     //     {
-//     //         return contour;
-//     //     }
-
-//     //     using OutPutPointType = cv::Point_<OutPutType>;
-//     //     std::vector<OutPutPointType> converted_points;
-//     //     converted_points.reserve(contour->points().size());
-//     //     for (const auto &point : contour->points())
-//     //     {
-//     //         converted_points.emplace_back(static_cast<OutPutType>(point.x), static_cast<OutPutType>(point.y));
-//     //     }
-//     //     return std::make_shared<ContourWrapper<OutPutType>>(std::move(converted_points));
-//     // }
-
-// /**
-//  * @brief 精度转换
-//  */
-// template <ContourWrapperBaseType OutPutType, ContourWrapperBaseType InputType>
-// inline std::shared_ptr<ContourWrapper<OutPutType>> getConverted(const std::shared_ptr<ContourWrapper<InputType>> &contour)
-// {
-//     // 若类型相同，则直接返回
-//     if constexpr (std::is_same_v<OutPutType, InputType>)
-//     {
-//         return contour;
-//     }
-
-//     using OutPutPointType = cv::Point_<OutPutType>;
-//     std::vector<OutPutPointType> converted_points;
-//     converted_points.reserve(contour->points().size());
-//     for (const auto &point : contour->points())
-//     {
-//         converted_points.emplace_back(static_cast<OutPutType>(point.x), static_cast<OutPutType>(point.y));
-//     }
-//     return std::make_shared<ContourWrapper<OutPutType>>(std::move(converted_points));
-
-// }
 
 /**
  * @brief 轮廓精度转换函数（支持 int/float/double 互转）
@@ -588,6 +269,319 @@ concept ContourWrapperPtrType = requires {
  * @note 类型相同时直接返回原指针（无额外开销）
  *       类型不同时生成新轮廓（触发写时复制）
  */
+template <ContourWrapperBaseType OutputType, ContourWrapperPtrType ContourPtr>
+inline auto convert(const ContourPtr &contour) -> std::shared_ptr<ContourWrapper<OutputType>>;
+
+
+
+// 构造函数
+template <ContourWrapperBaseType _Tp>
+ContourWrapper<_Tp>::ContourWrapper(const std::vector<PointType> &contour)
+    : __points(contour)
+{
+    // 初始化标志位
+    cache_flags.reset();
+}
+
+// 移动构造函数
+template <ContourWrapperBaseType _Tp>
+ContourWrapper<_Tp>::ContourWrapper(std::vector<PointType> &&contour)
+    : __points(std::move(contour))
+{
+    // 初始化标志位
+    cache_flags.reset();
+}
+
+// 创建轮廓对象
+template <ContourWrapperBaseType _Tp>
+inline std::shared_ptr<ContourWrapper<_Tp>> ContourWrapper<_Tp>::make_contour(const std::vector<PointType> &contour)
+{
+    return std::make_shared<ContourWrapper<_Tp>>(contour);
+}
+
+template <ContourWrapperBaseType _Tp>
+inline std::shared_ptr<ContourWrapper<_Tp>> ContourWrapper<_Tp>::make_contour(std::vector<PointType> &&contour)
+{
+    return std::make_shared<ContourWrapper<_Tp>>(std::move(contour));
+}
+
+// 获取轮廓点集
+template <ContourWrapperBaseType _Tp>
+const std::vector<typename ContourWrapper<_Tp>::PointType> &ContourWrapper<_Tp>::points() const
+{
+    return __points;
+}
+
+// 获取轮廓面积
+template <ContourWrapperBaseType _Tp>
+double ContourWrapper<_Tp>::area() const
+{
+    if (!cache_flags.test(AREA_CALC))
+    {
+        __area = std::abs(cv::contourArea(__points));
+        cache_flags.set(AREA_CALC);
+    }
+    return __area;
+}
+
+// 获取轮廓周长
+template <ContourWrapperBaseType _Tp>
+double ContourWrapper<_Tp>::perimeter(bool close) const
+{
+    if (close)
+    {
+        if (!cache_flags.test(PERIMETER_CLOSE_CALC))
+        {
+            const auto &contour = this->points();
+            __perimeter_close = cv::arcLength(contour, true);
+            cache_flags.set(PERIMETER_CLOSE_CALC);
+        }
+        return __perimeter_close;
+    }
+    else
+    {
+        if (!cache_flags.test(PERIMETER_OPEN_CALC))
+        {
+            const auto &contour = this->points();
+            __perimeter_open = cv::arcLength(contour, false);
+            cache_flags.set(PERIMETER_OPEN_CALC);
+        }
+        return __perimeter_open;
+    }
+}
+
+// 获取轮廓中心点
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::KeyPointType ContourWrapper<_Tp>::center() const
+{
+    if (!cache_flags.test(CENTER_CALC))
+    {
+        const auto &contour = this->points();
+        cv::Scalar mean_val = cv::mean(contour);
+        __center = KeyPointType(mean_val[0], mean_val[1]);
+        cache_flags.set(CENTER_CALC);
+    }
+    return __center;
+}
+
+// 获取轮廓的正外接矩形
+template <ContourWrapperBaseType _Tp>
+cv::Rect ContourWrapper<_Tp>::boundingRect() const
+{
+    if (!cache_flags.test(BOUNDING_RECT_CALC))
+    {
+        const auto &contour = this->points();
+        __bounding_rect = std::make_unique<cv::Rect>(
+            cv::boundingRect(contour));
+        cache_flags.set(BOUNDING_RECT_CALC);
+    }
+    return *__bounding_rect;
+}
+
+// 获取轮廓的最小外接矩形
+template <ContourWrapperBaseType _Tp>
+cv::RotatedRect ContourWrapper<_Tp>::minAreaRect() const
+{
+    if (!cache_flags.test(MIN_AREA_RECT_CALC))
+    {
+        const auto &contour = this->points();
+        __min_area_rect = std::make_unique<cv::RotatedRect>(
+            cv::minAreaRect(contour));
+        cache_flags.set(MIN_AREA_RECT_CALC);
+    }
+    return *__min_area_rect;
+}
+
+// 获取轮廓的拟合圆
+template <ContourWrapperBaseType _Tp>
+std::tuple<cv::Point2f, float> ContourWrapper<_Tp>::fittedCircle() const
+{
+    if (!cache_flags.test(FITTED_CIRCLE_CALC))
+    {
+        const auto &contour = this->points();
+        if (contour.size() >= 3)
+        {
+            cv::Point2f center_temp;
+            float radius_temp = 0;
+            cv::minEnclosingCircle(contour, center_temp, radius_temp);
+            __fitted_circle = std::make_unique<std::tuple<cv::Point2f, float>>(center_temp, radius_temp);
+            cache_flags.set(FITTED_CIRCLE_CALC);
+        }
+        else
+        {
+            // 点数不足时触发异常
+            VC_THROW_ERROR("Insufficient points for circle fitting");
+        }
+    }
+    return *__fitted_circle;
+}
+
+// 获取轮廓的拟合椭圆
+template <ContourWrapperBaseType _Tp>
+cv::RotatedRect ContourWrapper<_Tp>::fittedEllipse() const
+{
+    if (!cache_flags.test(FITTED_ELLIPSE_CALC))
+    {
+        const auto &contour = this->points();
+        if (contour.size() >= 5)
+        {
+            __fitted_ellipse = std::make_unique<cv::RotatedRect>(cv::fitEllipse(contour));
+            cache_flags.set(FITTED_ELLIPSE_CALC);
+        }
+        else
+        {
+            // 点数不足时触发异常
+            VC_THROW_ERROR("Insufficient points for ellipse fitting");
+        }
+    }
+    return *__fitted_ellipse;
+}
+
+// 获取轮廓的凸包
+template <ContourWrapperBaseType _Tp>
+const std::vector<typename ContourWrapper<_Tp>::PointType> &ContourWrapper<_Tp>::convexHull() const
+{
+    if (!cache_flags.test(CONVEX_HULL_CALC))
+    {
+        const auto &contour = this->points();
+        __convex_hull = std::make_unique<std::vector<PointType>>();
+        cv::convexHull(contour, *__convex_hull);
+        cache_flags.set(CONVEX_HULL_CALC);
+    }
+    return *__convex_hull;
+}
+
+// 获取凸包的索引
+template <ContourWrapperBaseType _Tp>
+const std::vector<int> &ContourWrapper<_Tp>::convexHullIdx() const
+{
+    if (!cache_flags.test(CONVEX_HULL_IDX_CALC))
+    {
+        const auto &contour = this->points();
+        __convex_hull_idx = std::make_unique<std::vector<int>>();
+        cv::convexHull(contour, *__convex_hull_idx);
+        cache_flags.set(CONVEX_HULL_IDX_CALC);
+    }
+    return *__convex_hull_idx;
+}
+
+// 获取凸包的面积
+template <ContourWrapperBaseType _Tp>
+float ContourWrapper<_Tp>::convexArea() const
+{
+    if (!cache_flags.test(CONVEX_HULL_AREA_CALC))
+    {
+        const auto &convex_contour = this->convexHull();
+        __convex_area = std::abs(cv::contourArea(convex_contour));
+        cache_flags.set(CONVEX_HULL_AREA_CALC);
+    }
+    return __convex_area;
+}
+
+// 生成信息字符串
+template <ContourWrapperBaseType _Tp>
+std::string ContourWrapper<_Tp>::infoString() const
+{
+    std::ostringstream oss;
+    oss << "  Area: " << area() << "\n";
+    oss << "  Perimeter (Closed): " << perimeter(true) << "\n";
+    oss << "  Center: (" << center().x << ", " << center().y << ")\n";
+    return oss.str();
+}
+
+// 隐式转换
+template <ContourWrapperBaseType _Tp>
+ContourWrapper<_Tp>::operator const std::vector<PointType> &() const
+{
+    return __points;
+}
+
+// 获取轮廓的凸包轮廓——接口
+template <ContourWrapperBaseType _Tp>
+std::shared_ptr<ContourWrapper<_Tp>> ContourWrapper<_Tp>::getConvexHull(const std::vector<std::shared_ptr<const ContourWrapper<_Tp>>> &contours)
+{
+    // 检查所有轮廓是否有效
+    for (const auto &contour : contours)
+    {
+        if (contour == nullptr || contour->points().empty())
+        {
+            VC_THROW_ERROR("Invalid contour");
+        }
+    }
+    return getConvexHullImpl(contours);
+}
+
+// 迭代器访问实现
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_iterator ContourWrapper<_Tp>::begin() const noexcept { return __points.begin(); }
+
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_iterator ContourWrapper<_Tp>::end() const noexcept { return __points.end(); }
+
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_iterator ContourWrapper<_Tp>::cbegin() const noexcept { return __points.cbegin(); }
+
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_iterator ContourWrapper<_Tp>::cend() const noexcept { return __points.cend(); }
+
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_reverse_iterator ContourWrapper<_Tp>::rbegin() const noexcept { return __points.rbegin(); }
+
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_reverse_iterator ContourWrapper<_Tp>::rend() const noexcept { return __points.rend(); }
+
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_reverse_iterator ContourWrapper<_Tp>::crbegin() const noexcept { return __points.crbegin(); }
+
+template <ContourWrapperBaseType _Tp>
+typename ContourWrapper<_Tp>::const_reverse_iterator ContourWrapper<_Tp>::crend() const noexcept { return __points.crend(); }
+
+// STL接口实现
+template <ContourWrapperBaseType _Tp>
+size_t ContourWrapper<_Tp>::size() const noexcept { return __points.size(); }
+
+template <ContourWrapperBaseType _Tp>
+bool ContourWrapper<_Tp>::empty() const noexcept { return __points.empty(); }
+
+template <ContourWrapperBaseType _Tp>
+const typename ContourWrapper<_Tp>::PointType &ContourWrapper<_Tp>::operator[](size_t idx) const noexcept { return __points[idx]; }
+
+template <ContourWrapperBaseType _Tp>
+const typename ContourWrapper<_Tp>::PointType &ContourWrapper<_Tp>::at(size_t idx) const
+{
+    if (idx >= __points.size())
+    {
+        VC_THROW_ERROR("Index out of range");
+    }
+    return __points.at(idx);
+}
+
+template <ContourWrapperBaseType _Tp>
+const typename ContourWrapper<_Tp>::PointType &ContourWrapper<_Tp>::front() const noexcept { return __points.front(); }
+
+template <ContourWrapperBaseType _Tp>
+const typename ContourWrapper<_Tp>::PointType &ContourWrapper<_Tp>::back() const noexcept { return __points.back(); }
+
+// 获取多轮廓的凸包轮廓
+template <ContourWrapperBaseType _Tp>
+std::shared_ptr<ContourWrapper<_Tp>> ContourWrapper<_Tp>::getConvexHullImpl(const std::vector<std::shared_ptr<const ContourWrapper<_Tp>>> &contours)
+{
+    size_t total_point_size = 0;
+    for (const auto &contour : contours)
+        total_point_size += contour->points().size();
+    std::vector<PointType> all_points;
+    all_points.reserve(total_point_size);
+    for (const auto &contour : contours)
+    {
+        const auto &points = contour->points();
+        all_points.insert(all_points.end(), points.begin(), points.end());
+    }
+    std::vector<PointType> convex_hull;
+    cv::convexHull(all_points, convex_hull);
+    return ContourWrapper<_Tp>::make_contour(std::move(convex_hull));
+}
+
+// 轮廓精度转换函数实现
 template <ContourWrapperBaseType OutputType, ContourWrapperPtrType ContourPtr>
 inline auto convert(const ContourPtr &contour) -> std::shared_ptr<ContourWrapper<OutputType>>
 {
@@ -619,6 +613,11 @@ inline auto convert(const ContourPtr &contour) -> std::shared_ptr<ContourWrapper
 
     return nullptr;
 }
+
+// 显式实例化模板
+template class ContourWrapper<int>;
+template class ContourWrapper<float>;
+template class ContourWrapper<double>;
 
 #include "extensions.hpp"
 #include "hierarchy.hpp"

@@ -1,87 +1,83 @@
 /**
- * @file camera_para.hpp
+ * @file camera_param.hpp
  * @author SCUT RobotLab Vision Group
- * @brief CameraParam module header file
- * @version 1.0
+ * @brief 相机参数模块头文件
  * @date 2023-10-03
- *
- * @copyright Copyright 2023 (c), SCUT RobotLab Vision Group
- *
  */
 
 #pragma once
 
 #include <opencv2/core/types.hpp>
+#include <vector>
+#include <string>
 
-//! CameraParam 参数模块
+/**
+ * @brief CameraParam 相机参数结构体
+ *
+ * 包含相机本体参数、畸变参数、坐标变换参数以及图传参数。
+ */
 struct CameraParam
 {
-    //! 相机曝光
-    int exposure = 800;
-    //! 相机Gamma值
-    int gamma = 100;
-    //! 相机亮度
-    int brightness = 15;
-    //! 相机对比度
-    int contrast = 100;
-    //! 相机饱和度
-    int saturation = 100;
-    //! 相机锐度
-    int sharpness = 100;
-    //! 相机全通道增益
-    int gain = 64;
-    //! 相机蓝色增益
-    int b_gain = 100;
-    //! 相机绿色增益
-    int g_gain = 100;
-    //! 相机红色增益
-    int r_gain = 100;
-    //! 相机grab模式
-    int grab_mode = 1;
-    //! 相机retrieve模式
-    int retrieve_mode = 1;
-    //! 相机自动曝光模式
-    int auto_exposure = 0;
-    //! 相机自动白平衡模式
-    int auto_wb = 0;
-    //! 相机内参
+    //! ---------------------相机本体参数--------------------
+    int exposure = 800;    //!< 曝光
+    int gamma = 100;       //!< Gamma 值
+    int brightness = 15;   //!< 亮度
+    int contrast = 100;    //!< 对比度
+    int saturation = 100;  //!< 饱和度
+    int sharpness = 100;   //!< 锐度
+    int gain = 64;         //!< 全通道增益
+    int b_gain = 100;      //!< 蓝色增益
+    int g_gain = 100;      //!< 绿色增益
+    int r_gain = 100;      //!< 红色增益
+    int grab_mode = 1;     //!< Grab 模式
+    int retrieve_mode = 1; //!< Retrieve 模式
+    int auto_exposure = 0; //!< 自动曝光模式
+    int auto_wb = 0;       //!< 自动白平衡模式
+
+    //! 相机内参矩阵
     cv::Matx33f cameraMatrix = {1250, 0, 640, 0, 1250, 512, 0, 0, 1};
+
     //! 畸变参数
     cv::Matx<float, 5, 1> distCoeff = cv::Matx<float, 5, 1>(0, 0, 0, 0, 0);
+
     //! 相机坐标系到转轴坐标系的欧拉角
     cv::Matx<float, 3, 1> camera2joint_euler_angle = cv::Matx<float, 3, 1>(0, 0, 0);
+
     //! 相机坐标系到转轴坐标系的旋转矩阵
     cv::Matx<float, 3, 3> cam2joint_rmat = cv::Matx<float, 3, 3>(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
     //! 相机坐标系到转轴坐标系的平移向量
     cv::Matx<float, 3, 1> cam2joint_tvec = cv::Matx<float, 3, 1>(0, 0, 0);
 
-    //! 相机LUT查表
+    //! 相机 LUT 查表
     std::vector<int> lut_vec;
+
     //! 相机序列号
     std::string serial_number;
-    //! 相机宽度和高度
+
+    //! 相机分辨率
     int image_width = 1440;
-    //! 相机宽度和高度
     int image_height = 1080;
 
     //! ---------------------图传参数--------------------
-    //! 图传宽度和高度
-    int trans_width = 720;
-    //! 图传宽度和高度
-    int trans_height = 480;
-    // ！ 操作手击打点坐标
-    int hit_point_x = 360;
-    //! 操作手击打点坐标
-    int hit_point_y = 240;
-    //! 图传内参
+    int trans_width = 720;  //!< 图传宽度
+    int trans_height = 480; //!< 图传高度
+    int hit_point_x = 360;  //!< 操作手击打点 X 坐标
+    int hit_point_y = 240;  //!< 操作手击打点 Y 坐标
+
+    //! 图传内参矩阵
     cv::Matx33f transMatrix = {1000, 0, 360, 0, 1000, 240, 0, 0, 1};
+
     //! 转轴坐标系到图传坐标系的欧拉角
     cv::Matx<float, 3, 1> trans2joint_euler_angle = cv::Matx<float, 3, 1>(0, 0, 0);
+
     //! 转轴坐标系到图传坐标系的旋转矩阵
     cv::Matx<float, 3, 3> trans2joint_rmat = cv::Matx<float, 3, 3>(1, 0, 0, 0, 1, 0, 0, 0, 1);
+
     //! 转轴坐标系到图传坐标系的平移向量
     cv::Matx<float, 3, 1> trans2joint_tvec = cv::Matx<float, 3, 1>(0, 0, 0);
 
+    //! ---------------------YML 初始化--------------------
     YML_INIT(
         CameraParam,
         YML_ADD_PARAM(exposure);
@@ -106,10 +102,8 @@ struct CameraParam
         YML_ADD_PARAM(lut_vec);
         YML_ADD_PARAM(serial_number);
         YML_ADD_PARAM(image_width);
-        YML_ADD_PARAM(image_height);
-    );
-
+        YML_ADD_PARAM(image_height););
 };
 
-//! CameraParam 参数模块
+//! 全局 CameraParam 实例
 inline CameraParam camera_param;

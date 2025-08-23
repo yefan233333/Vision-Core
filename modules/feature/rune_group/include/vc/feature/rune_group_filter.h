@@ -2,7 +2,6 @@
  * @file rune_group_filter.h
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 神符序列组滤波策略头文件
- * @version 1.0
  * @date 2025-03-22
  * @copyright Copyright (c) 2025
  */

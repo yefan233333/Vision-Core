@@ -1,3 +1,10 @@
+/**
+ * @file geom_utils.hpp
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 常用几何与向量计算工具头文件
+ * @date 2025-XX-XX
+ */
+
 #pragma once
 
 #include <opencv2/core.hpp>

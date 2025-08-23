@@ -1,3 +1,10 @@
+/**
+ * @file geom_circle.hpp
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 二维圆类的定义与实现
+ * @date 2025-XX-XX
+ */
+
 #pragma once
 
 #include <opencv2/core.hpp>
@@ -9,39 +16,39 @@
 #include "geom_line.hpp"
 
 /**
- * @brief 二维圆类
+ * @brief 二维圆类模板
  *
- * 该类用于表示和操作二维圆的几何属性。
+ * 提供二维圆的基本属性与操作，包括构造、几何计算、点关系判断及与直线或其他圆的交点计算。
+ *
+ * @tparam _Tp 数值类型，默认 double
  */
 template <typename _Tp = double>
 class Circle2_
 {
 public:
-    using value_type = _Tp;                    //!< 圆的数值类型
+    using value_type = _Tp;                    //!< 数值类型
     using point_type = cv::Point_<value_type>; //!< 圆心点类型
 
     /**
-     * @brief 默认构造函数，创建单位圆
-     * @note 圆心位于原点 (0,0)，半径为 1.0
+     * @brief 默认构造函数
+     * @note 生成圆心位于原点 (0,0)，半径为 1 的单位圆
      */
     Circle2_();
 
     /**
-     * @brief 构造函数，通过圆心和半径创建圆
-     *
+     * @brief 通过圆心和半径构造圆
      * @param[in] center 圆心坐标
-     * @param[in] radius 圆的半径
-     * @note 半径值必须大于0，否则抛出异常
+     * @param[in] radius 半径（必须大于0）
+     * @throws std::invalid_argument 当半径<=0时抛出异常
      */
     Circle2_(const point_type &center, value_type radius);
 
     /**
-     * @brief 构造函数，通过三个点创建圆
-     *
+     * @brief 通过三点确定一个唯一圆
      * @param[in] p1 圆上的第一个点
      * @param[in] p2 圆上的第二个点
      * @param[in] p3 圆上的第三个点
-     * @throws std::invalid_argument 如果点共线或无法确定唯一的圆
+     * @throws std::invalid_argument 当三点共线或重复时无法确定唯一圆
      */
     Circle2_(const point_type &p1, const point_type &p2, const point_type &p3);
 
@@ -56,81 +63,100 @@ public:
     Circle2_(Circle2_ &&other) noexcept;
 
     /**
-     * @brief 赋值运算符重载
+     * @brief 拷贝赋值运算符
      */
     Circle2_ &operator=(const Circle2_ &other);
 
     /**
-     * @brief 移动赋值运算符重载
+     * @brief 移动赋值运算符
      */
     Circle2_ &operator=(Circle2_ &&other) noexcept;
 
     /**
      * @brief 获取圆心坐标
+     * @return 圆心坐标点
      */
     point_type center() const;
 
     /**
-     * @brief 获取圆的半径
+     * @brief 获取半径
+     * @return 圆的半径
      */
     value_type radius() const;
 
     /**
      * @brief 计算圆的周长
+     * @return 圆的周长
      */
     value_type circumference() const;
 
     /**
      * @brief 计算圆的面积
+     * @return 圆的面积
      */
     value_type area() const;
 
     /**
      * @brief 计算点到圆的距离
-     *
-     * @param p 外部点
-     * @return 点到圆周的最短距离（正为外点，负为内点）
+     * @param[in] p 任意点
+     * @return 正值表示点在圆外的距离，负值表示点在圆内的距离
      */
     value_type distanceTo(const point_type &p) const;
 
     /**
-     * @brief 检查点是否在圆上或圆内
-     *
-     * @param p 要检查的点
-     * @param tolerance 容差值，默认值为1e-5
-     * @return true 如果点在圆上或圆内（在容差范围内）
+     * @brief 判断点是否在圆内（含圆周）
+     * @param[in] p 要判断的点
+     * @param[in] tolerance 容差，默认 1e-5
+     * @return true 点在圆内或圆周上
      */
     bool contains(const point_type &p, value_type tolerance = 1e-5) const;
 
     /**
-     * @brief 检查点是否在圆周上
-     *
-     * @param p 要检查的点
-     * @param tolerance 容差值，默认值为1e-5
-     * @return true 如果点在圆周上（在容差范围内）
+     * @brief 判断点是否在圆周上
+     * @param[in] p 要判断的点
+     * @param[in] tolerance 容差，默认 1e-5
+     * @return true 点位于圆周上
      */
     bool onCircumference(const point_type &p, value_type tolerance = 1e-5) const;
 
     /**
      * @brief 计算圆与直线的交点
-     *
-     * @param line 要检查的直线
-     * @return std::vector<point_type> 交点的集合（0, 1或2个点）
+     * @param[in] line 直线对象
+     * @return 包含0、1或2个交点的向量
      */
     std::vector<point_type> intersect(const Line2_<value_type> &line) const;
 
     /**
      * @brief 计算两个圆的交点
-     *
-     * @param other 另一个圆
-     * @return std::vector<point_type> 交点的集合（0, 1或2个点）
+     * @param[in] other 另一圆对象
+     * @return 包含0、1或2个交点的向量
      */
     std::vector<point_type> intersect(const Circle2_ &other) const;
 
 private:
     point_type __center; //!< 圆心坐标
-    value_type __radius; //!< 圆的半径
+    value_type __radius; //!< 半径
 };
+
+/** @typedef Circle2i
+ * @brief 使用 int 类型的二维圆
+ */
+using Circle2i = Circle2_<int>;
+
+/** @typedef Circle2f
+ * @brief 使用 float 类型的二维圆
+ */
+using Circle2f = Circle2_<float>;
+
+/** @typedef Circle2d
+ * @brief 使用 double 类型的二维圆
+ */
+using Circle2d = Circle2_<double>;
+
+/** @typedef Circle
+ * @brief 默认使用 float 类型的二维圆
+ */
+using Circle = Circle2f;
 
 // 类外成员函数实现
 template <typename _Tp>
@@ -405,9 +431,3 @@ Circle2_<_Tp>::intersect(const Circle2_ &other) const
 
     return intersections;
 }
-
-using Circle2i = Circle2_<int>;    //!< 整型圆类
-using Circle2f = Circle2_<float>;  //!< 单精度浮点数圆类
-using Circle2d = Circle2_<double>; //!< 双精度浮点数圆类
-
-using Circle = Circle2f; //!< 默认圆类型，使用单精度浮点数

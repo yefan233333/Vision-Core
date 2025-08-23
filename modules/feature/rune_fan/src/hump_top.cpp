@@ -2,7 +2,6 @@
  * @file hump_finder.cpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief   神符扇叶的顶部突起点类的源文件
- * @version 0.1
  * @date 2024-11-14
  *
  * @copyright Copyright (c) 2025

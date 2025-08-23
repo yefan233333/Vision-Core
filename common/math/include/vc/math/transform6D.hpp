@@ -1,3 +1,10 @@
+/**
+ * @file transform6D.hpp
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 6自由度变换类 Transform6D 定义，支持旋转矩阵、旋转向量和平移向量的转换及组合操作
+ * @date 2025-08-24
+ */
+
 #pragma once
 
 #include <opencv2/core.hpp>
@@ -409,25 +416,51 @@ inline void Transform6D::rotate_z(double angle, AngleMode mode)
 
 namespace transform6D_utils
 {
-    // ---------------【转换函数实现】----------------
+    /**
+     * @brief 将任意符合 rmat_type 概念的旋转矩阵转换为 Transform6D::RmatType
+     *
+     * @tparam T 输入旋转矩阵类型
+     * @param rmat 输入旋转矩阵
+     * @return Transform6D::RmatType 转换后的旋转矩阵
+     */
     template <transform6D_concepts::rmat_type T>
     inline Transform6D::RmatType convertRmat(const T &rmat)
     {
         return static_cast<Transform6D::RmatType>(rmat);
     }
 
+    /**
+     * @brief 将任意符合 rvec_type 概念的旋转向量转换为 Transform6D::RvecType
+     *
+     * @tparam T 输入旋转向量类型
+     * @param rvec 输入旋转向量
+     * @return Transform6D::RvecType 转换后的旋转向量
+     */
     template <transform6D_concepts::rvec_type T>
     inline Transform6D::RvecType convertRvec(const T &rvec)
     {
         return geom_utils_concepts::convert3d<Transform6D::RvecType>(rvec);
     }
 
+    /**
+     * @brief 将任意符合 tvec_type 概念的平移向量转换为 Transform6D::TvecType
+     *
+     * @tparam T 输入平移向量类型
+     * @param tvec 输入平移向量
+     * @return Transform6D::TvecType 转换后的平移向量
+     */
     template <transform6D_concepts::tvec_type T>
     inline Transform6D::TvecType convertTvec(const T &tvec)
     {
         return geom_utils_concepts::convert3d<Transform6D::TvecType>(tvec);
     }
 
+    /**
+     * @brief 将 3x1 旋转向量矩阵转换为 Transform6D::RmatType 旋转矩阵
+     *
+     * @param rvec 输入旋转向量（cv::Matx<value_type, 3, 1>）
+     * @return Transform6D::RmatType 转换后的旋转矩阵
+     */
     inline Transform6D::RmatType convertRmat(const cv::Matx<Transform6D::RvecType::value_type, 3, 1> &rvec)
     {
         auto rmat = Transform6D::RmatType::eye();

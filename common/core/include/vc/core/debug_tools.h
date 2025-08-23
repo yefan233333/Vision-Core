@@ -1,28 +1,59 @@
+/**
+ * @file debug_tools.h
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 调试工具类定义文件
+ * @date 2025-XX-XX
+ */
+
 #pragma once
 
-#include <opencv2/opencv.hpp>
-
-#pragma once
 #include <opencv2/opencv.hpp>
 #include <mutex>
 #include <string>
 
+/**
+ * @brief 调试工具类
+ *
+ * @note 提供全局单例访问，支持缓存图像、绘制调试信息以及显示窗口。
+ *       适用于逐帧视觉处理程序的调试可视化。
+ */
 class DebugTools
 {
+    /// @brief 智能指针类型
     using Ptr = std::shared_ptr<DebugTools>;
+
 public:
+    /**
+     * @brief 构造函数
+     */
     DebugTools() = default;
-    
-    // 单例模式，方便全局调用
+
+    /**
+     * @brief 获取单例实例
+     * @return DebugTools 单例智能指针
+     */
     static Ptr get();
 
-    // 设置缓存图像（通常在处理开始时调用）
+    /**
+     * @brief 设置缓存图像
+     * @param[in] img 待缓存的图像
+     *
+     * @note 通常在处理开始时调用，用于后续绘制调试信息。
+     */
     void setImage(const cv::Mat &img);
 
-    // 获取缓存图像引用（用于绘制调试信息）
+    /**
+     * @brief 获取缓存图像
+     * @return cv::Mat 返回当前缓存图像的副本
+     *
+     * @note 用于在调试或绘制过程中访问当前图像。
+     */
     cv::Mat getImage();
 
-    // 在固定窗口显示（例如 "Debug"）
+    /**
+     * @brief 在指定窗口显示缓存图像
+     * @param[in] winName 窗口名称，默认为 "Debug"
+     */
     void show(const std::string &winName = "Debug");
 
     // 禁止复制和赋值
@@ -30,12 +61,16 @@ public:
     DebugTools &operator=(const DebugTools &) = delete;
 
 private:
-
-    // 初始化窗口
+    /**
+     * @brief 初始化显示窗口
+     * @param[in] winName 窗口名称，默认为 "Debug"
+     */
     void initWindow(const std::string &winName = "Debug");
 
-    cv::Mat cache_;
-    std::mutex mtx_;
-    bool window_initialized_ = false;
+    cv::Mat cache_;                   //!< 缓存图像
+    std::mutex mtx_;                  //!< 互斥锁，用于线程安全
+    bool window_initialized_ = false; //!< 窗口初始化状态
 };
+
+/// @brief DebugTools 智能指针类型
 using DebugTools_ptr = std::shared_ptr<DebugTools>;

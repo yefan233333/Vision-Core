@@ -2,11 +2,7 @@
  * @file contour_converter.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 轮廓转化模块
- * @version 1.0
  * @date 2025-4-12
- *
- * @copyright Copyright (c) 2025
- *
  */
 
 #pragma once
