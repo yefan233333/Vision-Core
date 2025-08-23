@@ -11,44 +11,16 @@ class DebugTools
 {
 public:
     // 单例模式，方便全局调用
-    static DebugTools &get()
-    {
-        static DebugTools instance;
-        return instance;
-    }
+    static DebugTools &get();
 
     // 设置缓存图像（通常在处理开始时调用）
-    void setImage(const cv::Mat &img)
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        img.copyTo(cache_);
-    }
+    void setImage(const cv::Mat &img);
 
     // 获取缓存图像引用（用于绘制调试信息）
-    cv::Mat getImage()
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        if (cache_.empty())
-            return cv::Mat();
-        return cache_;
-    }
-
+    cv::Mat getImage();
 
     // 在固定窗口显示（例如 "Debug"）
-    void show(const std::string &winName = "Debug")
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        if (!window_initialized_)
-        {
-            initWindow(winName);
-            window_initialized_ = true;
-        }
-
-        if (!cache_.empty())
-        {
-            cv::imshow(winName, cache_);
-        }
-    }
+    void show(const std::string &winName = "Debug");
 
     // 禁止复制和赋值
     DebugTools(const DebugTools &) = delete;
@@ -58,11 +30,7 @@ private:
     DebugTools() = default;
 
     // 初始化窗口
-    void initWindow(const std::string &winName = "Debug")
-    {
-        cv::namedWindow(winName, cv::WINDOW_NORMAL);
-        cv::resizeWindow(winName, 640, 480);
-    }
+    void initWindow(const std::string &winName = "Debug");
 
 
 

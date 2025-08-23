@@ -14,5 +14,7 @@ struct DetectorInput
     //! 陀螺仪信息
     DEFINE_PROPERTY(GyroData, public, public, (GyroData));
     //! 特征节点数组
-    DEFINE_PROPERTY(FeatureNodes, public, public, (std::vector<FeatureNode>));
+    DEFINE_PROPERTY(FeatureNodes, public, public, (std::vector<FeatureNode_ptr>));
+    //! 识别颜色
+    DEFINE_PROPERTY(Color, public, public, (PixChannel));
 };

@@ -124,22 +124,36 @@ shared_ptr<RuneFanActive> RuneFanActive::make_feature(const Contour_cptr &contou
     return nullptr;
 }
 
-RuneFanActive_ptr RuneFanActive::make_feature(const vector<Point2f> &top_corners,
-                                              const vector<Point2f> &bottom_center_corners,
-                                              const vector<Point2f> &side_corners,
-                                              const vector<Point2f> &bottom_side_corners)
+RuneFanActive_ptr RuneFanActive::make_feature(const vector<Point2d> &top_corners,
+                                              const vector<Point2d> &bottom_center_corners,
+                                              const vector<Point2d> &side_corners,
+                                              const vector<Point2d> &bottom_side_corners)
 {
+    vector<Point2f> top_corners_f, bottom_center_corners_f, side_corners_f, bottom_side_corners_f;
+    auto convert_point = [](const vector<Point2d> &src, vector<Point2f> &dst)
+    {
+        dst.resize(src.size());
+        for (size_t i = 0; i < src.size(); i++)
+        {
+            dst[i] = Point2f(static_cast<float>(src[i].x), static_cast<float>(src[i].y));
+        }
+    };
+    convert_point(top_corners, top_corners_f);
+    convert_point(bottom_center_corners, bottom_center_corners_f);
+    convert_point(side_corners, side_corners_f);
+    convert_point(bottom_side_corners, bottom_side_corners_f);
+    
     vector<Point2f> points;
-    points.insert(points.end(), top_corners.begin(), top_corners.end());
-    points.insert(points.end(), bottom_center_corners.begin(), bottom_center_corners.end());
-    points.insert(points.end(), side_corners.begin(), side_corners.end());
-    points.insert(points.end(), bottom_side_corners.begin(), bottom_side_corners.end());
+    points.insert(points.end(), top_corners_f.begin(), top_corners_f.end());
+    points.insert(points.end(), bottom_center_corners_f.begin(), bottom_center_corners_f.end());
+    points.insert(points.end(), side_corners_f.begin(), side_corners_f.end());
+    points.insert(points.end(), bottom_side_corners_f.begin(), bottom_side_corners_f.end());
     vector<Point2f> hull;
     convexHull(points, hull);
     auto contour = ContourWrapper<int>::make_contour(vector<Point>(hull.begin(), hull.end()));
     RotatedRect rotated_rect = contour->minAreaRect();
 
-    return make_shared<RuneFanActive>(contour, rotated_rect, top_corners, bottom_center_corners, side_corners, bottom_side_corners);
+    return make_shared<RuneFanActive>(contour, rotated_rect, top_corners_f, bottom_center_corners_f, side_corners_f, bottom_side_corners_f);
 }
 
 /**
@@ -558,22 +572,6 @@ bool RuneFanActive::getLinePairs(const vector<Point> &contour_plus, const Mat &a
     // 获取所有线段
     vector<Line> lines;
     getAllLine(contour_plus, angles_mat, gradient_mat, lines);
-
-#if RUNE_FAN_DEBUG
-    // 绘制所有线段
-    do
-    {
-        Mat img_show = DebugTools::get().getImage();
-        for (const auto &line : lines)
-        {
-            Point2f start_point = contour_plus[line.start_idx];
-            Point2f end_point = contour_plus[line.end_idx];
-            cv::line(img_show, start_point, end_point, Scalar(0, 255, 0), 1);
-            Point2f center = (start_point + end_point) / 2.0;
-            circle(img_show, center, 2, Scalar(255, 0, 0), -1);
-        }
-    } while (0);
-#endif
 
     // 匹配正反线段
     vector<tuple<Line, Line>> matched_lines;

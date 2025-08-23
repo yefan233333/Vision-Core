@@ -10,7 +10,6 @@
 using namespace std;
 using namespace cv;
 
-
 /**
  * @brief 获取参考PnP数据
  */
@@ -33,7 +32,7 @@ inline Point2f getCenter(const FeatureNode_cptr &feature)
  *
  * @note 单个神符的偏移角本身没有意义，只用于表示不同神符之间的理想相对角度 (即 72 的倍数)
  */
-inline vector<float> getRuneDeviation(const std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &runes)
+inline vector<float> getRuneDeviation(const std::vector<RuneFeatureComboConst> &runes)
 {
     // 角度归一化函数   将角度限定在 0 ~ 360 之间
     auto normalizeAngle = [](float angle) -> float
@@ -47,7 +46,7 @@ inline vector<float> getRuneDeviation(const std::vector<std::tuple<FeatureNode_p
 
     auto temp_runes = runes;
     // 像素坐标系的角度
-    map<tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>, float> angle_map;
+    map<tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>, float> angle_map;
 
     for (const auto &feature_group : temp_runes)
     {
@@ -96,8 +95,8 @@ inline vector<float> getRuneDeviation(const std::vector<std::tuple<FeatureNode_p
 
     // 按角度对神符进行排序.
     sort(temp_runes.begin(), temp_runes.end(),
-         [&](const tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr> &rune_1,
-             const tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr> &rune_2)
+         [&](const RuneFeatureComboConst &rune_1,
+             const RuneFeatureComboConst &rune_2)
          {
              return angle_map[rune_1] < angle_map[rune_2];
          });
@@ -136,7 +135,7 @@ inline vector<float> getRuneDeviation(const std::vector<std::tuple<FeatureNode_p
     }
 
     // 为各个特征组设置其对应神符的编号 （0~4）
-    map<tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>, int> rune_idx{};
+    map<tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>, int> rune_idx{};
     unordered_set<int> pending_num{0, 1, 2, 3, 4}; // 待匹配的编号
     for (auto &feature_group : temp_runes)
     {
@@ -228,7 +227,7 @@ inline void rotatePoints(const vector<Point3f> &raw_points, float angle, vector<
  * @return  返回PnP解算的点集 (2D点、3D点)
  */
 inline bool getPnpPoints(const FeatureNode_ptr &group,
-                         const std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &runes,
+                         const std::vector<RuneFeatureComboConst> &runes,
                          std::vector<cv::Point2f> &points_2d,
                          std::vector<cv::Point3f> &points_3d,
                          std::vector<float> &point_weights)
@@ -238,8 +237,8 @@ inline bool getPnpPoints(const FeatureNode_ptr &group,
         VC_THROW_ERROR("The matched features is empty");
     }
 
-    vector<float> deviation_angles = getRuneDeviation(runes);                  // 获取神符偏移角度
-    map<tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>, float> rune_deviation_angle{}; // 特征组对应的偏移角度
+    vector<float> deviation_angles = getRuneDeviation(runes);                                       // 获取神符偏移角度
+    map<tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>, float> rune_deviation_angle{}; // 特征组对应的偏移角度
     for (size_t i = 0; i < runes.size(); i++)
     {
         rune_deviation_angle[runes[i]] = deviation_angles[i];
@@ -257,7 +256,7 @@ inline bool getPnpPoints(const FeatureNode_ptr &group,
     {
         auto [target_feature, center_feature, fan_feature] = feature_group;
         auto target = RuneTarget::cast(target_feature);
-        auto center = RuneTarget::cast(center_feature);
+        auto center = RuneCenter::cast(center_feature);
         auto fan = RuneFan::cast(fan_feature);
         if ((target == nullptr && fan == nullptr) || center == nullptr)
         {
@@ -486,7 +485,7 @@ bool RuneDetector::getCameraPnpData(const FeatureNode_ptr &group, const vector<P
 
 bool RuneDetector::getPnpData(PoseNode &camera_pnp_data,
                               const FeatureNode_ptr &group,
-                              const std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &matched_features) const
+                              const std::vector<RuneFeatureComboConst> &matched_features) const
 {
     if (group == nullptr)
     {

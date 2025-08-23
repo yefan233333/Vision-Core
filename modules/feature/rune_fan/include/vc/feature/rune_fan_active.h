@@ -94,10 +94,10 @@ public:
      * @return 如果成功，返回 RuneFan 的共享指针，否则返回 nullptr
      * @note 利用从PNP解算获取到的角点构造，输入的角点有顺序要求
      */
-    static Ptr make_feature(const std::vector<cv::Point2f> &top_corners,
-                            const std::vector<cv::Point2f> &bottom_center_corners,
-                            const std::vector<cv::Point2f> &side_corners,
-                            const std::vector<cv::Point2f> &bottom_side_corners);
+    static Ptr make_feature(const std::vector<cv::Point2d> &top_corners,
+                            const std::vector<cv::Point2d> &bottom_center_corners,
+                            const std::vector<cv::Point2d> &side_corners,
+                            const std::vector<cv::Point2d> &bottom_side_corners);
 
 protected:
     /**

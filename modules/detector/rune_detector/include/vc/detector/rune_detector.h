@@ -2,17 +2,23 @@
 
 #include "vc/detector/detector.h"
 
+//! 特征组合体
+using RuneFeatureCombo = std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>;
+using RuneFeatureComboConst = std::tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>;
+
 class RuneDetector : public Detector
 {
 public:
     RuneDetector() = default;
 
+    //! 最新帧的输入图像
+    DEFINE_PROPERTY(InputImage, public, protected, (cv::Mat));
     //! 时间戳
     DEFINE_PROPERTY(Tick, public, protected, (int64_t));
     //! 陀螺仪数据
     DEFINE_PROPERTY(GyroData, public, protected, (GyroData));
 
-
+public:
     /**
      * @brief 识别器的主函数
      * @param input 识别器输入
@@ -25,6 +31,16 @@ public:
 
 private:
     /**
+     * @brief 二值化操作
+     *
+     * @param[in] src 输入原图
+     * @param[out] bin 输出二值化图像
+     * @param[in] target_color 目标颜色
+     * @param[in] threshold 阈值
+     */
+    static void binary(const cv::Mat &src, cv::Mat &bin, PixChannel target_color, uint8_t threshold);
+
+    /**
      * @brief 找出所有的配对神符特征
      *
      * @param[in] src 预处理之后的图像
@@ -32,7 +48,7 @@ private:
      * @param[out] features 找到的所有特征
      * @param[out] matched_features 配对好的特征 (靶心、中心、扇叶),未找出的特征将会用 nullptr 补齐
      */
-    static bool findFeatures(cv::Mat src, const std::tuple<bool, cv::Point2f> &center_estimation_info, std::vector<FeatureNode_ptr> &features, std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &matched_features);
+    static bool findFeatures(cv::Mat src, std::vector<FeatureNode_cptr> &features, std::vector<RuneFeatureCombo> &matched_features);
 
     /**
      * @brief 将神符组合体与追踪器进行匹配
@@ -150,7 +166,7 @@ private:
      * @param[in] p_fans 所有神符扇叶
      * @return 配对后的特征组
      */
-    static std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> getMatchedFeature(const std::vector<FeatureNode_ptr> &p_targets, const FeatureNode_ptr &p_center, const std::vector<FeatureNode_ptr> &p_fans);
+    static std::vector<RuneFeatureCombo> getMatchedFeature(const std::vector<FeatureNode_ptr> &p_targets, const FeatureNode_ptr &p_center, const std::vector<FeatureNode_ptr> &p_fans);
 
     /**
      * @brief 获取神符在相机坐标系下的 PNP 解算数据
@@ -162,7 +178,7 @@ private:
      */
     bool getPnpData(PoseNode &camera_pnp_data,
                     const FeatureNode_ptr &group,
-                    const std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &matched_features) const;
+                    const std::vector<RuneFeatureComboConst> &matched_features) const;
 
     /**
      * @brief 获取所有神符组合体
@@ -177,7 +193,7 @@ private:
      */
     bool getRunes(std::vector<FeatureNode_ptr> &current_combos,
                   const FeatureNode_ptr &group,
-                  const std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &matched_features,
+                  const std::vector<RuneFeatureComboConst> &matched_features,
                   const PoseNode &camera_pnp_data) const;
 
     /**

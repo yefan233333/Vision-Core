@@ -56,10 +56,8 @@ public:
      * @param[in] p_combo combo_ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline Ptr cast(FeatureNode_ptr p_combo)
-    {
-        return std::dynamic_pointer_cast<RuneCombo>(p_combo);
-    }
+    static inline Ptr cast(FeatureNode_ptr p_combo) { return std::dynamic_pointer_cast<RuneCombo>(p_combo); }
+    static inline const std::shared_ptr<const RuneCombo> cast(FeatureNode_cptr p_combo) { return std::dynamic_pointer_cast<const RuneCombo>(p_combo); }
 
 private:
 };

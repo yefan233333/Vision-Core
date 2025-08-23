@@ -325,7 +325,7 @@ RuneFanActive::RuneFanActive(const std::vector<Contour_cptr> &contours,
     setRotatedRect(fit_ellipse);
 
     // 设置图像属性
-    auto image_info = this->getImageCache();
+    auto& image_info = this->getImageCache();
     image_info.setContours(vector<Contour_cptr>{contour});
     image_info.setWidth(width);
     image_info.setHeight(height);
@@ -440,6 +440,13 @@ std::shared_ptr<RuneFanActive> RuneFanActive::make_feature(const std::tuple<TopH
     }
 
     RuneFanActive_ptr fan = make_shared<RuneFanActive>(fan_contours, top_humps_corners, direction);
+#if FEATURE_NODE_DEBUG
+    if(!fan->getImageCache().isSetDirection())
+    {
+        cout << "error: direction is not set!" << endl;
+    }
+#endif
+
     if (fan && !fan->isSetError())
     {
         fan->setError(angle_delta);

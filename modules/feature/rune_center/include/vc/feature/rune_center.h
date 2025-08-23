@@ -74,10 +74,8 @@ public:
      * @param[in] p_feature feature_ptr 抽象指针
      * @return 派生对象指针
      */
-    static inline std::shared_ptr<RuneCenter> cast(FeatureNode_ptr p_feature)
-    {
-        return std::dynamic_pointer_cast<RuneCenter>(p_feature);
-    }
+    static inline std::shared_ptr<RuneCenter> cast(FeatureNode_ptr p_feature) {return std::dynamic_pointer_cast<RuneCenter>(p_feature);}
+    static inline const std::shared_ptr<const RuneCenter> cast(FeatureNode_cptr p_feature) {return std::dynamic_pointer_cast<const RuneCenter>(p_feature);}
 
     /**
      * @brief 绘制特征

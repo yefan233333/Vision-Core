@@ -1,6 +1,8 @@
 #pragma once
 
 #include "vc/core/logging.h"
+#include "vc/core/type_expansion.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iostream>

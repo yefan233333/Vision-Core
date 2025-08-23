@@ -67,3 +67,11 @@ using  RangeI = ArithmeticRange<int>;
 using  RangeF = ArithmeticRange<float>;
 using  RangeD = ArithmeticRange<double>;
 using  RangeSize = ArithmeticRange<std::size_t>;
+
+//! 像素通道枚举
+enum PixChannel : uint8_t
+{
+    BLUE = 0U,  //!< 蓝色通道
+    GREEN = 1U, //!< 绿色通道
+    RED = 2U    //!< 红色通道
+};

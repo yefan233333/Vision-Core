@@ -64,7 +64,7 @@ void RuneFan::find_incomplete_active_fans(std::vector<FeatureNode_ptr> &fans,
                                           const cv::Point2f &rotate_center,
                                           std::unordered_map<FeatureNode_cptr, std::unordered_set<size_t>> &used_contour_idxs)
 {
-    RuneFanActive::find_incomplete_active_fans(fans, contours, hierarchy, mask, rotate_center, used_contour_idxs);
+    RuneFanActive::find_incomplete(fans, contours, hierarchy, mask, rotate_center, used_contour_idxs);
 }
 
 auto RuneFan::getPnpPoints() const -> std::tuple<std::vector<cv::Point2f>, std::vector<cv::Point3f>, std::vector<float>>
@@ -105,7 +105,7 @@ auto RuneFan::getRelativePnpPoints() const -> std::tuple<std::vector<cv::Point2f
  * @param points 待检查的坐标
  * @return true 坐标范围正常
  */
-bool checkPoints(const vector<Point2f> &points)
+bool checkPoints(const vector<Point2d> &points)
 {
     static const float MAX_X = 5000;
     static const float MAX_Y = 5000;
@@ -136,10 +136,10 @@ std::shared_ptr<RuneFan> RuneFan::make_feature(const PoseNode &fan_to_cam, bool 
         bottom_side_hump_corners = rune_fan_param.ACTIVE_BOTTOM_SIDE_3D;
 
         // 重投影
-        vector<Point2f> top_hump_corners_2d{};
-        vector<Point2f> bottom_center_hump_corners_2d{};
-        vector<Point2f> side_hump_corners_2d{};
-        vector<Point2f> bottom_side_hump_corners_2d{};
+        vector<Point2d> top_hump_corners_2d{};
+        vector<Point2d> bottom_center_hump_corners_2d{};
+        vector<Point2d> side_hump_corners_2d{};
+        vector<Point2d> bottom_side_hump_corners_2d{};
 
         projectPoints(top_hump_corners, fan_to_cam.rvec(), fan_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, top_hump_corners_2d);
         projectPoints(bottom_center_hump_corners, fan_to_cam.rvec(), fan_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, bottom_center_hump_corners_2d);
@@ -156,8 +156,8 @@ std::shared_ptr<RuneFan> RuneFan::make_feature(const PoseNode &fan_to_cam, bool 
     }
     else
     {
-        vector<Point3f> corners = rune_fan_param.INACTIVE_3D;
-        vector<Point2f> corners_2d{};
+        vector<Point3d> corners = rune_fan_param.INACTIVE_3D;
+        vector<Point2d> corners_2d{};
         // 重投影
         projectPoints(corners, fan_to_cam.rvec(), fan_to_cam.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, corners_2d);
 

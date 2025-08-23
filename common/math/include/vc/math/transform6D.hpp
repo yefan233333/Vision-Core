@@ -125,6 +125,12 @@ public:
     template <transform6D_concepts::tvec_type T>
     void tvec(const T &tvec) noexcept;
 
+    /**
+     * @brief 求逆变换
+     * @return Transform6D 返回逆变换
+     */
+    Transform6D inv() const noexcept;
+
     //----------------------绕自身坐标轴旋转--------------------------------
     /**
      * @brief 绕自身X轴旋转
@@ -308,6 +314,14 @@ template <transform6D_concepts::tvec_type T>
 inline void Transform6D::tvec(const T &tvec) noexcept
 {
     __tvec = transform6D_utils::convertTvec(tvec);
+}
+
+inline Transform6D Transform6D::inv() const noexcept
+{
+    ensureRmatInitialized();
+    ensureRvecInitialized();
+    // 计算逆变换
+    return Transform6D(__rmat.t(), -__rmat.t() * __tvec);
 }
 
 /**

@@ -82,7 +82,33 @@ struct CameraParam
     //! 转轴坐标系到图传坐标系的平移向量
     cv::Matx<float, 3, 1> trans2joint_tvec = cv::Matx<float, 3, 1>(0, 0, 0);
 
-    CameraParam() = default;
+    YML_INIT(
+        CameraParam,
+        YML_ADD_PARAM(exposure);
+        YML_ADD_PARAM(gamma);
+        YML_ADD_PARAM(brightness);
+        YML_ADD_PARAM(contrast);
+        YML_ADD_PARAM(saturation);
+        YML_ADD_PARAM(sharpness);
+        YML_ADD_PARAM(gain);
+        YML_ADD_PARAM(b_gain);
+        YML_ADD_PARAM(g_gain);
+        YML_ADD_PARAM(r_gain);
+        YML_ADD_PARAM(grab_mode);
+        YML_ADD_PARAM(retrieve_mode);
+        YML_ADD_PARAM(auto_exposure);
+        YML_ADD_PARAM(auto_wb);
+        YML_ADD_PARAM(cameraMatrix);
+        YML_ADD_PARAM(distCoeff);
+        YML_ADD_PARAM(camera2joint_euler_angle);
+        YML_ADD_PARAM(cam2joint_rmat);
+        YML_ADD_PARAM(cam2joint_tvec);
+        YML_ADD_PARAM(lut_vec);
+        YML_ADD_PARAM(serial_number);
+        YML_ADD_PARAM(image_width);
+        YML_ADD_PARAM(image_height);
+    );
+
 };
 
 //! CameraParam 参数模块

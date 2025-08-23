@@ -34,7 +34,7 @@ inline Point2f getCenter(const FeatureNode_cptr feature)
  * @param camera_pnp_data 相机坐标系下的神符中心PNP数据
  * @return 是否设置成功
  */
-inline bool setTempRunePnpData(vector<PoseNode>&pnp_datas, const PoseNode &camera_pnp_data)
+inline bool setTempRunePnpData(vector<PoseNode> &pnp_datas, const PoseNode &camera_pnp_data)
 {
     if (pnp_datas.size() != 5)
     {
@@ -62,14 +62,14 @@ inline bool setTempRunePnpData(vector<PoseNode>&pnp_datas, const PoseNode &camer
  * @param[in] features_visible 特征组
  * @param[in] group 神符组
  */
-inline bool setTempRuneType(vector<RuneType> &types, const vector<PoseNode> &pnp_datas, const vector<tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &features_visible, const FeatureNode_ptr &group)
+inline bool setTempRuneType(vector<RuneType> &types, const vector<PoseNode> &pnp_datas, const vector<tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>> &features_visible, const FeatureNode_ptr &group)
 {
     // 获取重投影后的点
     auto getProjectPoint = [&](const cv::Matx31f &src, const PoseNode &pnp_data) -> cv::Point2f
     {
         vector<Point2f> project_points;
         projectPoints(src, pnp_data.rvec(), pnp_data.tvec(), camera_param.cameraMatrix, camera_param.distCoeff, project_points);
-        return project_points[0];   
+        return project_points[0];
     };
 
     if (types.size() != 5 || pnp_datas.size() != 5)
@@ -211,7 +211,7 @@ inline bool setAllfeatures(const vector<PoseNode> &rune_pnp_datas, const vector<
 
 bool RuneDetector::getRunes(std::vector<FeatureNode_ptr> &current_combos,
                             const FeatureNode_ptr &group,
-                            const std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &features_visible,
+                            const std::vector<RuneFeatureComboConst> &features_visible,
                             const PoseNode &camera_pnp_data) const
 {
     if (group == nullptr)
@@ -223,8 +223,8 @@ bool RuneDetector::getRunes(std::vector<FeatureNode_ptr> &current_combos,
         return false;
     }
     vector<tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> pnp_runes(5); // 使用PNP解算得到的神符
-    vector<PoseNode> pnp_rune_datas(5);                  // 五片PNP神符的数据
-    vector<RuneType> pnp_rune_types(5);                          // 五片空神符的类型
+    vector<PoseNode> pnp_rune_datas(5);                                            // 五片PNP神符的数据
+    vector<RuneType> pnp_rune_types(5);                                            // 五片空神符的类型
 
     if (setTempRunePnpData(pnp_rune_datas, camera_pnp_data) == false)
         return false; // 设置五片PNP神符的数据

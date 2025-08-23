@@ -12,7 +12,6 @@ inline Point2f getCenter(const FeatureNode_cptr &feature)
     return feature->getImageCache().getCenter();
 }
 
-
 bool RuneDetector::match(const vector<FeatureNode_ptr> &combos, vector<FeatureNode_ptr> &trackers, bool is_vanish_update)
 {
     // 异常中断

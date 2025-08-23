@@ -11,6 +11,9 @@
 #include "vc/core/type_utils.h"
 #include "vc/dataio/dataio.h"
 
+
+#define FEATURE_NODE_DEBUG 1
+
 /**
  * @brief 特征节点
  *
@@ -19,8 +22,8 @@
 class FeatureNode : public std::enable_shared_from_this<FeatureNode>
 {
     using Ptr = std::shared_ptr<FeatureNode>;                    //! 指针类型
+    public:
     using FeatureNodeMap = std::unordered_map<std::string, Ptr>; //! 特征节点映射表类型
-public:
     using DrawMask = std::uint64_t;
 
 public:
@@ -53,7 +56,7 @@ public:
         //! 位姿节点映射
         DEFINE_PROPERTY_WITH_INIT(PoseNodes, public, public, (PoseNodeMap), PoseNodeMap{});
         //! 陀螺仪位姿信息
-        DEFINE_PROPERTY(GyroPose, public, public, (GyroData));
+        DEFINE_PROPERTY(GyroData, public, public, (GyroData));
     };
 
     //! 绘制配置结构体
@@ -71,7 +74,7 @@ private:
     //! 子特征节点映射表
     DEFINE_PROPERTY_WITH_INIT(ChildFeatures, public, protected, (FeatureNodeMap), FeatureNodeMap());
     //! 构建时间戳
-    DEFINE_PROPERTY(Tick, public, protected, (int64_t));
+    DEFINE_PROPERTY(Tick, public, public, (int64_t));
 
 public:
     /**

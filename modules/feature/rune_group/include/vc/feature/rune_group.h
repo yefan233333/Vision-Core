@@ -2,8 +2,12 @@
 
 #include "vc/feature/tracking_feature_node.h"
 
-class DataConverter; //!< 前向声明数据转换器
+class DataConverter;      //!< 前向声明数据转换器
 class RuneFilterStrategy; //!< 前向声明神符滤波器
+
+//! 特征组合体
+using RuneFeatureCombo = std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>;
+using RuneFeatureComboConst = std::tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>;
 
 //! 神符序列组
 class RuneGroup : public TrackingFeatureNode
@@ -15,17 +19,17 @@ class RuneGroup : public TrackingFeatureNode
     DEFINE_PROPERTY_WITH_INIT(AngleSpeeds, public, protected, (std::deque<double>), {}); //!< 角速度数据（顺负逆正）
     DEFINE_PROPERTY(PredictFunc, public, public, (std::function<double(int64_t)>));      //!< 角度变化函数
     DEFINE_PROPERTY(RecommendedTicks, public, public, (std::vector<int64_t>));           //!< 推荐击打的时间戳 (由小到大)
-    DEFINE_PROPERTY(CamToGyro, public, protected, (PoseNode));                           //!< 相机坐标系到陀螺仪坐标系的变换位姿数据
-    DEFINE_PROPERTY(GyroData, public, public, (GyroData));                               //!< 陀螺仪数据
-    DEFINE_PROPERTY(LastUpdateTick, public, protected, (int64_t));
-
-    std::shared_ptr<RuneFilterStrategy> _filter = nullptr; //!< 滤波策略,用于对陀螺仪坐标系下的PNP数据进行滤波
+    DEFINE_PROPERTY(CamToGyro, public, protected, (PoseNode));
+    DEFINE_PROPERTY(LastUpdateTick, protected, protected, (int64_t));        //!< 相机坐标系到陀螺仪坐标系的变换位姿数据
+    DEFINE_PROPERTY_WITH_INIT(VanishNum, protected, protected, (size_t), 0); //!< 掉帧计数器
+    DEFINE_PROPERTY(LastValidPoseGyro, public, protected, (PoseNode));       //!< 最后一次有效观测位姿(陀螺仪坐标系下)
+    std::shared_ptr<RuneFilterStrategy> _filter = nullptr;                   //!< 滤波策略,用于对陀螺仪坐标系下的PNP数据进行滤波
 
 public:
     RuneGroup() = default;
 
     //! 构建 RuneGroup
-    static inline std::shared_ptr<RuneGroup> make_group() { return std::make_shared<RuneGroup>(); }
+    static inline std::shared_ptr<RuneGroup> make_feature() { return std::make_shared<RuneGroup>(); }
 
     /**
      * @brief 动态类型转换
@@ -37,6 +41,10 @@ public:
     {
         return std::dynamic_pointer_cast<RuneGroup>(p_group);
     }
+
+    std::vector<FeatureNode_ptr> getTrackers();
+    const std::vector<FeatureNode_cptr> getTrackers() const;
+    void setTrackers(const std::vector<FeatureNode_ptr> &trackers);
 
     /**
      * @brief 更新神符序列组
@@ -66,7 +74,7 @@ public:
     /**
      * @brief 获取上一帧的特征信息
      */
-    std::vector<std::tuple<FeatureNode_cptr, FeatureNode_cptr, FeatureNode_cptr>> getLastFrameFeatures() const;
+    std::vector<RuneFeatureComboConst> getLastFrameFeatures() const;
 
     /**
      * @brief 可见性处理
@@ -111,12 +119,17 @@ public:
         int64_t last_switch_tick = 0;
     };
 
-    /**
-     * @brief 获取神符最新的激活信息
-     *
-     * @return 神符激活信息
-     */
-    ActivationInfo getActivationInfo() const;
+    struct CenterEstimationInfo
+    {
+        //! 是否有效
+        bool is_valid = false;
+        //! 神符中心陀螺仪坐标系位置
+        cv::Point3d pos_to_gyro;
+        //! 获取该估计位置的时间戳
+        int64_t tick;
+    };
+    //! 神符中心的估计信息
+    DEFINE_PROPERTY(CenterEstimationInfo,public,protected,(CenterEstimationInfo));
 
     /**
      * @brief 获取相机坐标系到陀螺仪坐标系的PNP数据
@@ -124,6 +137,8 @@ public:
      * @param[in] gyro_data 陀螺仪数据
      */
     static PoseNode calcCamToGyroPnpData(const GyroData &gyro_data);
+
+    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
 
 private:
     //! 转化器映射
@@ -154,8 +169,8 @@ private:
      */
     bool correctRoll(const PoseNode &raw_cam_pnp_data, PoseNode &corrected_cam_pnp_data);
 
-    PoseNode _correntRoll_last_cam_pnp_data{}; //!< 上一帧的相机坐标系PNP数据
-    bool _correntRoll_last_cam_pnp_data_flag = false;  //!< 上一帧的相机坐标系PNP数据是否有效
+    PoseNode _correntRoll_last_cam_pnp_data{};        //!< 上一帧的相机坐标系PNP数据
+    bool _correntRoll_last_cam_pnp_data_flag = false; //!< 上一帧的相机坐标系PNP数据是否有效
 
     /**
      * @brief 检验位姿是否过于极端
@@ -172,11 +187,6 @@ private:
      * @brief 判断当前帧是否发生了靶心切换
      */
     bool isTargetCenterChanged() const;
-
-    /**
-     * @brief 更新神符激活信息
-     */
-    void updateActivationInfo();
 
     /**
      * @brief 更新神符中心的估计信息

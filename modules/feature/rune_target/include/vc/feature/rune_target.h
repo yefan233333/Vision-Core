@@ -26,11 +26,9 @@ public:
      */
     RuneTarget(const Contour_cptr contour, const std::vector<cv::Point2f> corners);
 
-    static inline std::shared_ptr<RuneTarget> cast(FeatureNode_ptr p_feature)
-    {
-        return std::dynamic_pointer_cast<RuneTarget>(p_feature);
-    }
-
+    static inline std::shared_ptr<RuneTarget> cast(FeatureNode_ptr p_feature) { return std::dynamic_pointer_cast<RuneTarget>(p_feature); }
+    static inline const std::shared_ptr<const RuneTarget> cast(FeatureNode_cptr p_feature) { return std::dynamic_pointer_cast<const RuneTarget>(p_feature); }
+    
     /**
      * @brief 找到所有未激活靶心
      *

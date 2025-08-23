@@ -17,11 +17,8 @@ public:
     TrackingFeatureNode(TrackingFeatureNode &&) = delete;
     virtual ~TrackingFeatureNode() = default;
 
-    static inline std::shared_ptr<TrackingFeatureNode> cast(FeatureNode_ptr p_feature)
-    {
-        return std::dynamic_pointer_cast<TrackingFeatureNode>(p_feature);
-    }
-
+    static inline std::shared_ptr<TrackingFeatureNode> cast(FeatureNode_ptr p_feature) { return std::dynamic_pointer_cast<TrackingFeatureNode>(p_feature); }
+    static inline const std::shared_ptr<const TrackingFeatureNode> cast(FeatureNode_cptr p_feature) { return std::dynamic_pointer_cast<const TrackingFeatureNode>(p_feature); }
 };
 //! 追踪特征节点智能指针类型定义
 using TrackingFeatureNode_ptr = std::shared_ptr<TrackingFeatureNode>;

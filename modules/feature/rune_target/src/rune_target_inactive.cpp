@@ -12,9 +12,23 @@ using namespace cv;
 
 RuneTargetInactive::RuneTargetInactive(const Point2f center, const std::vector<cv::Point2f> corners)
 {
-    vector<Point2f> temp_contours{};
+    vector<Point2f> temp_contour{};
     float width = rune_target_param.ACTIVE_DEFAULT_SIDE;
     float height = rune_target_param.ACTIVE_DEFAULT_SIDE;
+    Contour_cptr contour = nullptr;
+    temp_contour.insert(temp_contour.end(), corners.begin(), corners.end());
+    if (temp_contour.size() < 3)
+    {
+        vector<Point> contours_point(temp_contour.begin(), temp_contour.end());
+        contour = ContourWrapper<int>::make_contour(contours_point);
+    }
+    else
+    {
+        vector<Point2f> hull;
+        convexHull(temp_contour, hull);
+        vector<Point> contours_point(hull.begin(), hull.end());
+        contour = ContourWrapper<int>::make_contour(contours_point);
+    }
 
     setActiveFlag(false);
     auto &image_info = getImageCache();
@@ -22,6 +36,7 @@ RuneTargetInactive::RuneTargetInactive(const Point2f center, const std::vector<c
     image_info.setWidth(width);
     image_info.setHeight(height);
     image_info.setCorners(corners);
+    image_info.setContours(vector<Contour_cptr>{contour});
 }
 
 /**
@@ -832,6 +847,7 @@ void RuneTargetInactive::drawFeature(cv::Mat &image, const DrawConfig_cptr &conf
             auto font_color = rune_target_draw_param.inactive.font_color;
             putText(image, to_string(i), corners[i], FONT_HERSHEY_SIMPLEX, font_scale, font_color, font_thickness, LINE_AA);
         }
+        return true;
     };
 
     do

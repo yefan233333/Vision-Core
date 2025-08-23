@@ -64,7 +64,7 @@ struct RuneFanParam
     //! 灯臂距离其它特征的最大距离比例
     float INACTIVE_MAX_DISTANCE_RATIO = 6.0;
     //! 灯臂角点的PNP解算用的3D坐标.(坐标系的中心点是的灯臂顶边中点，此时灯臂转到神符的最高处)(顺序：左上，右上，右下，左下)
-    std::vector<cv::Point3f> INACTIVE_3D = {cv::Point3f(-30, 0, 0), cv::Point3f(30, 0, 0), cv::Point3f(30, 330, 0), cv::Point3f(-30, 330, 0)};
+    std::vector<cv::Point3d> INACTIVE_3D = {cv::Point3d(-30, 0, 0), cv::Point3d(30, 0, 0), cv::Point3d(30, 330, 0), cv::Point3d(-30, 330, 0)};
     //! 灯臂坐标系相对于神符中心的平移矩阵
     cv::Matx31d INACTIVE_TRANSLATION = cv::Matx31d(0, -505, 0);
     //! 灯臂坐标系相对于神符中心的旋转矩阵

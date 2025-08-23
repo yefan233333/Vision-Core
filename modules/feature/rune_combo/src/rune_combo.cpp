@@ -142,7 +142,7 @@ RuneCombo::RuneCombo(const FeatureNode_ptr &p_target,
 
 
     auto &pose_info = getPoseCache();
-    pose_info.setGyroPose(gyro_data);
+    pose_info.setGyroData(gyro_data);
     pose_info.getPoseNodes()[CoordFrame::CAMERA] = rune_to_cam; // 相机坐标系
     pose_info.getPoseNodes()[CoordFrame::JOINT] = rune_to_joint; // 转轴坐标系
     pose_info.getPoseNodes()[CoordFrame::GYRO] = rune_to_gyro; // 陀螺仪坐标系

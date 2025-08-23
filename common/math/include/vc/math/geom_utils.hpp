@@ -377,3 +377,15 @@ inline auto getDist(const cv::Vec<Tp1, 4> &line, const cv::Point_<Tp2> &pt, bool
                   std::sqrt(line(0) * line(0) + line(1) * line(1));
     return direc ? retval : std::abs(retval);
 }
+
+/**
+ * @brief 将陀螺仪欧拉角转化为旋转矩阵
+ *
+ * @param[in] yaw 陀螺仪 yaw 数据 (左负右正)
+ * @param[in] pitch 陀螺仪 pitch 数据 (上负下正)
+ */
+template <typename _Tp>
+inline cv::Matx<_Tp, 3, 3> gyroEuler2RotMat(_Tp yaw, _Tp pitch)
+{
+    return euler2Mat(deg2rad(yaw), Y) * euler2Mat(deg2rad(-1 * pitch), X);
+}

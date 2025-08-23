@@ -22,6 +22,11 @@ public:
         return std::dynamic_pointer_cast<RuneFan>(p_feature);
     }
 
+    static inline const std::shared_ptr<const RuneFan> cast(FeatureNode_cptr p_feature)
+    {
+        return std::dynamic_pointer_cast<const RuneFan>(p_feature);
+    }
+
     /**
      * @brief 找到所有未激活扇叶
      *

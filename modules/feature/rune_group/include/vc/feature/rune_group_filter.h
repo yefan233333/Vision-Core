@@ -18,6 +18,7 @@
 #include <opencv2/core/types.hpp>
 
 #include "vc/math/pose_node.hpp"
+#include "rune_filter_type.h"
 
 /**
  * @brief 神符位姿的滤波策略
@@ -72,10 +73,12 @@ public:
      *
      * @return cv::Matx61d 滤波器的最新值
      */
-    inline cv::Matx61d getLatest() {}
+    inline cv::Matx61d getLatest() {return cv::Matx61d::zeros(); }
 
     //! 是否有效
     virtual bool isValid() = 0;
+    //! 获取滤波数据类型
+    virtual RuneFilterDataType getDataType() = 0;
     //! 获取滤波数据类型
     //! 获取滤波次数
     size_t getFilterCount() const { return __filter_count; }
@@ -84,3 +87,5 @@ public:
 };
 
 using RuneFilter_ptr = std::shared_ptr<RuneFilterStrategy>;
+
+

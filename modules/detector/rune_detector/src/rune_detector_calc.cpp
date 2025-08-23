@@ -48,6 +48,35 @@ inline Point2f getCenter(const FeatureNode_cptr feature)
     return feature->getImageCache().getCenter();
 }
 
+void RuneDetector::binary(const cv::Mat &src, cv::Mat &bin, PixChannel target_color, uint8_t threshold)
+{
+    if(src.type() != CV_8UC3)
+    {
+        VC_THROW_ERROR("The image type of \"src\" is incorrect");
+    }
+    if(target_color != PixChannel::RED && target_color != PixChannel::BLUE)
+    {
+        VC_THROW_ERROR("The value of \"target_color\" is incorrect");
+    }
+    auto ch1 = target_color == PixChannel::RED ? PixChannel::RED : PixChannel::BLUE;
+    auto ch2 = target_color == PixChannel::RED ? PixChannel::BLUE : PixChannel::RED;
+    bin = Mat::zeros(Size(src.cols, src.rows), CV_8UC1);
+    parallel_for_(Range(0, src.rows),
+                    [&](const Range &range)
+                    {
+                        const uchar *data_src = nullptr;
+                        uchar *data_bin = nullptr;
+                        for (int row = range.start; row < range.end; ++row)
+                        {
+                            data_src = src.ptr<uchar>(row);
+                            data_bin = bin.ptr<uchar>(row);
+                            for (int col = 0; col < src.cols; ++col)
+                                if (data_src[3 * col + ch1] - data_src[3 * col + ch2] > threshold)
+                                    data_bin[col] = 255;
+                        }
+                    });
+}
+
 bool RuneDetector::filterInactiveTarget(std::vector<FeatureNode_ptr> &inactive_targets)
 {
     if (inactive_targets.size() > 1)

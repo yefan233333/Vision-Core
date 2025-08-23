@@ -2,14 +2,13 @@
 #include "vc/detector/rune_detector_param.h"
 #include "vc/feature/rune_fan.h"
 #include "vc/feature/rune_target.h"
-#include "vc/feature/rune_center.h" 
+#include "vc/feature/rune_center.h"
 #include "vc/feature/rune_fan_inactive.h"
 #include "vc/feature/rune_target_inactive.h"
-
+#include "vc/core/debug_tools.h"
 
 using namespace std;
 using namespace cv;
-
 
 inline Point2f getCenter(const FeatureNode_cptr &feature)
 {
@@ -30,7 +29,7 @@ inline Point2f getDirection(const FeatureNode_cptr &feature)
  *
  * @param runes 神符组
  */
-inline bool isMatchError(const std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &runes)
+inline bool isMatchError(const std::vector<RuneFeatureCombo> &runes)
 {
     for (auto &[target, center, fan] : runes)
     {
@@ -46,7 +45,7 @@ inline bool isMatchError(const std::vector<std::tuple<FeatureNode_ptr, FeatureNo
     return false;
 }
 
- /**
+/**
  * @brief 通过未激活扇叶强制构造神符中心
  */
 FeatureNode_ptr forceMakeCenterByInactiveFan(vector<FeatureNode_ptr> &inactive_fans, const vector<FeatureNode_ptr> &inactive_targets)
@@ -58,7 +57,7 @@ FeatureNode_ptr forceMakeCenterByInactiveFan(vector<FeatureNode_ptr> &inactive_f
     vector<FeatureNode_ptr> in_fans(inactive_fans.begin(), inactive_fans.end());
     for (auto &fan : in_fans)
     {
-        auto end_arrow_contour = RuneFanInactive::getEndArrowContour(fan, to_const_ptr(in_targets));
+        auto end_arrow_contour = RuneFanInactive::getEndArrowContour(fan, to_const(in_targets));
         if (end_arrow_contour == nullptr)
             continue;
         // 尝试构造神符中心
@@ -90,7 +89,7 @@ FeatureNode_ptr forceMakeCenterByInactiveFan(vector<FeatureNode_ptr> &inactive_f
  *       3. 仅用于临时测试使用
  */
 FeatureNode_ptr forceMakeCenter(const vector<FeatureNode_ptr> &inactive_targets, const vector<FeatureNode_ptr> &active_targets,
-                          vector<FeatureNode_ptr> &inactive_fans, const vector<FeatureNode_ptr> &active_fans)
+                                vector<FeatureNode_ptr> &inactive_fans, const vector<FeatureNode_ptr> &active_fans)
 {
     // 尝试通过未激活扇叶构造神符中心
     auto rune_center = forceMakeCenterByInactiveFan(inactive_fans, inactive_targets);
@@ -174,7 +173,7 @@ FeatureNode_ptr forceMakeCenter(const vector<FeatureNode_ptr> &inactive_targets,
     // 创建神符中心
     return RuneCenter::make_feature(center);
 }
-bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_estimation_info, vector<FeatureNode_ptr> &features, std::vector<std::tuple<FeatureNode_ptr, FeatureNode_ptr, FeatureNode_ptr>> &matched_features)
+bool RuneDetector::findFeatures(Mat src, vector<FeatureNode_cptr> &features, std::vector<RuneFeatureCombo> &matched_features)
 {
 
     vector<Contour_cptr> contours{};
@@ -195,7 +194,7 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
     {
         return false;
     }
-    vector<FeatureNode_ptr> targets_active; // 神符已激活靶心向量
+    vector<FeatureNode_ptr> targets_active;   // 神符已激活靶心向量
     vector<FeatureNode_ptr> targets_inactive; // 神符未激活靶心向量
     vector<FeatureNode_ptr> fans_active;      // 神符已激活扇叶向量
     vector<FeatureNode_ptr> fans_inactive;    // 神符未激活扇叶向量
@@ -206,7 +205,7 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
         // RuneTimer timer("findInactiveTargets");
         unordered_map<FeatureNode_cptr, unordered_set<size_t>> used_idxs{};
         RuneTarget::find_inactive_targets(targets_inactive, contours, hierarchy, continue_idx, used_idxs); // 未激活神符靶心
-        filterInactiveTarget(targets_inactive);                                                          // 筛选未激活靶心
+        filterInactiveTarget(targets_inactive);                                                            // 筛选未激活靶心
         for (const auto &target : targets_inactive)
             continue_idx.insert(used_idxs[target].begin(), used_idxs[target].end());
     }
@@ -214,7 +213,7 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
         // RuneTimer timer("findActiveTargets");
         unordered_map<FeatureNode_cptr, unordered_set<size_t>> used_idxs{};
         RuneTarget::find_active_targets(targets_active, contours, hierarchy, continue_idx, used_idxs); // 已激活神符靶心
-        filterActiveTarget(targets_active, targets_inactive);                                        // 筛选激活靶心
+        filterActiveTarget(targets_active, targets_inactive);                                          // 筛选激活靶心
         for (const auto &target : targets_active)
             continue_idx.insert(used_idxs[target].begin(), used_idxs[target].end());
     }
@@ -231,14 +230,14 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
         vector<FeatureNode_cptr> targets_inactive_temp{}; // 用于辅助识别未激活扇叶
         targets_inactive_temp.insert(targets_inactive_temp.end(), targets_inactive.begin(), targets_inactive.end());
         RuneFan::find_inactive_fans(fans_inactive, contours, hierarchy, continue_idx, used_idxs, targets_inactive_temp); // 未激活神符扇叶
-        filterInactiveFan(fans_inactive, targets_inactive, targets_active, fans_active);                               // 异常扇叶筛选
+        filterInactiveFan(fans_inactive, targets_inactive, targets_active, fans_active);                                 // 异常扇叶筛选
         for (const auto &fan : fans_inactive)
             continue_idx.insert(used_idxs[fan].begin(), used_idxs[fan].end());
     }
     {
         // RuneTimer timer("findCenters");
         unordered_map<FeatureNode_cptr, unordered_set<size_t>> used_idxs{};
-        RuneCenter::find(centers, contours, hierarchy, continue_idx, used_idxs);      // 神符中心
+        RuneCenter::find(centers, contours, hierarchy, continue_idx, used_idxs);             // 神符中心
         filterCenter(centers, targets_inactive, targets_active, fans_inactive, fans_active); // 异常中心筛选
         for (const auto &center : centers)
             continue_idx.insert(used_idxs[center].begin(), used_idxs[center].end());
@@ -251,7 +250,6 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
     {
         if (centers.empty())
             return true; // 神符中心为空、需要强制构造
-        // return false;
         if (!rune_detector_param.ENABLE_CENTER_FORCE_CONSTRUCT_WINDOW)
         {
             return false; // 不需要强制构造神符中心
@@ -281,19 +279,6 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
         {
             break; // 不需要强制构造神符中心
         }
-        // 判断能否获取神符中心的估计数据
-        auto [is_estimated, center_estimation] = center_estimation_info;
-        if (is_estimated) // 如果有估计数据
-        {
-            auto center_ptr = RuneCenter::make_feature(center_estimation);
-            if (center_ptr)
-            {
-                centers.clear(); // 清除原来的神符中心数据
-                centers.emplace_back(center_ptr);
-                break;
-            }
-        }
-
         // 尝试强制构造神符中心
         auto center = forceMakeCenter(targets_inactive, targets_active, fans_inactive, fans_active);
         if (center)
@@ -306,12 +291,16 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
         return false; // 无法构造神符中心、放弃构建
     } while (0);
 
+    if(centers.empty())
+    {
+        return false; // 神符中心为空、放弃构建
+    }
 
     FeatureNode_ptr rune_center = centers[0];                                               // 神符中心
     FeatureNode_ptr rune_inactive_fan = fans_inactive.empty() ? nullptr : fans_inactive[0]; // 未激活扇叶
 
     RuneFanInactive::correctDirection(rune_inactive_fan, getCenter(rune_center)); // 未激活扇叶的方向矫正
-    RuneFanInactive::correctCorners(rune_inactive_fan);                             // 未激活扇叶的角点矫正
+    RuneFanInactive::correctCorners(rune_inactive_fan);                           // 未激活扇叶的角点矫正
 
     vector<FeatureNode_ptr> rune_targets{};
     vector<FeatureNode_ptr> rune_fans{};
@@ -326,7 +315,7 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
 
     Point2f rotate_center{};
     if (RuneDetector::getRotateCenter(rune_targets, rune_fans, rotate_center) == false) // 获取旋转中心
-        rotate_center = getCenter(rune_center);                                       // 当旋转中心为空、直接以神符中心为旋转中心
+        rotate_center = getCenter(rune_center);                                         // 当旋转中心为空、直接以神符中心为旋转中心
 
     // 未激活靶心的矫正
     for (auto &target : rune_targets)
@@ -342,7 +331,7 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
     vector<FeatureNode_ptr> fans_active_incomplete; // 未完整的已激活扇叶向量
     unordered_map<FeatureNode_cptr, unordered_set<size_t>> fans_active_incomplete_idxs{};
     RuneFan::find_incomplete_active_fans(fans_active_incomplete, contours, hierarchy, continue_idx, rotate_center, fans_active_incomplete_idxs); // 未完整的已激活扇叶
-    filterActiveFanIncomplete(fans_active_incomplete, targets_inactive, targets_active, fans_inactive, fans_active, rune_center);             // 筛选未完整的已激活扇叶
+    filterActiveFanIncomplete(fans_active_incomplete, targets_inactive, targets_active, fans_inactive, fans_active, rune_center);                // 筛选未完整的已激活扇叶
     rune_fans.insert(rune_fans.end(), fans_active_incomplete.begin(), fans_active_incomplete.end());
 
     auto temp_matched_features = getMatchedFeature(rune_targets, rune_center, rune_fans); // 获取配对后的特征组
@@ -350,7 +339,31 @@ bool RuneDetector::findFeatures(Mat src, const tuple<bool, cv::Point2f> &center_
     {
         return false;
     }
+
+#if FEATURE_NODE_DEBUG
+    // 绘制所有特征
+    do
+    {
+        Mat img_show = DebugTools::get().getImage();
+        if (img_show.empty())
+            break;
+        for (const auto &target : rune_targets)
+        {
+            target->drawFeature(img_show);
+        }
+        for (const auto &fan : rune_fans)
+        {
+            fan->drawFeature(img_show);
+        }
+        for (const auto &center : centers)
+        {
+            center->drawFeature(img_show);
+        }
     
+    }while(0);  
+
+#endif
+
     matched_features = temp_matched_features;
     // 存入 features
     for (auto [target, center, fan] : temp_matched_features)
