@@ -7,6 +7,7 @@
 #include "vc/feature/rune_fan_active.h"
 #include "vc/feature/rune_fan_inactive.h"
 #include "vc/feature/rune_center.h"
+#include "vc/core/debug_tools/window_auto_layout.h"
 #include "vc/core/yml_manager.hpp"
 #include "vc/core/debug_tools.h"
 #include "vc/feature/rune_fan.h"
@@ -70,7 +71,7 @@ int main(int argc, char **argv)
 
     // 创建进度条窗口
     const string trackbar_window = "Camera Feed";
-    namedWindow(trackbar_window, WINDOW_NORMAL);
+    WindowAutoLayout::get()->addWindow(trackbar_window);
     resizeWindow(trackbar_window, 640, 480);
 
     // 回调函数用于拖动进度条时跳转到指定帧
@@ -80,18 +81,18 @@ int main(int argc, char **argv)
         cap_ptr->set(CAP_PROP_POS_FRAMES, pos);
     };
     createTrackbar("Frame", trackbar_window, &current_frame, max(1, total_frames - 1), on_trackbar, &cap);
-
-    // FeatureNode_ptr rune_group = RuneGroup::make_feature();
     vector<FeatureNode_ptr> rune_groups{};
 
     while (true)
     {
-
         cap.read(frame); // 从摄像头捕获一帧
         if (frame.empty())
         {
             cerr << "Error: Could not read frame." << endl;
-            break;
+            // 从头开始播放
+            cap.set(CAP_PROP_POS_FRAMES, 0);
+            current_frame = 0;
+            continue;
         }
 
         DebugTools::get()->setImage(frame);
@@ -101,7 +102,7 @@ int main(int argc, char **argv)
         input.setImage(frame);
         input.setTick(cv::getTickCount());
         input.setGyroData(GyroData()); // 空数据
-        input.setColor(PixChannel::BLUE);
+        input.setColor(PixChannel::RED);
         input.setFeatureNodes(rune_groups);
 
         static auto rune_detector = RuneDetector::make_detector();

@@ -2,6 +2,7 @@
 #include "vc/detector/rune_detector_param.h"
 #include "vc/feature/rune_group.h"
 #include "vc/core/debug_tools.h"
+#include "vc/core/debug_tools/window_auto_layout.h"
 
 using namespace std;
 using namespace cv;
@@ -70,7 +71,8 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
 
     Mat bin;
     binary(input_image, bin, color, thesh);
-    namedWindow("Binary Image", WINDOW_NORMAL);
+    WindowAutoLayout::get()->addWindow("Binary Image");
+    // namedWindow("Binary Image", WINDOW_NORMAL);
     resizeWindow("Binary Image", 600, 400);
     imshow("Binary Image", bin);
 

@@ -7,6 +7,8 @@
 #include "vc/feature/rune_fan.h"
 #include "vc/feature/rune_filter_fusion.h"
 #include "vc/camera/camera_param.h"
+#include "vc/core/debug_tools.h"
+#include "vc/core/debug_tools/param_view_manager.h"
 
 using namespace std;
 using namespace cv;
@@ -147,7 +149,14 @@ bool RuneGroup::update(const PoseNode &r_cam_raw, const GyroData &gyro, int64_t 
     Matx61f filter_pos = out.filtered_pos;
     auto [tvec, rvec] = DataConverter::toTvecAndRvec(filter_pos);
     PoseNode r_gyro(rvec, tvec);
-
+#if FEATURE_NODE_DEBUG
+    DebugTools::get()->getPVM()->addParam("X", "RawX", raw_pos(0));
+    DebugTools::get()->getPVM()->addParam("Y", "RawY", raw_pos(1));
+    DebugTools::get()->getPVM()->addParam("Z", "RawZ", raw_pos(2));
+    DebugTools::get()->getPVM()->addParam("Roll", "RawRoll", raw_pos(3));
+    DebugTools::get()->getPVM()->addParam("Pitch", "RawPitch", raw_pos(4));
+    DebugTools::get()->getPVM()->addParam("Yaw", "RawYaw", raw_pos(5));
+#endif
     updatePnpData(r_gyro, gyro);
     if (!vanish)
         updateCenterEstimation();

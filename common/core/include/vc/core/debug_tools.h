@@ -11,6 +11,8 @@
 #include <mutex>
 #include <string>
 
+class ParamViewManager; //!< 参数视图管理器
+
 /**
  * @brief 调试工具类
  *
@@ -51,6 +53,12 @@ public:
     cv::Mat getImage();
 
     /**
+     * @brief 获取参数视图管理器
+     * @return ParamViewManager_ptr 返回参数视图管理器的指针
+     */
+    std::shared_ptr<ParamViewManager> getPVM();
+
+    /**
      * @brief 在指定窗口显示缓存图像
      * @param[in] winName 窗口名称，默认为 "Debug"
      */
@@ -70,6 +78,7 @@ private:
     cv::Mat cache_;                   //!< 缓存图像
     std::mutex mtx_;                  //!< 互斥锁，用于线程安全
     bool window_initialized_ = false; //!< 窗口初始化状态
+    std::shared_ptr<ParamViewManager> pvm_ = nullptr; //!< 参数视图管理器
 };
 
 /// @brief DebugTools 智能指针类型

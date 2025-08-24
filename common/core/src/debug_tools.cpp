@@ -1,4 +1,6 @@
 #include "vc/core/debug_tools.h"
+#include "vc/core/debug_tools/param_view_manager.h"
+#include "vc/core/debug_tools/window_auto_layout.h"
 
 using namespace std;
 using namespace cv;
@@ -26,7 +28,7 @@ cv::Mat DebugTools::getImage()
     return cache_;
 }
 
-// 在固定窗口显示（例如 "Debug"）
+// 在固定窗口显示
 void DebugTools::show(const std::string &winName)
 {
     std::lock_guard<std::mutex> lock(mtx_);
@@ -40,12 +42,23 @@ void DebugTools::show(const std::string &winName)
     {
         cv::imshow(winName, cache_);
     }
+
+    if(pvm_)
+        pvm_->showAll();
 }
 
 
 // 初始化窗口
 void DebugTools::initWindow(const std::string &winName)
 {
-    cv::namedWindow(winName, cv::WINDOW_NORMAL);
+    WindowAutoLayout::get()->addWindow(winName);
+    // cv::namedWindow(winName, cv::WINDOW_NORMAL);
     cv::resizeWindow(winName, 640, 480);
+}
+
+std::shared_ptr<ParamViewManager> DebugTools::getPVM()
+{
+    if(!pvm_)
+        pvm_ = ParamViewManager::create();
+    return pvm_;
 }

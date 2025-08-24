@@ -51,6 +51,19 @@ private:
     static bool findFeatures(cv::Mat src, std::vector<FeatureNode_cptr> &features, std::vector<RuneFeatureCombo> &matched_features);
 
     /**
+     * @brief 初步获取所有的神符特征
+     * @param[out] targets_inactive 未激活的靶心
+     * @param[out] targets_active 激活的靶心
+     * @param[out] fans_inactive 未激活的扇叶
+     * @param[out] fans_active 激活的扇叶
+     * @param[out] centers 神符中心
+     * @param[in] contours 输入的轮廓
+     * @param[in] hierarchy 轮廓的层级关系
+     * @param[in] continue_idx 需要跳过的轮廓索引
+     */
+    static void extractRuneFeatures(std::vector<FeatureNode_ptr> &targets_inactive,std::vector<FeatureNode_ptr> &targets_active,std::vector<FeatureNode_ptr> &fans_inactive,std::vector<FeatureNode_ptr> &fans_active,std::vector<FeatureNode_ptr> &centers,const std::vector<Contour_cptr> &contours,const std::vector<cv::Vec4i> &hierarchy,std::unordered_set<size_t> &continue_idx);
+
+    /**
      * @brief 将神符组合体与追踪器进行匹配
      *
      * @param[in] combos 所有的神符组合体 [长度为5]
@@ -211,4 +224,5 @@ private:
                           const std::vector<cv::Point3f> &points_3d,
                           const std::vector<float> &point_weights,
                           PoseNode &pnp_data) const;
+
 };

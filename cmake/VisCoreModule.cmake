@@ -74,9 +74,11 @@ function(VisCore_add_module module_name)
         if(NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/src/${module_name})
             set(module_source_dir ${CMAKE_CURRENT_LIST_DIR}/src)
         endif()
-        # 添加源文件 
-        set(module_sources_src "")
-        aux_source_directory(${module_source_dir} module_sources_src)
+        # 递归获取所有 .c 和 .cpp 文件
+        file(GLOB_RECURSE module_sources_src
+            "${module_source_dir}/*.c"
+            "${module_source_dir}/*.cpp"
+        )
         target_sources(${module_lib_name} PRIVATE ${module_sources_src})
     endif()
 
