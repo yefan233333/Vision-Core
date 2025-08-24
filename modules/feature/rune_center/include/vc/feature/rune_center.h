@@ -1,7 +1,7 @@
 /**
  * @file rune_center.h
  * @brief 神符中心特征头文件
- * @author 张峰玮 (3480409161@qq.com)
+ * @author zhaoxi (535394140@qq.com)
  * @date 2025-08-24
  */
 

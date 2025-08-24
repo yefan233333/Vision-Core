@@ -2,7 +2,7 @@
  * @file yml_manager.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief YML 文件生成、加载和写入管理工具
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #pragma once

@@ -2,7 +2,7 @@
  * @file type_utils.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 几何向量类型概念及通用操作工具头文件
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #pragma once

@@ -2,7 +2,7 @@
  * @file rune_fan_inactive.h
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 未激活的神符扇叶特征类头文件
- * @date 2025-XX-XX
+ * @date 2025-7-15
  * @details 定义了继承自 RuneFan 的未激活扇叶特征类 RuneFanInactive，
  *          包含箭头轮廓、角点矫正、方向矫正、PNP位姿构造及可视化接口。
  *          提供静态方法用于批量查找、构造和获取末端箭头轮廓。

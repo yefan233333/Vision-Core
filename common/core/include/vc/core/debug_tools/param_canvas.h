@@ -1,3 +1,10 @@
+/**
+ * @file param_canvas.h
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 参数可视化画布
+ * @date 2025-7-15
+ */
+
 #pragma once
 #include <deque>
 #include <opencv2/opencv.hpp>
@@ -32,8 +39,6 @@ public:
     void clearMarks();
     void reset();
     void show();
-
-
 
 private:
     using ParamQueue = std::deque<float>;

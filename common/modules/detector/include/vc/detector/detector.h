@@ -1,8 +1,8 @@
 /**
  * @file detector.h
- * @author 张峰玮 (3480409161@qq.com)
- * @brief 识别器基类定义文件
- * @date 2025-XX-XX
+ * @author zhaoxi (535394140@qq.com)
+ * @brief 抽象识别类头文件
+ * @date 2025-08-20
  */
 
 #pragma once

@@ -2,7 +2,7 @@
  * @file rune_fan_active.h
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 已激活的神符扇叶特征类头文件
- * @date 2025-XX-XX
+ * @date 2025-7-15
  * @details 定义了继承自 RuneFan 的已激活扇叶特征类 RuneFanActive，
  *          包含构造、残缺扇叶处理、PNP位姿构造及可视化接口。
  *          提供静态方法用于批量查找、构造和获取扇叶角点。

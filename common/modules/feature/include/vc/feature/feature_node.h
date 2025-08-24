@@ -2,7 +2,7 @@
  * @file feature_node.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 特征节点基类定义文件
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #pragma once

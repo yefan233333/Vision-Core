@@ -2,7 +2,7 @@
  * @file detector_output.h
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 识别器输出参数定义文件
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #pragma once

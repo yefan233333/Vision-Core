@@ -2,7 +2,7 @@
  * @file rune_fan_hump_param.h
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 神符扇叶突起参数定义
- * @date 2025-XX-XX
+ * @date 2025-7-15
  * @details 定义了用于扇叶顶部、底部中心和底部侧边突起检测的参数结构体 RuneFanHumpParam。
  *          包含滤波器参数、角度偏差限制、最小间隔及距离比例等，并支持 YML 配置管理。
  */

@@ -2,7 +2,7 @@
  * @file cv_expansion_type.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief OpenCV 常用矩阵类型拓展定义
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #pragma once

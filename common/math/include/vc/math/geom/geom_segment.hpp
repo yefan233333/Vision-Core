@@ -2,7 +2,7 @@
  * @file geom_segment.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 二维线段类头文件
- * @date 2025-XX-XX
+ * @date 2025-7-15
  *
  * @details
  * 该类用于表示二维空间中的线段，并提供如下几何操作：

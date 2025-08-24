@@ -1,8 +1,8 @@
 /**
  * @file rune_target.h
- * @author 张峰玮 (3480409161@qq.com)
- * @brief 神符靶心特征类定义头文件
- * @date 2025-08-24
+ * @author 张华铨 (1325694319@qq.com)
+ * @version 0.1
+ * @date 2025-08-20
  *
  * @details
  * 定义神符靶心特征类 RuneTarget 及其智能指针类型。

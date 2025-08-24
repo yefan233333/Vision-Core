@@ -2,7 +2,7 @@
  * @file window_auto_layout.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief OpenCV 窗口自动布局器
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #include <opencv2/opencv.hpp>
@@ -16,7 +16,7 @@ class WindowAutoLayout
 {
 public:
     using Ptr = std::shared_ptr<WindowAutoLayout>; //!< 智能指针类型定义
-    static Ptr get();                     //!< 获取单例实例
+    static Ptr get();                              //!< 获取单例实例
     /**
      * @brief 构造函数
      * @param screen 屏幕尺寸（逻辑管理范围），默认 1920x1080
@@ -54,6 +54,7 @@ public:
      * @param steps 插值帧数（越大越顺滑）
      */
     void _debug_setAnimation(bool enabled, int duration_ms = 200, int steps = 12);
+
 private:
     struct Node
     {

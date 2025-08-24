@@ -11,6 +11,8 @@
 #include <vector>
 #include <string>
 
+#include "vc/core/yml_manager.hpp"
+
 /**
  * @brief CameraParam 相机参数结构体
  *

@@ -2,7 +2,7 @@
  * @file logging.h
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 终端信息打印与异常抛出宏定义
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #pragma once

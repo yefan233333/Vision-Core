@@ -1,3 +1,10 @@
+/**
+ * @file param_view_manager.h
+ * @author 张峰玮 (3480409161@qq.com)
+ * @brief 参数可视化管理器
+ * @date 2025-7-15
+ */
+
 #pragma once
 
 #include "param_canvas.h"

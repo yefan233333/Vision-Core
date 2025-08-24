@@ -2,7 +2,7 @@
  * @file property_wrapper.hpp
  * @author 张峰玮 (3480409161@qq.com)
  * @brief 属性包装类与相关宏定义
- * @date 2025-XX-XX
+ * @date 2025-7-15
  */
 
 #pragma once
