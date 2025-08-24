@@ -5,7 +5,7 @@ WindowAutoLayout::Ptr WindowAutoLayout::get()
     static WindowAutoLayout::Ptr instance = []() -> Ptr
     {
         auto result = std::make_shared<WindowAutoLayout>(cv::Size(1920, 1080), cv::Size(320, 240));
-        result->_debug_setAnimation(true, 30, 15);
+        result->_debug_setAnimation(false, 30, 15);
         return result;
     }();
     return instance;

@@ -46,7 +46,6 @@ public:
      * @param[in] tick 捕获特征的时间戳
      */
     RuneCombo(const FeatureNode_ptr &p_target, const FeatureNode_ptr &p_center, const FeatureNode_ptr &p_fan, const PoseNode &rune_to_cam, const RuneType &type, const GyroData &gyro_data, int64 tick);
-
     RuneCombo(const RuneCombo &) = delete;
     RuneCombo(RuneCombo &&) = delete;
 

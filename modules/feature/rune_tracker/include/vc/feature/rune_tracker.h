@@ -56,6 +56,15 @@ public:
      */
     void updateVisible(bool is_visible);
 
+    /**
+     * @brief 绘制特征节点
+     *
+     * @param[in,out] image 绘制目标图像
+     * @param[in] config 绘制配置指针，默认为nullptr
+     *
+     * @note 默认实现为空，子类可以重写此函数以实现具体绘制逻辑。
+     */
+    virtual void drawFeature(cv::Mat &image, const DrawConfig_cptr &config = nullptr) const override;
 private:
     /**
      * @brief 从神符组合体更新内部数据

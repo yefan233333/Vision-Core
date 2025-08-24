@@ -529,7 +529,6 @@ void RuneTargetInactive::drawFeature(Mat &image, const DrawConfig_cptr &config) 
         {
             auto color = rune_target_draw_param.inactive.color;
             auto thickness = rune_target_draw_param.inactive.thickness;
-            line(image, corners[i], corners[(i + 1) % corners.size()], color, thickness, LINE_AA);
             auto point_radius = rune_target_draw_param.inactive.point_radius;
             circle(image, corners[i], point_radius, color, thickness, LINE_AA);
         }
@@ -545,12 +544,10 @@ void RuneTargetInactive::drawFeature(Mat &image, const DrawConfig_cptr &config) 
 
     do
     {
-        if (draw_ellipse())
-            break;
-        else if (draw_corners())
-            break;
-        else
+        if (!draw_ellipse())
             draw_circle();
+        draw_corners();
+
     } while (0);
 }
 

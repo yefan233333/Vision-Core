@@ -337,7 +337,7 @@ bool RuneDetector::findFeatures(Mat src, vector<FeatureNode_cptr> &features, std
     if (isMatchError(temp_matched_features))                                              // 匹配异常
     {
         return false;
-    }
+    } 
 
 #if FEATURE_NODE_DEBUG
     // 绘制所有特征
@@ -360,7 +360,6 @@ bool RuneDetector::findFeatures(Mat src, vector<FeatureNode_cptr> &features, std
         }
 
     } while (0);
-
 #endif
 
     matched_features = temp_matched_features;

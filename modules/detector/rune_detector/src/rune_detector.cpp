@@ -72,8 +72,6 @@ void RuneDetector::detect(DetectorInput &input, DetectorOutput &output)
     Mat bin;
     binary(input_image, bin, color, thesh);
     WindowAutoLayout::get()->addWindow("Binary Image");
-    // namedWindow("Binary Image", WINDOW_NORMAL);
-    resizeWindow("Binary Image", 600, 400);
     imshow("Binary Image", bin);
 
 

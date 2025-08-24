@@ -8,11 +8,13 @@
 #include "vc/feature/rune_fan_inactive.h"
 #include "vc/feature/rune_center.h"
 #include "vc/core/debug_tools/window_auto_layout.h"
+#include "vc/core/debug_tools/param_view_manager.h"
 #include "vc/core/yml_manager.hpp"
 #include "vc/core/debug_tools.h"
 #include "vc/feature/rune_fan.h"
 #include "vc/detector/rune_detector.h"
 #include "vc/feature/rune_group.h"
+#include "vc/feature/rune_combo.h"
 #include <vector>
 #include <iostream>
 #include <cmath>
@@ -70,7 +72,7 @@ int main(int argc, char **argv)
     int current_frame = 0;
 
     // 创建进度条窗口
-    const string trackbar_window = "Camera Feed";
+    const string trackbar_window = "Debug";
     WindowAutoLayout::get()->addWindow(trackbar_window);
     resizeWindow(trackbar_window, 640, 480);
 
@@ -110,13 +112,45 @@ int main(int argc, char **argv)
         rune_detector->detect(input, output);
         rune_groups = output.getFeatureNodes();
 
+        // 获取待击打靶心
+        do
+        {
+            if (rune_groups.empty())
+                break;
+            auto rune_group = RuneGroup::cast(rune_groups.front());
+            if (rune_group->childFeatures().empty())
+                break;
+            FeatureNode_cptr target_tracker = nullptr;
+            for (auto tracker : rune_group->getTrackers())
+            {
+                auto tracker_ = TrackingFeatureNode::cast(tracker);
+                if (tracker_->getHistoryNodes().size() < 2)
+                    continue;
+                auto type = RuneCombo::cast(tracker_->getHistoryNodes().front())->getRuneType();
+                if (type == RuneType::PENDING_STRUCK)
+                {
+                    target_tracker = tracker;
+                    break;
+                }
+            }
+            if (!target_tracker)
+                break;
+            // 获取位姿信息
+            auto pose = target_tracker->getPoseCache().getPoseNodes().at(CoordFrame::CAMERA);
+            auto tvec = pose.tvec();
+            auto x = tvec[0];
+            auto y = tvec[1];
+            auto z = tvec[2];
+            auto dist = sqrt(x * x + y * y + z * z);
+            DebugTools::get()->getPVM()->addParam("Target", "Dist", dist);
+        } while (0);
 
         auto img_show = DebugTools::get()->getImage();
 
         imshow(trackbar_window, img_show);
 
         DebugTools::get()->show();
-        int key = waitKey(1);
+        int key = waitKey(5);
         if (key == 27) // 按 'ESC' 键退出
         {
             break;

@@ -27,8 +27,8 @@ inline bool checkPoseDiff(const Matx61f &p1, const Matx61f &p2)
     for (int i = 0; i < 6; i++)
         diff[i] = p1(i) - p2(i);
     const double limits[6] = {rune_group_param.MAX_X_DEVIATION, rune_group_param.MAX_Y_DEVIATION,
-                             rune_group_param.MAX_Z_DEVIATION, rune_group_param.MAX_YAW_DEVIATION,
-                             rune_group_param.MAX_PITCH_DEVIATION, rune_group_param.MAX_ROLL_DEVIATION};
+                              rune_group_param.MAX_Z_DEVIATION, rune_group_param.MAX_YAW_DEVIATION,
+                              rune_group_param.MAX_PITCH_DEVIATION, rune_group_param.MAX_ROLL_DEVIATION};
     const char *names[6] = {"X", "Y", "Z", "Yaw", "Pitch", "Roll"};
     for (int i = 0; i < 6; i++)
         if (abs(diff[i]) > static_cast<float>(limits[i]))
@@ -150,12 +150,19 @@ bool RuneGroup::update(const PoseNode &r_cam_raw, const GyroData &gyro, int64_t 
     auto [tvec, rvec] = DataConverter::toTvecAndRvec(filter_pos);
     PoseNode r_gyro(rvec, tvec);
 #if FEATURE_NODE_DEBUG
-    DebugTools::get()->getPVM()->addParam("X", "RawX", raw_pos(0));
-    DebugTools::get()->getPVM()->addParam("Y", "RawY", raw_pos(1));
-    DebugTools::get()->getPVM()->addParam("Z", "RawZ", raw_pos(2));
-    DebugTools::get()->getPVM()->addParam("Roll", "RawRoll", raw_pos(3));
-    DebugTools::get()->getPVM()->addParam("Pitch", "RawPitch", raw_pos(4));
-    DebugTools::get()->getPVM()->addParam("Yaw", "RawYaw", raw_pos(5));
+//     DebugTools::get()->getPVM()->addParam("X", "RawX", raw_pos(0));
+//     DebugTools::get()->getPVM()->addParam("Y", "RawY", raw_pos(1));
+//     DebugTools::get()->getPVM()->addParam("Z", "RawZ", raw_pos(2));
+//     DebugTools::get()->getPVM()->addParam("X", "FilteredX", filter_pos(0));
+//     DebugTools::get()->getPVM()->addParam("Y", "FilteredY", filter_pos(1));
+//     DebugTools::get()->getPVM()->addParam("Z", "FilteredZ", filter_pos(2));
+//     DebugTools::get()->getPVM()->addParam("Yaw", "RawYaw", raw_pos(3));
+//     DebugTools::get()->getPVM()->addParam("Pitch", "RawPitch", raw_pos(4));
+//     DebugTools::get()->getPVM()->addParam("Roll", "RawRoll", raw_pos(5));
+
+//     DebugTools::get()->getPVM()->addParam("Yaw", "FilteredYaw", filter_pos(3));
+//     DebugTools::get()->getPVM()->addParam("Pitch", "FilteredPitch", filter_pos(4));
+//     DebugTools::get()->getPVM()->addParam("Roll", "FilteredRoll", filter_pos(5));
 #endif
     updatePnpData(r_gyro, gyro);
     if (!vanish)
@@ -446,6 +453,49 @@ inline void drawCube(cv::Mat &img, const PoseNode &p, float x_len, float y_len, 
     }
 }
 
+inline void drawPentagonalPrism(cv::Mat &img, const PoseNode &p,
+                                float radius, float height,
+                                cv::Scalar c)
+{
+    float hz = height / 2.0f; // 高度一半
+    std::vector<cv::Point3f> pts3d;
+
+    const float angle_step = 2.0f * CV_PI / 5.0f;
+    // 下底面 (z = -hz)
+    for (int i = 0; i < 5; ++i)
+    {
+        float angle = i * angle_step - CV_PI / 2.0f; // 起点朝Y轴正方向
+        float x = radius * std::cos(angle);
+        float y = radius * std::sin(angle);
+        pts3d.emplace_back(x, y, -hz);
+    }
+    // 上底面 (z = +hz)
+    for (int i = 0; i < 5; ++i)
+    {
+        float angle = i * angle_step - CV_PI / 2.0f;
+        float x = radius * std::cos(angle);
+        float y = radius * std::sin(angle);
+        pts3d.emplace_back(x, y, hz);
+    }
+
+    // 投影
+    std::vector<cv::Point2f> pts2d;
+    projectPoints(pts3d, p.rvec(), p.tvec(),
+                  camera_param.cameraMatrix, camera_param.distCoeff, pts2d);
+
+    // 绘制底面、顶面和侧面
+    for (int i = 0; i < 5; ++i)
+    {
+        int next = (i + 1) % 5;
+        // 下底面
+        cv::line(img, pts2d[i], pts2d[next], c, 1);
+        // 上底面
+        cv::line(img, pts2d[i + 5], pts2d[next + 5], c, 1);
+        // 连接侧边
+        cv::line(img, pts2d[i], pts2d[i + 5], c, 1);
+    }
+}
+
 void RuneGroup::drawFeature(cv::Mat &img, const DrawConfig_cptr &config) const
 {
     if (img.empty())
@@ -453,8 +503,7 @@ void RuneGroup::drawFeature(cv::Mat &img, const DrawConfig_cptr &config) const
     auto &pose_info = getPoseCache();
     if (pose_info.getPoseNodes().find(CoordFrame::CAMERA) == pose_info.getPoseNodes().end())
         return;
-    if (getTrackers().size() < 2)
-        return;
     auto &p = pose_info.getPoseNodes().at(CoordFrame::CAMERA);
-    drawCube(img, p, 2000, 2000, 500, cv::Scalar(0, 255, 0));
+    for (const auto &tracker : getTrackers())
+        tracker->drawFeature(img, config);
 }
