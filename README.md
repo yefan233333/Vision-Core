@@ -8,11 +8,16 @@ Github 仓库地址：[rm_vision_core](https://github.com/scutrobotlab/rm_vision
 
 - 【新思路】我们提出了一种通用的纯色图形角点提取思路，可用于稳定提取不规则轮廓的角点。
 - 【算法】基于上述思路，我们设计了一种针对局部条状轮廓的末端点提取算法。可用于稳定识别神符扇叶（已激活形态）或神符靶心的角点。角点识别效果示意可见图1.1。
+
+<img width="735" height="475" alt="Image" src="https://github.com/user-attachments/assets/d84b0256-8268-4271-a9c6-1aac5015d852"/>
+
+图1.1
+
 - 【优势】相对于多边形近似和普通凸包检测的传统角点识别思路，该算法提升了稳定性和精度，角点提取误差稳定在`1~3`个像素点以内。一次开符过程最多可同时识别`37`个稳定角点。
 
 ## 2. 功能介绍
 
-- 本项目是一套面向 **能量机关（神符）多角点识别与自瞄** 的完整算法框架，涵盖 感知、识别、预测、决策 的全链路功能。整体采用模块化设计，便于移植、优化与二次开发。
+- 本项目是一套面向 **能量机关（神符）多角点识别与自瞄** 的识别算法框架，涵盖神符识别中特征识别、角点提取、位姿解算的全链路功能。整体采用模块化设计，便于移植、优化与二次开发。
 - 核心实现基于 **C++**，并使用 **OpenCV 4.7.0** 作为图像处理引擎，无需依赖 ROS，环境配置简单高效。
 - 该项目构建于 **华南虎 视觉库 SRVL** 的基础之上，是面向开源需求的 特化版本。在保持识别逻辑一致的前提下，移除了大量冗余代码，优化了架构与注释，提高了可读性与可维护性，更适合开源社区交流与二次开发。
 - 源码实现包含本队在神符自瞄中的完整识别逻辑，涵盖（但不限于）：神符靶心角点提取算法、神符扇叶角点提取算法、多特征匹配算法、位姿（PnP）解算模块。此外，项目还提供多种辅助开发工具，如：参数配置自动生成器，快速生成标准化配置文件；参数可视化管理器，支持多维度调试与曲线对比；日志信息打印系统，方便调试与性能分析。
@@ -58,13 +63,20 @@ Github 仓库地址：[rm_vision_core](https://github.com/scutrobotlab/rm_vision
 
 ### 4.1 系统框图
 
+系统框图如图4.1.1
+<img width="1280" height="1157" alt="Image" src="https://github.com/user-attachments/assets/878ef41f-5cb8-4fc4-a9b9-5296513ed0f0" />
+图4.1.1
+
 ### 4.2 软件架构
 
   类型封装和属性定义采用自定义宏库规范生成和管理。且针对大部分常用信息结构都进行了封装（位姿节点、轮廓属性等）。
-
+<img width="1018" height="1280" alt="Image" src="https://github.com/user-attachments/assets/aa17d638-eedf-49d7-aef5-8aba4f51fce3" />
+图4.2.1
 ### 4.3 数据流图
 
  整体设计采用逐层组装的思路：从基础特征的识别入手，逐步向上构建更高层级的结构，并在每一层解算所需的计算信息。各特征节点之间统一通过 `FeatureNode_ptr` 接口进行连接和交互。
+ <img width="1280" height="509" alt="Image" src="https://github.com/user-attachments/assets/e20a4e1d-419f-492c-8ee1-fbd6067fcbb4" />
+ 图4.3.1
 
 ### 4.4 文件结构
 
@@ -318,18 +330,43 @@ Github 仓库地址：[rm_vision_core](https://github.com/scutrobotlab/rm_vision
 - 灯条两侧的轮廓点 在其垂线上的投影点的距离差基本相等。（反映了灯条的厚度）
 - 通过以上特点，我们可以尝试为一个轮廓上的某一个点查找其反向匹配点，（即假设当前点位于灯条的一侧时，尝试为其匹配灯条另一侧的点）若成功查找到匹配点，则说明该点位于灯条上，否则不在灯条上。
 - 合并一定范围内所有匹配成功的轮廓点，就可以得到一对线段。（由 上升线段 和 下降线段组成。前者由正向点合并得到、后者由下降点合并得到），两条线段求平均，就可以得到灯条的中轴线。
+  
+<div style="display: flex; gap: 10px; flex-wrap: nowrap;">
+  <img src="https://github.com/user-attachments/assets/1fb40ce2-2d58-4aff-a53a-4e5d64da4390" width="150">
+  <img src="https://github.com/user-attachments/assets/ad9b73ed-db26-48fc-b8f4-ec1d8e027cbb" width="150">
+  <img src="https://github.com/user-attachments/assets/e5fec197-0ea2-42a7-8d10-80a765c6edfd" width="150">
+  <img src="https://github.com/user-attachments/assets/57bd5fe0-8e49-4ca8-883d-b4a426751e17" width="150">
+  <img src="https://github.com/user-attachments/assets/1cb3fd9e-aa58-4fff-805d-25aedd809b98" width="150">
+</div>
+图5.1.1 图5.1.2 图5.1.3 图5.1.4 图5.1.5
 
 ### 5.2 轮廓的链码化
 
 - 链码是一种用方向序列来表示轮廓的方法。假设我们有一个由像素点组成的物体边界，链码会按照一定顺序（如顺时针）遍历边界像素，并用 **数字编码当前像素指向下一个像素的方向**。参考图5.2.1 [1] 的效果。
+ 
+<img width="572" height="659" alt="Image" src="https://github.com/user-attachments/assets/89deba52-736d-43ab-93b1-d026243744bd" />
+
+图5.2.1
 
 - 我们先对扇叶进行二值化处理，得到图5.2.2
+ 
+<img width="233" height="196" alt="Image" src="https://github.com/user-attachments/assets/841da63e-f3cd-4f90-8570-17cca47db06f" />
+图5.2.2
 
 - 对其提取轮廓，并将轮廓点链码化，将链码数组可视化成曲线，即可得到图5.2.3。由于我们使用的是4连通链码 [2]，因此可以明显看到链码表被清晰的分成了四个层级。一个层级代表一个方向。
 
+<img width="1280" height="165" alt="Image" src="https://github.com/user-attachments/assets/05b91555-01a5-4bfe-9c8c-89b6b60ab57a" />
+图5.2.3
+
 - 我们将链码值映射为角度（0~360°），并进行滤波操作，即可得到扇叶轮廓的方向角的角度值数组。如图5.2.4。其中，我们采用`cv::Mat` 作为角度存储的容器，方便使用 OpenCV 提供的自定义滤波器求解梯度矩阵。
 
+<img width="1605" height="198" alt="Image" src="https://github.com/user-attachments/assets/03c973c7-406c-4b63-9a5d-095a114ed269" />
+图5.2.4
+
 - 通过该角度数组，我们能够初步提取一些关键信息。例如，在图5.2.5中，红、绿两条线所在的角度平面相差180°，且它们之间的角度呈单调变化。这表明它们对应的轮廓点极有可能属于同一个凸起块。
+
+<img width="1605" height="198" alt="Image" src="https://github.com/user-attachments/assets/5342356d-0b92-4e3e-8e0b-a87a8dd3dcf1" />
+图5.2.5
 
 ### 5.3 邻点聚类压缩
 
